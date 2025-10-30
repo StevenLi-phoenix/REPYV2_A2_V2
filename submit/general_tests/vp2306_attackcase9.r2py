@@ -1,0 +1,12 @@
+f = openfile("testfile9", True)
+f.writeat("Attack9", 0)
+
+
+#do not allow reopen while file is open
+try:
+    openfile("testfile9", True)
+    assert False
+except FileInUseError:
+    pass
+finally:
+    f.close()

@@ -1,0 +1,53 @@
+# n13302308_attackcase_delete_race.r2py
+# Rapid create/remove loop to try to trigger race-condition style bugs.
+# If any remove succeeds in actually deleting the base file, we write exploit_delete_success.
+
+def safe_create_base():
+    try:
+        b = openfile("confirmfile", True)
+        b.writeat("A", 0)
+        b.close()
+        return True
+    except Exception:
+        return False
+
+def safe_check_base_exists():
+    try:
+        o = openfile("confirmfile", False)
+        o.close()
+        return True
+    except Exception:
+        return False
+
+vulnerable = False
+# try a number of iterations (adjust count if needed)
+i = 0
+while i < 300 and not vulnerable:
+    i += 1
+    # create base
+    safe_create_base()
+    # attempt remove in a tight try
+    try:
+        removefile("confirmfile")
+    except (RepyArgumentError, FileInUseError, AssertionError, ValueError, FileNotFoundError):
+        # expected; continue
+        pass
+    except Exception:
+        # unexpected;
+        pass
+
+    # check existence; if gone => removal succeeded -> vulnerability
+    if not safe_check_base_exists():
+        vulnerable = True
+        break
+
+# if vulnerable, create sentinel
+if vulnerable:
+    try:
+        s = openfile("exploit_delete_success", True)
+        s.writeat("1", 0)
+        s.close()
+    except Exception:
+        pass
+# done: remain silent if secure
+

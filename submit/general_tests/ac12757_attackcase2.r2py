@@ -1,0 +1,22 @@
+# ac12757_attackcase2.r2py
+# Targets: RepyArgumentError - Creating explicit version files
+
+try:
+    # Attempt to create a file with a version suffix directly
+    try:
+        explicit_version_asset = openfile("myasset.txt.v1", True)
+        # If we reach here, the monitor failed to prevent explicit version creation
+        explicit_version_asset.close() # Clean up if it somehow succeeded
+        raise Exception("Monitor failed: Was able to create an explicit versioned file!")
+    except RepyArgumentError:
+        # Expected behavior: Monitor correctly raised RepyArgumentError
+        pass
+    except Exception as e:
+        # Unexpected error type
+        raise Exception("Monitor failed with unexpected error when creating explicit version: " + str(e))
+
+except Exception as e:
+    # Catch any unexpected errors during setup
+    raise Exception("Attack case 2 failed due to unexpected setup error: " + str(e))
+
+# This attack case breaks reference_monitor_example1, reference_monitor_example2

@@ -1,0 +1,6 @@
+try:
+  f = openfile("test.vs.ad", True)
+  f.writeat("content", 0)
+  f.close()
+except Exception, e:
+  log("TEST11 VULNERABLE: \n")

@@ -1,0 +1,7 @@
+# Try to create a new file
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("first", 0)
+    f1.close()
+except:
+    log("failed creating a new file?")

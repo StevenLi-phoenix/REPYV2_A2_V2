@@ -1,0 +1,25 @@
+# bm3792_attackcase23.r2py
+# Test: Create empty version, then try to modify base file
+
+f1 = openfile("testfile", True)
+f1.writeat("base", 0)
+f1.close()
+
+# Create empty version
+f2 = openfile("testfile", True)
+f2.close()
+
+# Try to modify base file
+try:
+    base = openfile("testfile", False)
+    base.writeat("hack", 0)
+    base.close()
+    
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    if content == "hack":
+        log("SECURITY BUG: Modified base after empty version created\n")
+except:
+    pass

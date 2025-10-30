@@ -1,0 +1,51 @@
+try:
+    f = openfile("versiontest.txt", True)
+    f.writeat("base", 0)
+    f.close()
+    
+    f2 = openfile("versiontest.txt", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    try:
+        v0 = openfile("versiontest.txt.v0", False)
+        v0.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        vneg = openfile("versiontest.txt.v-1", False)
+        vneg.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        vbig = openfile("versiontest.txt.v999", False)
+        vbig.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        vstring = openfile("versiontest.txt.vabc", False)
+        vstring.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        vcreate = openfile("versiontest.txt.v2", True)
+        vcreate.close()
+    except RepyArgumentError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

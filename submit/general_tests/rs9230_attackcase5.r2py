@@ -1,0 +1,23 @@
+# Test Case 5: Try to write after file is closed and reopened
+# Should not be able to write to any file after it's been created and closed
+
+f1 = openfile("sealed.txt", True)
+f1.writeat("sealed content", 0)
+f1.close()
+
+# Try to open with create=True again (should create new version, not modify original)
+f2 = openfile("sealed.txt", True)
+try:
+    # If this is opening the same file (not a new version), writing should fail
+    original_files = listfiles()
+    f2.writeat("attempting modification", 0)
+    f2.close()
+    
+    new_files = listfiles()
+    if len(new_files) <= len(original_files):
+        log("ATTACK SUCCESSFUL: Modified file without creating new version\n")
+        exitall()
+except Exception as e:
+    f2.close()
+
+log("Test passed - cannot modify closed files\n")

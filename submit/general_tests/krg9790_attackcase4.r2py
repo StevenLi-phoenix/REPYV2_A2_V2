@@ -1,0 +1,18 @@
+#attack 4: write to base after versioning
+f1 = openfile("base", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("base", True)
+f2.close()
+
+try:
+    fbase = openfile("base", False)
+    fbase.writeat("HACKED", 0)
+    fbase.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Was able to write to base file after versioning!\n")
+except FileInUseError:
+    try:
+        fbase.close()
+    except:
+        pass

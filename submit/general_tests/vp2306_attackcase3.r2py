@@ -1,0 +1,17 @@
+f = openfile("testfile3", True)
+f.writeat("Attack3", 0)
+f.close()
+f2 = openfile("testfile3", True)  
+
+#dont allow writing to explicit older version files
+try:
+    oldfile = openfile("testfile3", False)
+    try:
+        oldfile.writeat("Attack32", 3)
+        assert False
+    except FileInUseError:
+        pass
+    finally:
+        oldfile.close()
+finally:
+    f2.close()

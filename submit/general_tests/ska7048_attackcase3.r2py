@@ -1,0 +1,27 @@
+try:
+    f1 = openfile("manualtest3.v1", True)
+    log("BUG FOUND\n")
+    f1.close()
+except RepyArgumentError:
+    pass
+
+try:
+    f2 = openfile("manualtest3.v99", True)
+    log("BUG FOUND\n")
+    f2.close()
+except RepyArgumentError:
+    pass
+
+try:
+    f3 = openfile("manualtest3.version", True)
+    f3.writeat("data", 0)
+    f3.close()
+except:
+    log("BUG FOUND\n")
+
+try:
+    f4 = openfile("manualtest3.v0", True)
+    log("BUG FOUND\n")
+    f4.close()
+except RepyArgumentError:
+    pass

@@ -1,0 +1,9 @@
+try:
+    openfile("endswithv.", True)
+except Exception:
+    pass
+
+try:
+    openfile("endswithv.v", True)
+except Exception:
+    pass

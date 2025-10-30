@@ -1,0 +1,11 @@
+#Test: Cannot create a new version while latest version is open
+
+f1 = openfile("testfile_inuse", True)
+f1.writeat("Data", 0)
+
+try:
+    f2 = openfile("testfile_inuse", True)
+except Exception:
+    pass
+
+f1.close()

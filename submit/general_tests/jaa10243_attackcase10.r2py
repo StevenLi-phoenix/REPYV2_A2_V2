@@ -1,0 +1,18 @@
+# Create a file with double extension
+f1 = openfile("test.file.txt", True)
+f1.writeat("helloworld", 0)
+f1.close()
+
+# Create version
+f2 = openfile("test.file.txt", True)
+f2.writeat("helloworld2", 0)
+f2.close()
+
+# Try to access the version 
+try:
+    f3 = openfile("test.file.txt.v1", False)
+    f3.close()
+   
+except FileNotFoundError:
+    log("version file not created for double extension\n")
+    exitall()

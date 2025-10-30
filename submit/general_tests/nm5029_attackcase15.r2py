@@ -1,0 +1,22 @@
+# spawn two concurrent creates and count outcomes
+name = "race_demo"
+cnt = {"ok": 0, "err": 0}
+lk  = createlock()
+
+# seed v0
+f = openfile(name, True); f.writeat("X", 0); f.close()
+
+def worker():
+  try:
+    h = openfile(name, True)        # try to create next version
+    lk.acquire(True);  cnt["ok"] = cnt["ok"] + 1;  lk.release()
+    h.close()
+  except FileInUseError:
+    lk.acquire(True);  cnt["err"] = cnt["err"] + 1; lk.release()
+
+createthread(worker)
+createthread(worker)
+
+sleep(0.5)                          # let threads finish
+assert cnt["ok"] == 1               # exactly one version created
+assert cnt["err"] == 1              # one blocked by FileInUseError

@@ -1,0 +1,51 @@
+# Test for Spec #9: listfiles() hides versioned files (*.vN).
+
+f_base1 = None
+f_v1 = None
+f_base2 = None
+
+try:
+    # Setup: Create files and versions
+    f_base1 = openfile("attack6_file1", True) # Create file1
+    f_base1.writeat("data1", 0)
+    f_base1.close()
+    f_v1 = openfile("attack6_file1", True)    # Create file1.v1
+    f_v1.writeat("data1v1", 0)
+    f_v1.close()
+    f_base2 = openfile("attack6_file2", True) # Create file2 (no versions)
+    f_base2.writeat("data2", 0)
+    f_base2.close()
+
+    # Call listfiles()
+    listed_files = listfiles()
+
+    # --- Verification ---
+    # Expected result should only contain base names
+    correct_list = ["attack6_file1", "attack6_file2"]
+
+    # Convert both lists to sets for reliable comparison regardless of order
+    listed_set = set(listed_files)
+    correct_set = set(correct_list)
+
+    if listed_set != correct_set:
+        # If sets don't match (e.g., contains ".v1", missing base names, includes extra files), FLAWED.
+        assert(False) # Signal failure
+
+    # If sets match, monitor is correct. Pass silently.
+
+except AssertionError:
+    raise # Propagate failure signal
+except Exception:
+    # Test setup failed or unexpected monitor error
+    assert(False) # Signal failure
+finally:
+    # Best-effort cleanup
+    try:
+        if f_base1 and not f_base1.VMfile.closed: f_base1.close()
+    except Exception: pass
+    try:
+        if f_v1 and not f_v1.VMfile.closed: f_v1.close()
+    except Exception: pass
+    try:
+        if f_base2 and not f_base2.VMfile.closed: f_base2.close()
+    except Exception: pass

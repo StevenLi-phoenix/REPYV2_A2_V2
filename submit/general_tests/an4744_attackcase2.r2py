@@ -1,0 +1,16 @@
+# Test: To check that a person shouldnot be able to create version of a file while it is open
+
+# Create and open a file
+f1 = openfile("file1.txt", True)
+f1.writeat("Initial data", 0)
+
+# Attack: Try to create version while file is still open
+try:
+    f2 = openfile("file1.txt", True)
+    f2.close()
+    f1.close()
+    # Error: If we get here, security is broken
+    assert False
+except FileInUseError:
+    # Expected: here it is expected that the first file should be closed first
+    f1.close()

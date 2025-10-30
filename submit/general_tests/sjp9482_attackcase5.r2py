@@ -1,0 +1,13 @@
+file_name = "test_file"
+
+f = openfile(file_name, True)
+f.writeat("Data", 0)
+f.close()
+
+file_list = listfiles()
+
+if file_name + '.v1' in file_list or file_name + '.meta' in file_list:
+    raise Exception("InternalFilesExposedByListdir")
+
+if file_name not in file_list:
+    raise Exception("BaseFileNotListed")

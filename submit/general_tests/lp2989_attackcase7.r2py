@@ -1,0 +1,146 @@
+# MEGA ATTACK 15: Edge Cases in File Operations
+# Tests: Boundary conditions, unusual operation sequences
+
+# Test 1: Write zero bytes
+f = openfile("zero.txt", True)
+try:
+    f.writeat("", 0)
+    f.close()
+    
+    f2 = openfile("zero.txt", False)
+    content = f2.readat(None, 0)
+    f2.close()
+    
+    if content != "":
+        log("ATTACK SUCCESSFUL: Zero-byte write behaved unexpectedly\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 2: Read zero bytes
+f = openfile("readzero.txt", True)
+f.writeat("data", 0)
+try:
+    content = f.readat(0, 0)
+    f.close()
+    if content != "":
+        log("ATTACK SUCCESSFUL: Read zero bytes returned content\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 3: Read past end of file
+f = openfile("short.txt", True)
+f.writeat("tiny", 0)
+try:
+    content = f.readat(1000, 0)
+    f.close()
+    if len(content) > 4:
+        log("ATTACK SUCCESSFUL: Read past EOF returned extra data\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 4: Write then immediate version without reading
+f = openfile("quickver.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+try:
+    f2 = openfile("quickver.txt", True)
+    f2.writeat("v2", 0)
+    f2.close()
+    
+    fv = openfile("quickver.txt.v1", False)
+    content = fv.readat(None, 0)
+    fv.close()
+    
+    if content != "v1":
+        log("ATTACK SUCCESSFUL: Quick version without read corrupted\n")
+except Exception:
+    pass
+
+# Test 5: Multiple writes to different offsets without close
+f = openfile("multiwrite.txt", True)
+try:
+    f.writeat("AAA", 0)
+    f.writeat("BBB", 10)
+    f.writeat("CCC", 20)
+    f.close()
+    
+    f2 = openfile("multiwrite.txt", False)
+    content = f2.readat(None, 0)
+    f2.close()
+    
+    # Check for proper spacing
+    if len(content) < 23:
+        log("ATTACK SUCCESSFUL: Multi-offset write incomplete\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 6: Overwrite middle of file
+f = openfile("middle.txt", True)
+f.writeat("AAAABBBBCCCC", 0)
+f.close()
+
+f = openfile("middle.txt", False)
+try:
+    f.writeat("XX", 4)
+    f.close()
+    
+    f2 = openfile("middle.txt", False)
+    content = f2.readat(None, 0)
+    f2.close()
+    
+    if content != "AAAAXXBBCCCC":
+        log("ATTACK SUCCESSFUL: Middle overwrite corrupted file\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 7: Create version of empty file
+f = openfile("empty_v.txt", True)
+f.close()
+
+f2 = openfile("empty_v.txt", True)
+f2.close()
+
+try:
+    fv = openfile("empty_v.txt.v1", False)
+    content = fv.readat(None, 0)
+    fv.close()
+    
+    if content != "":
+        log("ATTACK SUCCESSFUL: Empty file version not empty\n")
+except FileNotFoundError:
+    log("ATTACK SUCCESSFUL: Empty file version not created\n")
+except Exception:
+    pass
+
+# Test 8: Alternating writes and reads on same handle
+f = openfile("alternate.txt", True)
+try:
+    f.writeat("A", 0)
+    c1 = f.readat(1, 0)
+    f.writeat("B", 1)
+    c2 = f.readat(2, 0)
+    f.close()
+    
+    if c2 != "AB":
+        log("ATTACK SUCCESSFUL: Alternating write/read inconsistent\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass

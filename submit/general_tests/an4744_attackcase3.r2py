@@ -1,0 +1,14 @@
+# Test: To check that file deletion is completely blocked
+
+# Create a file
+f = openfile("file1.txt", True)
+f.writeat("Initial Data", 0)
+f.close()
+
+# Attack: Try to delete the file
+try:
+    removefile("file1.txt")
+    # Error: If we get here, security is broken
+    assert False
+except RepyArgumentError:
+    pass

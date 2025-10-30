@@ -1,0 +1,18 @@
+"""
+Check if list files lists the versions or just the bases
+"""
+
+try:
+    f = openfile("listme.txt", True)
+    f.writeat("1", 0)
+    f.close()
+    f2 = openfile("listme.txt", True)
+    f2.close()
+    for name in listfiles():
+        if ".v" in name:
+            parts = name.rsplit(".v", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                log("Bug: files with their versions were listed")
+except Exception:
+    log("Bug: error when doing allowed operations")
+

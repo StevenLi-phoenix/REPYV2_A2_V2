@@ -1,0 +1,64 @@
+F = "a1.txt"
+
+try:
+  f = openfile(F, True)
+  f.writeat("seed", 0)
+  f.close()
+except:
+  pass
+
+try:
+  h = openfile(F, True)
+  h.close()
+except:
+  pass
+
+names = listfiles()
+latest = None
+maxv = -1
+baseprefix = F + ".v"
+
+for n in names:
+  if n == F:
+    v = 1
+  elif n.startswith(baseprefix):
+    try:
+      v = int(n.split(".v")[-1])
+    except:
+      continue
+  else:
+    continue
+  if v > maxv:
+    maxv = v
+    latest = n
+
+older = None
+if maxv >= 2:
+  for n in names:
+    if n == F:
+      v = 1
+    elif n.startswith(baseprefix):
+      try:
+        v = int(n.split(".v")[-1])
+      except:
+        continue
+    else:
+      continue
+    if v < maxv:
+      older = n
+      break
+
+if older:
+  try:
+    g = openfile(older, False)
+    try:
+      g.writeat("X", 0)
+      log("Old version '" + older + "' is writable")
+    except:
+      pass
+    try:
+      g.close()
+    except:
+      pass
+  except:
+    pass

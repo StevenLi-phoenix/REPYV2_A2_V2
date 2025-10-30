@@ -1,0 +1,47 @@
+B = "a10.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("seed", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+def latest(name):
+  L = None; mv = -1; pref = name + ".v"
+  for n in listfiles():
+    if n == name:
+      v = 1
+    elif n.startswith(pref):
+      try: v = int(n.split(".v")[-1])
+      except: continue
+    else:
+      continue
+    if v > mv:
+      mv = v; L = n
+  return L
+
+try:
+  v = openfile(B, True)
+  try: v.writeat("payload", 0)
+  except: pass
+  try: v.close()
+  except: pass
+except:
+  pass
+
+L = latest(B)
+if L:
+  try:
+    g = openfile(L, False)
+    try:
+      g.writeat("must_fail", 0)
+      log("Reopened latest '" + L + "' still writable after close")
+    except:
+      pass
+    try: g.close()
+    except: pass
+  except:
+    pass

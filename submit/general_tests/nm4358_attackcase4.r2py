@@ -1,0 +1,30 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase4.r2py
+Goal: Find overblocking bug (accuracy)
+'''
+
+# Make sure reading does NOT get blocked
+
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass
+
+try:
+    h = openfile("test4.txt", True)
+    h.writeat("SAFE", 0)
+    h.close()
+
+    h2 = openfile("test4.txt", False)  # read mode
+    h2.readat(4, 0)
+    h2.close()
+except:
+    # If a correct monitor blocks this, we've found an over-blocking bug.
+    debug_log("Over blocked\n")
+    pass

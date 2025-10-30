@@ -1,0 +1,21 @@
+# Checks if closed file version is immutable
+
+# Create first version of "samplefile"
+firstVersion = openfile("samplefile", True)
+firstVersion.writeat("hello", 0)
+firstVersion.close()
+
+# Create and close next version
+nextVersion = openfile("samplefile", True)
+nextVersion.close()
+
+# Try to modify old version
+old = openfile("samplefile.v1", False)
+try:
+    # If ran, then it's not immutable
+    old.writeat("hello", 0)
+    assert False, "Cannot write to old version"
+except FileInUseError:
+    pass
+
+old.close()

@@ -1,0 +1,6 @@
+files = [ "meow...", "v0", "v123", "x.x", "v1." ];
+
+for f in files:
+    openfile(f, True).close();
+
+assert(set(files) == set(listfiles()));

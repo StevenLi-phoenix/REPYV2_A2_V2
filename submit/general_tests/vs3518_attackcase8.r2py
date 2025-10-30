@@ -1,0 +1,53 @@
+marker = "compromised_vs3518_attackcase12"
+protected = "protected_attack12.txt"
+temp = "temp_attack12.txt"
+
+try:
+    f = open(protected, "w")
+    try:
+        f.write("ORIGINAL12\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+h = None
+try:
+    try:
+        h = open(temp, "w")
+        try:
+            h.write("EVIL12\n")
+            try:
+                h.flush()
+            except Exception:
+                pass
+        finally:
+            # don't close immediately; simulate race by re-opening/closing below
+            pass
+    except Exception:
+        pass
+
+    try:
+        os.rename(temp, protected)
+    except Exception:
+        pass
+finally:
+    try:
+        if h:
+            h.close()
+    except Exception:
+        pass
+
+try:
+    f = open(protected, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    if "EVIL12" in c:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

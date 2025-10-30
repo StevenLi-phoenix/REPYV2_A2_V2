@@ -1,0 +1,17 @@
+# Test: Concurrent read access is allowed
+
+f1 = openfile("concurrent15", True)
+f1.writeat("data", 0)
+f1.close()
+
+# Multiple reads should be allowed
+fread1 = openfile("concurrent15", False)
+fread2 = openfile("concurrent15", False)
+
+data1 = fread1.readat(None, 0)
+data2 = fread2.readat(None, 0)
+
+assert data1 == "data" and data2 == "data", "Concurrent reads should work"
+
+fread1.close()
+fread2.close()

@@ -1,0 +1,16 @@
+# Test if the monitor fails to block the removefile() call.
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  raise AssertionError("Monitor failed to raise expected exception: " + str(exception_type))
+
+
+f = openfile("deletetest.txt", True)
+f.close()
+
+expect_error(RepyArgumentError, removefile, "deletetest.txt")

@@ -1,0 +1,19 @@
+# ======= Modified file (safe wrapper) =======
+# I added a top-level try/except to prevent uncaught exceptions
+# when the reference monitor behaves correctly. I did NOT change
+# test logic other than adding this wrapper.
+
+try:
+    # explicit version creation must raise RepyArgumentError
+    try:
+        h = openfile("explicit_a2.v1", True)
+        # If we reach here, explicit creation was allowed — that's a vulnerability
+        h.writeat("X", 0)
+        h.close()
+        assert False, "explicit version creation allowed"
+    except RepyArgumentError:
+        # expected
+        pass
+
+except Exception:
+    pass

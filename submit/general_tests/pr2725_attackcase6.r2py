@@ -1,0 +1,13 @@
+# Test 6: Create a file with vxx where xx are two integers
+# According to the spec on vx where x is an int is considered
+f1 = openfile("testfile.v01", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile.v01", True)
+f1.writeat("GoodMorning", 0)
+f1.close()
+
+f2 = openfile("testfile.v01.v1", False)
+assert f2.readat(None, 0) == "GoodMorning"
+f2.close()

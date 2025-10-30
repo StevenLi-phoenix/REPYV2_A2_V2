@@ -1,0 +1,18 @@
+# Test: Cannot create version from a version file
+
+# Create file with version
+f1 = openfile("base.txt", True)
+f1.writeat("Data", 0)
+f1.close()
+
+f2 = openfile("base.txt", True)
+f2.close()
+
+# Attack: Try to create version from version file
+try:
+    f = openfile("base.txt.v1", True)
+    f.close()
+    # Error: If we get here, security is broken
+    assert False
+except RepyArgumentError:
+    pass

@@ -1,0 +1,30 @@
+# Test: removefile must be blocked for both versioned and base names
+
+# Create file to attempt deletion
+try:
+    a = openfile("tc5file", True)
+    a.writeat("x", 0)
+    a.close()
+except Exception:
+    assert False
+
+# Attempt to remove a versioned file (should raise RepyArgumentError)
+try:
+    removefile("tc5file.v1")
+    # If removal succeeded, fail
+    assert False
+except RepyArgumentError:
+    # expected
+    pass
+except Exception:
+    # wrong exception type
+    assert False
+
+# Attempt to remove by base name (should also raise RepyArgumentError)
+try:
+    removefile("tc5file")
+    assert False
+except RepyArgumentError:
+    pass
+except Exception:
+    assert False

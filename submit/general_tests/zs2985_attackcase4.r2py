@@ -1,0 +1,22 @@
+# Attack Case 4: File Usage Conflict Test
+# This test checks if the security layer properly handles file usage conflicts
+
+try:
+    # Open file for writing
+    f1 = openfile("testfile", True)
+
+    # Attempt to open the same file again - should be blocked
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    # If execution reaches here, the security layer has a vulnerability
+    log("SECURITY FLAW: File usage conflict was not handled!")
+
+    f1.close()
+
+except FileInUseError:
+    # Expected behavior - security layer correctly prevented conflict
+    pass
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

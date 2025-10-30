@@ -1,0 +1,19 @@
+# Test: listfiles() should hide .vNUM files
+
+f1 = openfile("ac13_testfile", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("ac13_testfile", True)
+f2.writeat("data2", 0)
+f2.close()
+
+f3 = openfile("ac13_testfile", True)
+f3.writeat("data3", 0)
+f3.close()
+
+files = listfiles()
+assert "ac13_testfile" in files, "Should show base file"
+assert "ac13_testfile.v1" not in files, "Should hide v1"
+assert "ac13_testfile.v2" not in files, "Should hide v2"
+

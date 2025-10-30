@@ -1,0 +1,11 @@
+# Offset write preserved across version create
+
+f = openfile("t20", True)
+f.writeat("ABCDEFGHIJ", 0)
+f.writeat("ZZZ", 4)      # make a hole overwrite
+f.close()
+v1 = openfile("t20", True)
+s = v1.readat(None, 0)
+if s[0:4] != "ABCD" or s[4:7] != "ZZZ":
+  raise Exception("offset write not preserved in version copy")
+v1.close()

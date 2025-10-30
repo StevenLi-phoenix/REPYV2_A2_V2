@@ -1,0 +1,9 @@
+#attack 18: test versioning empty file
+f1 = openfile("empty", True)
+f1.close()
+
+f2 = openfile("empty", True)
+content = f2.readat(None, 0)
+if content != "":
+    log("Welp -- Empty file version has content!\n")
+f2.close()

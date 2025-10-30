@@ -1,0 +1,19 @@
+# Test: creating explicit version names should NOT be allowed.
+# (If it succeeds, we log a vuln.)
+
+base = "race_alt_test.txt"
+
+# Ensure base exists
+try:
+  f = openfile(base, True); f.write("init"); f.close()
+except:
+  pass
+
+# Try to create 'explicit' version name directly
+try:
+  g = openfile(base + ".v1", True)
+  g.write("bad")
+  g.close()
+  log("VULN: explicit_version_creation_attack1")
+except:
+  pass

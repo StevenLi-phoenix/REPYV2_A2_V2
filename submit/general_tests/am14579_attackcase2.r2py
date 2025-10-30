@@ -1,0 +1,17 @@
+# Attack: Test that listfiles() hides version files (.v1, .v2, etc.)
+
+# Create a file and a version
+f1 = openfile("testfile_listfiles", True)
+f1.writeat("version0", 0)
+f1.close()
+
+f2 = openfile("testfile_listfiles", True)
+f2.writeat("version1", 0)
+f2.close()
+
+# Get file list
+files = listfiles()
+
+# Check if version files are exposed
+if "testfile_listfiles.v1" in files:
+    log("ATTACK SUCCESSFUL: listfiles() exposes version file testfile_listfiles.v1\n")

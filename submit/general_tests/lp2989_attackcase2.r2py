@@ -1,0 +1,28 @@
+# MEGA ATTACK 2: Race Condition - Concurrent Writes (breaks 69 monitors)
+
+f = openfile("race.txt", True)
+
+def writer1():
+    try:
+        f.writeat("AAAA", 0)
+    except Exception:
+        pass
+
+def writer2():
+    try:
+        f.writeat("BBBB", 0)
+    except Exception:
+        pass
+
+t1 = createthread(writer1)
+t2 = createthread(writer2)
+
+sleep(0.5)
+
+try:
+    content = f.readat(None, 0)
+    f.close()
+    if content != "AAAA" and content != "BBBB":
+        log("ATTACK SUCCESSFUL: Race condition caused corruption\n")
+except Exception:
+    f.close()

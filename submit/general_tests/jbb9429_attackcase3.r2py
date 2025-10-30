@@ -1,0 +1,62 @@
+def safe_create(filename):
+    try:
+        handle = openfile(filename, True)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_open(filename):
+    try:
+        handle = openfile(filename, False)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_write(handle, data, offset):
+    if handle is None:
+        return False
+    try:
+        handle.writeat(data, offset)
+        return True
+    except Exception:
+        return False
+
+
+def safe_close(handle):
+    if handle is None:
+        return
+    try:
+        handle.close()
+    except:
+        pass
+
+
+def test_name(filename):
+    violations = []
+
+    h_create, create_allowed = safe_create(filename)
+    if create_allowed:
+        violations.append("Policy violation: create allowed for " + filename)
+
+    h_open, open_allowed = safe_open(filename)
+    if open_allowed:
+        violations.append("Policy violation: open allowed for " + filename)
+
+    if create_allowed and safe_write(h_create, filename + " (create handle) test data\n", 0):
+        violations.append("Policy violation: write succeeded on create handle for " + filename)
+
+    if open_allowed and safe_write(h_open, filename + " (open handle) test data\n", 0):
+        violations.append("Policy violation: write succeeded on open handle for " + filename)
+
+    for message in violations:
+        log(message + "\n")
+
+def main():
+    test_name("file.v00001")
+    test_name("file.v999999999")
+    test_name("file.v2.v2.v2")
+
+
+main()

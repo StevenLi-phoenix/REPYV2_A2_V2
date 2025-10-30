@@ -1,0 +1,9 @@
+data = "A" * 1000
+
+f = openfile("largefile", True)
+f.writeat(data, 0)
+f.close()
+
+f2 = openfile("largefile", True)
+content = f2.readat(None, 0)
+f2.close()

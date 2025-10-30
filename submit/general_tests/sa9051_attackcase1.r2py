@@ -1,0 +1,19 @@
+f1 = openfile("testfile", True)
+f1.writeat("Version0", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("Version1", 0)
+f2.close()
+
+f3 = openfile("testfile", True)
+f3.writeat("Version2", 0)
+f3.close()
+
+base = openfile("testfile", False)
+try:
+    base.writeat("IllegalWrite", 0)
+    assert False, "Should have raised FileInUseError when writing to base after newer versions exist"
+except FileInUseError:
+    pass
+base.close()

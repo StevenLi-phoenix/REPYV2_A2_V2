@@ -1,0 +1,26 @@
+# pg2820_attackcase1.r2py
+# Try to create tmpb-style file directly and then promote it.
+# If the monitor trusts tmpb names incorrectly, this may overwrite.
+try:
+    # write into what a monitor might treat as a tmpb file
+    h = openfile("data.txt.tmpb", True)
+    # small content
+    h.writeat("pg2820-case1\n", 0)
+    h.close()
+
+    # attempt to remove authoritative copy (might raise)
+    try:
+        removefile("data.txt.a")
+    except Exception:
+        pass
+
+    # try to create authoritative name directly (should be blocked by many monitors)
+    try:
+        h2 = openfile("data.txt.a", True)
+        h2.writeat("pg2820-case1-promote\n", 0)
+        h2.close()
+    except Exception:
+        pass
+
+except Exception:
+    pass

@@ -1,0 +1,18 @@
+# Attack Case 19: Tricky filenames (ending in .v but not version files)
+
+ftricky = openfile("not.a.version.vtxt", True)
+ftricky.writeat("content", 0)
+ftricky.close()
+
+f2tricky = openfile("not.a.version.vtxt", True)
+assert f2tricky.readat(None, 0) == "content", "Should handle .vtxt files normally"
+f2tricky.close()
+
+fvonly = openfile("file.v", True)
+fvonly.writeat("data", 0)
+fvonly.close()
+
+fvonly2 = openfile("file.v", True)
+assert fvonly2.readat(None, 0) == "data", "Should handle 'file.v' as base file"
+fvonly2.close()
+

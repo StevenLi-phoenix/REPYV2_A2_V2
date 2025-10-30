@@ -1,0 +1,11 @@
+# Double-open latest is blocked
+
+f = openfile("t12", True); f.writeat("B",0); f.close()
+a = openfile("t12", False)
+try:
+  openfile("t12", False)
+  raise Exception("double-open latest allowed")
+except FileInUseError:
+  pass
+finally:
+  a.close()

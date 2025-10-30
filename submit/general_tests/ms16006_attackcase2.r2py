@@ -1,0 +1,8 @@
+# --- 2) create v1 and verify copy ---
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()

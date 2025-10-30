@@ -1,0 +1,48 @@
+# Checks versioning rules for "default": automatic versioning works,
+
+try:
+    base = openfile("default", True)
+    try:
+        base.writeat("DATA", 0)
+    except Exception:
+        pass
+    try:
+        base.close()
+    except Exception:
+        pass
+except Exception:
+    raise Exception("Bug detected: failed to create 'default'")
+
+# Auto make new version
+try:
+    vcreate = openfile("default", True)
+    try:
+        vcreate.close()
+    except Exception:
+        pass
+except Exception:
+    raise Exception("Bug detected: failed to create a new version for 'default'")
+
+# Manual make new version (not allowed)
+try:
+    f_bad = openfile("default.v1", True)
+except Exception:
+    pass
+else:
+    try:
+        f_bad.close()
+    except Exception:
+        pass
+    raise Exception("Bug detected: explicit version creation 'default.v1' succeeded when it should raise RepyArgumentError")
+
+
+try:
+    f_ok = openfile("default.v1", False)
+    try:
+        f_ok.close()
+    except Exception:
+        pass
+except FileNotFoundError:
+    raise Exception("Bug detected: existing version 'default.v1' could not be opened (FileNotFoundError)")
+except Exception:
+    raise Exception("Bug detected: unexpected error when opening existing version 'default.v1'")

@@ -1,0 +1,213 @@
+"""
+anf3003_attackcase07.r2py
+Attack Case: Concurrency creation and opening race conditions. In this test, we 
+             create a base file with "Hello World", then use threads to 
+             simultaneously write "Content A" and "Content B" to the base file,
+             attempting to trick a monitoring thread into seeing both contents in
+             the versioned files.
+"""
+
+# Configurations
+_ITERATIONS = 5
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+# Setup base
+try:
+    # Attempt to create the base file
+    file = openfile("attack7", True)
+
+    try:
+        # Write "Hello World" to the base file
+        file.writeat("Hello World", 0)
+
+    finally:
+        # Ensure the file is closed after writing
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions that occur during the initial file setup
+    pass
+
+
+def write_a():
+    """
+        Name: write_a
+        Arguments: None
+        Returns: None
+        Description: Repeatedly write "Content A" to the base file.
+    """
+
+    # Loop to write "Content A" to the base file
+    for i in range(_ITERATIONS):
+        try:
+            try:
+                # Open the file for writing
+                file = openfile("attack7", True)
+
+                try:
+                    # Write "Content A" to the base file
+                    file.writeat("Content A", 0)
+
+                finally:
+                    # Ensure the file is closed
+                    ac_close(file)
+
+            except Exception:
+                # Ignore exceptions during file operations
+                pass
+
+        except Exception:
+            # Ignore any exceptions
+            pass
+
+        try:
+            # Sleep briefly to increase concurrency
+            sleep(0.002)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+def write_b():
+    """
+        Name: write_b
+        Arguments: None
+        Returns: None
+        Description: Repeatedly write "Content B" to the base file.
+    """
+
+    # Loop to write "Content B" to the base file
+    for i in range(_ITERATIONS):
+        try:
+            try:
+                # Open the file for writing
+                file = openfile("attack7", True)
+
+                try:
+                    # Write "Content B" to the base file
+                    file.writeat("Content B", 0)
+
+                finally:
+                    # Ensure the file is closed
+                    ac_close(file)
+
+            except Exception:
+                # Ignore exceptions during file operations
+                pass
+
+        except Exception:
+            # Ignore any exceptions
+            pass
+
+        try:
+            # Sleep briefly to increase concurrency
+            sleep(0.002)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+# Start the attack!
+try:
+    # Create and start threads for writing
+    createthread(write_a)
+    createthread(write_b)
+
+    try:
+        # Allow some time for the attack to proceed
+        sleep(0.5)
+
+    except Exception:
+        # Ignore any exceptions during sleep
+        pass
+
+    # Inspect versions and file content
+    monitor_failed = False
+
+    try:
+        # Check the base file content
+        file = openfile("attack7", False)
+
+        try:
+            try:
+                # Read the base file content
+                content = file.readat(None, 0)
+
+            except Exception:
+                # If reading fails, set content to None
+                content = None
+
+        finally:
+            # Ensure the file is closed after reading
+            ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions during base file operations
+        pass
+
+    # Create a set of seen contents
+    seen = set()
+
+    # Check all versions for different contents
+    for i in range(1, 6):
+        try:
+            # Open each version file
+            file = openfile("attack7" + ".v" + str(i), False)
+
+            try:
+                try:
+                    # Read the version content
+                    content = file.readat(None, 0)
+                    
+                except Exception:
+                    # If reading fails, set content to None
+                    content = None
+
+                # If content is valid, add to seen set
+                if content:
+                    # Add content to seen set
+                    seen.add(content)
+
+            finally:
+                # Ensure the file is closed
+                ac_close(file)
+
+        except Exception:
+            # Ignore exceptions during file operations
+            pass
+
+    # Determine if multiple different contents were seen
+    if len(seen) >= 2:
+        # If multiple contents were seen, monitor failed
+        monitor_failed = True
+
+    # Log the result of monitoring
+    if monitor_failed:
+        try:
+            # Log the detection of leaked content
+            log("Attack Case 7: Monitor Failed")
+            
+        except Exception:
+            # Ignore any exceptions in logging
+            pass
+
+except Exception:
+    # Ignore any exceptions in starting the attack
+    pass

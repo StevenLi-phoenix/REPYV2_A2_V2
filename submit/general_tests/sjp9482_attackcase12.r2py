@@ -1,0 +1,24 @@
+file_name = "test_file"
+
+f1 = openfile(file_name, True)
+f1.writeat("Data", 0)
+f1.close()
+
+internal_temp_file = ".internal_temp"
+try:
+    f_internal = openfile(internal_temp_file, True)
+    f_internal.writeat("Hidden data", 0)
+    f_internal.close()
+except RepyArgumentError:
+    pass
+
+file_list = LPlistfiles()
+
+if file_name + '.v1' in file_list:
+    raise Exception("VersionFileExposedByListdir")
+
+if internal_temp_file in file_list:
+    raise Exception("InternalFileExposedByListdir")
+
+if file_name not in file_list:
+    raise Exception("BaseFileMissingFromListdir")

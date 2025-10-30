@@ -1,0 +1,24 @@
+# This test case checks for proper handling of file versioning and write permissions.
+file = openfile("test", True)
+file.writeat("A", 0)
+file.close()
+
+_ = openfile("test", True)
+_.close()
+
+try:
+    v = openfile("test.v1", False)
+    try:
+        v.writeat("BAD", 0)
+        try:
+            log("UNEXPECTED: write to explicit version t_writever.v1 succeeded")
+        except Exception:
+            pass
+    except Exception:
+        pass
+    finally:
+        try: v.close()
+        except Exception:
+            pass
+except Exception:
+    pass

@@ -1,0 +1,7 @@
+#attack 8: open non-existent file with create=False
+try:
+    f = openfile("doesnotexist", False)
+    f.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Opened non-existent file!\n")
+except FileNotFoundError:
+    pass

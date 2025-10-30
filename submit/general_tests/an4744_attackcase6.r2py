@@ -1,0 +1,20 @@
+# Test: To check that if Empty files are being versioned correctly
+
+# Create empty file
+f1 = openfile("empty-file.txt", True)
+f1.close()
+
+# Create version of empty file
+f2 = openfile("empty-file.txt", True)
+f2.close()
+
+# Verify version exists and is empty
+try:
+    v1 = openfile("empty-file.txt.v1", False)
+    content = v1.readat(None, 0)
+    if content != "":
+        assert False
+    v1.close()
+except FileNotFoundError:
+    # Error: If version wasn't created, security is broken
+    assert False

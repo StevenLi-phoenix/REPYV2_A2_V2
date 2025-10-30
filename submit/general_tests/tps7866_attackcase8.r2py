@@ -1,0 +1,8 @@
+# removefile always disallowed (base)
+
+f = openfile("t08", True); f.close()
+try:
+  removefile("t08")
+  raise Exception("removefile(base) allowed")
+except RepyArgumentError:
+  pass

@@ -1,0 +1,45 @@
+
+marker = "compromised_vs3518_attackcase5"
+protected_name = "protected_attack5.txt"
+outside_name = "..\\escape_attack5.txt"
+temp_name = "temp_attack5.txt"
+
+try:
+    f = open(protected_name, "w")
+    try:
+        f.write("ORIGINAL\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    f = open(temp_name, "w")
+    try:
+        f.write("EVIL\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        os.rename(temp_name, outside_name)
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(outside_name, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    try:
+        if "EVIL" in c:
+            open(marker, "w").close()
+    except Exception:
+        pass
+except Exception:
+    pass

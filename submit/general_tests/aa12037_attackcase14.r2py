@@ -1,0 +1,17 @@
+# Test: Concurrent read access is allowed
+
+f1 = openfile("a14_testfile", True)
+f1.writeat("data", 0)
+f1.close()
+
+# Multiple reads should be allowed
+f2 = openfile("a14_testfile", False)
+f3 = openfile("a14_testfile", False)
+
+data1 = f2.readat(None, 0)
+data2 = f3.readat(None, 0)
+
+assert data1 == "data" and data2 == "data", "Concurrent reading of data should ideally be allowed"
+
+f2.close()
+f3.close()

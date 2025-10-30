@@ -1,0 +1,18 @@
+# Test: Reading from older version should be allowed
+
+f1 = openfile("a6_testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# Create a versioned file
+f2 = openfile("a6_testfile", True)
+f2.close()
+
+# Try reading from older version
+try:
+    fold = openfile("a6_testfile", False)
+    content = fold.readat(None, 0)
+    fold.close()
+    assert content == "HelloWorld", "Older version content mismatch"
+except Exception as e:
+    raise AssertionError("Reading explicit older version failed: " + str(e))

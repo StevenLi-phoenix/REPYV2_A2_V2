@@ -1,0 +1,29 @@
+#pragma repy
+"""
+Checks that removefile raises exactly RepyArgumentError as specified.
+Should produce NO output on success.
+"""
+
+basename = "testfile_remove_check"
+h = None
+
+try:
+  h = openfile(basename, True)
+  h.close()
+  h = None
+
+  try:
+    removefile(basename)
+    # Should not be reached if monitor is correct
+    log("[FAIL] removefile('", basename, "') did not raise an exception.\n")
+  except RepyArgumentError:
+    # Expected correct exception
+    pass
+  except Exception, e:
+    # Wrong exception type raised
+    log("[FAIL] removefile('", basename, "') raised wrong exception type: ", str(type(e)), "\n")
+
+except Exception, e:
+  log("[FAIL] Unexpected error during Test 5 setup: ", str(e), "\n")
+finally:
+  if h: h.close()

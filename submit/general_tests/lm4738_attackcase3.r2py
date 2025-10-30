@@ -1,0 +1,8 @@
+### Reopening the first file and rewriting
+f1 = openfile("testfile", False)
+
+# Attempting to write again to that first file, shouldn't work after closed and finalized
+
+f1.writeat("attempted to rewrite", 0)
+
+raise FileInUseError("ERROR: Should not be able to write to an old file")

@@ -1,0 +1,17 @@
+#Test: Writing to older version must be rejected
+
+f1 = openfile("testfile_oldwrite", True)
+f1.writeat("A", 0)
+f1.close()
+
+f2 = openfile("testfile_oldwrite", True)
+f2.writeat("B", 0)
+f2.close()
+
+try:
+    #shouldn't work
+    old = openfile("testfile_oldwrite.v1", False)
+    old.writeat("C", 0)
+    old.close()
+except Exception:
+    pass

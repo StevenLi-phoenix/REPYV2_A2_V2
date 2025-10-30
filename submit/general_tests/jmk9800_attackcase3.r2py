@@ -1,0 +1,5 @@
+# Creating a file
+
+f1 = openfile("testfile", True)
+f1.close()
+

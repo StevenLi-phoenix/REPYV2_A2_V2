@@ -1,0 +1,28 @@
+
+# Test if the monitor is not thread-safe and lacks proper locking
+
+def create_new_version(filename):
+  f = openfile(filename, True)
+  f.close()
+
+fbase = openfile("testrace.txt", True)
+fbase.close()
+
+def thread_task_1():
+  f = openfile("testrace.txt", True)
+  f.close()
+
+def thread_task_2():
+  f = openfile("testrace.txt", True)
+  f.close()
+
+createthread(thread_task_1)
+createthread(thread_task_2)
+
+sleep(3) 
+
+try:
+  fv2 = openfile("testrace.txt.v2", False)
+  fv2.close()
+except FileNotFoundError:
+  raise AssertionError("Race condition test failed as testrace.txt.v2 was not created")

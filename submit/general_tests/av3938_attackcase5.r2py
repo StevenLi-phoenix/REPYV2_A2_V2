@@ -1,0 +1,33 @@
+try:
+    f1 = openfile("error.txt", True)
+    f1.writeat("data", 0)
+    f1.close()
+
+    f2 = openfile("error.txt", False)
+
+    failed_writes = 0
+
+    try:
+        f2.writeat("original-data", 0)
+    except:
+        failed_writes = failed_writes + 1
+
+    try:
+        f2.writeat("new-data", 0)
+    except:
+        failed_writes = failed_writes + 1
+    
+    f2.close()
+    
+    try:
+        f3.writeat("new-modified-data", 0)
+    except:
+        failed_writes = failed_writes + 1
+    
+    f3.close()
+
+    if failed_writes != 3:
+        log("reference monitor is vulnerable: Writes in old versions allowed\n")
+        
+except:
+    pass

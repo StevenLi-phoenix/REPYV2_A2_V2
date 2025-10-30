@@ -1,0 +1,17 @@
+f = openfile("rmfiletest", True)
+f.writeat("v0", 0)
+f.close()
+
+f2 = openfile("rmfiletest", True)
+f2.writeat("v1", 0)
+f2.close()
+
+f3 = openfile("rmfiletest", True)
+f3.writeat("v2", 0)
+f3.close()
+
+try:
+    removefile("rmfiletest.v2")
+    assert False, "removefile on explicit version should raise RepyArgumentError"
+except RepyArgumentError:
+    pass

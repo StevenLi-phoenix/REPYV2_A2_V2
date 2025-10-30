@@ -1,0 +1,26 @@
+# Checks if opening files that already opened works with multithreading
+def attempt_open():
+    for i in range(5):
+        try:
+            f = openfile("opened", True)
+        except FileInUseError:
+            pass
+        else:
+            log("Failed to raise FileInUseError\n")
+            raise Exception("Failed to raise FileInUseError")
+
+# open "opened" file without closing
+f = openfile("opened", True)
+try:
+    openfile("opened", True)
+except FileInUseError:
+    pass
+else:
+    log("Failed to raise FileInUseError\n")
+    raise Exception("Failed to raise FileInUseError")
+
+# attempt to open "opened" file with multiple threads
+for i in range(10):
+    createthread(attempt_open)
+
+f.close()

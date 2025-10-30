@@ -1,0 +1,15 @@
+# Test: Version file deletion not allowed
+
+f1 = openfile("vdeltest9", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("vdeltest9", True)
+f2.writeat("data2", 0)
+f2.close()
+
+try:
+    removefile("vdeltest9.v1")
+    assert False, "Should not allow version file deletion"
+except RepyArgumentError:
+    pass

@@ -1,0 +1,23 @@
+# Test 3: This test attempts to create multiple versions of the same file
+# and checks if the versioned files are listed 
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodMorning", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodAfternoon", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodEvening", 0)
+f1.close()
+
+files = listfiles()
+
+assert "testfile.v1" not in files
+assert "testfile.v2" not in files
+assert "testfile.v3" not in files

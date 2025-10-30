@@ -1,0 +1,32 @@
+# Test: base name containing ".v" (e.g., "weird.vbase") should version correctly,
+# and writes to the older base must be blocked.
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+base = "case6_weird.vbase"
+
+# create initial file
+x = openfile(base, True)
+x.writeat("start", 0)
+x.close()
+
+# create a version
+y = openfile(base, True)
+y.close()
+
+# Try to open the original name and write -> must be blocked
+orig = openfile(base, False)
+try:
+    ar(Exception, orig.writeat, "attack", 0)
+finally:
+    try:
+        orig.close()
+    except:
+        pass

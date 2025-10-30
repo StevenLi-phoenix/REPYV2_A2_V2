@@ -1,0 +1,14 @@
+"""
+Attack Case 11: Test that creating an explicit '.v0' version should be disallowed,
+"""
+
+# Attempt to explicitly create a .v0 file — this must be rejected by the monitor.
+try:
+    f = openfile("test.v0", True)
+    raise Exception("Should not allow creating explicit version files with .v0")
+except RepyArgumentError:
+    # Expected behavior: monitor rejects explicit version files (including .v0)
+    pass
+except Exception as e:
+    # Any other exception means the monitor raised the wrong type
+    raise Exception("Wrong exception: " + str(e))

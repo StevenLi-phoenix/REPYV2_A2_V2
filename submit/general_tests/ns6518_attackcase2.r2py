@@ -1,0 +1,24 @@
+
+# Test 2 — Writing to an older (closed) version must be disallowed.
+# Steps: create base -> close -> create new version -> open old version v1 and attempt write (must raise).
+
+f1 = openfile("tc2_oldwrite", True)
+f1.writeat("original", 0)
+f1.close()
+
+# create new version (should copy contents)
+f2 = openfile("tc2_oldwrite", True)
+assert f2.readat(None, 0) == "original"
+f2.close()
+
+# open explicit older version for read (create=False)
+older = openfile("tc2_oldwrite.v1", False)
+try:
+    # Attempt to write to an older version (must be disallowed)
+    older.writeat("X", 0)
+    # If no exception, fail
+    assert False
+except Exception:
+    # Expected: exception raised. Suppress.
+    pass
+older.close()

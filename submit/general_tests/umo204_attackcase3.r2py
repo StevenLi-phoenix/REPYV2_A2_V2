@@ -1,0 +1,9 @@
+# removefile attempt
+f = openfile("rmtest", True)
+f.close()
+try:
+    removefile("rmtest")
+    # if deletion succeeded or no exception -> attack success
+    assert False
+except RepyArgumentError:
+    pass

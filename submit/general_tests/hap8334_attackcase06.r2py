@@ -1,0 +1,15 @@
+# CASE 6 Trying to open version file
+
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+write("atk6", "L")
+v6 = openfile("atk6", True)
+try:
+    lst = listfiles()
+    assert "atk6" in lst and "atk6.v1" not in lst
+finally:
+    v6.close()

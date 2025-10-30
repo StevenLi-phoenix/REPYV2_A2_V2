@@ -1,0 +1,17 @@
+# pg2820_attackcase3.r2py
+# Write a few bytes then intentionally do not finish
+try:
+    f = openfile("data_partial.txt", True)
+    try:
+        # write at offset 0 a piece, then write again at an offset
+        f.writeat("partA-", 0)
+        f.writeat("partB", 6)
+    except Exception:
+        pass
+    # do not read it; close should trigger any commit the monitor expects
+    try:
+        f.close()
+    except Exception:
+        pass
+except Exception:
+    pass

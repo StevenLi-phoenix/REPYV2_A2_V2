@@ -1,0 +1,14 @@
+# Specification 4: "Note that a new version cannot be created while the latest version is open."
+# How it tests: opens a "latest version", tries to open another one
+
+basename='testfile'
+f1 = openfile(basename, True)
+try:
+    f2 = openfile(basename, True)
+    assert False
+except AssertionError:
+    f2.close()
+    f1.close()
+    raise ValueError("File should not have opened testfile.v1")
+except:
+    assert True

@@ -1,0 +1,12 @@
+# Writing older versions disallowed
+
+f = openfile("t04", True); f.writeat("X",0); f.close()
+openfile("t04", True).close()  
+h = openfile("t04.v1", False)
+try:
+  h.writeat("BAD", 0)
+  raise Exception("write to older version allowed")
+except FileInUseError:
+  pass
+finally:
+  h.close()

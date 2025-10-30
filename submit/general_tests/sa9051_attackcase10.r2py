@@ -1,0 +1,9 @@
+try:
+    openfile(".hidden", True)
+    try:
+        f = openfile(".hidden", False)
+        f.close()
+    except Exception:
+        pass
+except Exception:
+    pass

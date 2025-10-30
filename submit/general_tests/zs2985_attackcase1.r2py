@@ -1,0 +1,14 @@
+# Attack Case 1: File Deletion Restriction Test
+# This test verifies that the security layer properly blocks file deletion attempts
+
+try:
+    # Attempt to delete a file - should be blocked by security layer
+    removefile("testfile")
+    # If execution reaches here, the security layer has a vulnerability
+    log("SECURITY FLAW: File deletion was not blocked!")
+except RepyArgumentError:
+    # Expected behavior - security layer correctly blocked deletion
+    pass
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

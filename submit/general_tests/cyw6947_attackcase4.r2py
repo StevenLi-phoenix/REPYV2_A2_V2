@@ -1,0 +1,38 @@
+# This test checks if listfiles() properly lists only base files and not versioned files.
+file = openfile("test_list", True)
+file.writeat("X", 0)
+file.close()
+
+x = openfile("test_list", True)
+x.close()
+y = openfile("test_list", True)
+y.close()
+
+try:
+    files = listfiles()
+    if files is None:
+        try:
+            log("UNEXPECTED: listfiles() returned NONE")
+        except Exception:
+            pass
+    else:
+        has_base = False
+        seen_version = False
+        for f in files:
+            if f == "test_list":
+                has_base = True
+            if f == "test_list.v1" or f == "test_list.v2":
+                seen_version = True
+        if not has_base:
+            try:
+                log("UNEXPECTED: listfiles() did not return base file")
+            except Exception:
+                pass
+        if seen_version:
+            try:
+                log("UNEXCPECTED: listfiles() returned versioned file")
+            except Exception:
+                pass
+except Exception as e:
+  try: log("UNEXPECTED: listfiles() raised: " + str(e))
+  except Exception: pass

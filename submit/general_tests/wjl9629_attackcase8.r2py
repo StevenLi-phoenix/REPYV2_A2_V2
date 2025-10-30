@@ -1,0 +1,23 @@
+# Specification 6: "As is the case in normal RepyV2, if an openfile call with create=False, open the file only if that version exists"
+# How this tests: create versions, confirm that all are openable, up until the most recent
+
+basename = "testfile"
+files_to_make = 10
+# make 10 files
+for _ in range(files_to_make):
+    f = openfile(basename, True)
+    f.close()
+
+filename = basename
+for version in range(files_to_make - 1):
+    try:
+        f = openfile(filename, False)
+            
+    except FileNotFoundError:
+        assert True
+        break
+    except Exception as e:
+        raise e
+
+    f.close()
+    filename = basename + ".v" + str(version+1)

@@ -1,0 +1,16 @@
+f = openfile("concurrent2", True)
+f.writeat("data", 0)
+f.close()
+
+f = openfile("concurrent2", True)
+f.close()
+
+fv1 = openfile("concurrent2.v1", False)
+
+try:
+    fnew = openfile("concurrent2", True)
+    fnew.close()
+except FileInUseError:
+    pass
+
+fv1.close()

@@ -1,0 +1,8 @@
+f = openfile("report.v5.txt", True)
+f.writeat("test\n", 0)
+f.close()
+
+files = listfiles()
+
+if "report.v5.txt" not in files:
+    log("FAIL: listfiles() hides a legitimate filename containing '.v': report.v5.txt\n")

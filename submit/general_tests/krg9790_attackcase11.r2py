@@ -1,0 +1,26 @@
+#attack 11: test version numbers increment correctly
+f1 = openfile("test", True)
+f1.writeat("v1", 0)
+f1.close()
+
+f2 = openfile("test", True)
+f2.writeat("v2", 0)
+f2.close()
+
+f3 = openfile("test", True)
+f3.writeat("v3", 0)
+f3.close()
+
+#check that v1 exists
+try:
+    fv1 = openfile("test.v1", False)
+    fv1.close()
+except FileNotFoundError:
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Version 1 doesn't exist!\n")
+
+#v2 exists
+try:
+    fv2 = openfile("test.v2", False)
+    fv2.close()
+except FileNotFoundError:
+    log("MUAHAHAHA ATTACK SUCCEEDED <3Version 2 doesn't exist!\n")

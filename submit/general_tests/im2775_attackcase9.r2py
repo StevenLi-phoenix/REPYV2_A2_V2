@@ -1,0 +1,15 @@
+f = openfile("rapid", True)
+f.writeat("v0", 0)
+f.close()
+
+for i in range(10):
+    f = openfile("rapid", True)
+    f.writeat("v" + str(i+1), 0)
+    f.close()
+
+for i in range(1, 11):
+    try:
+        fv = openfile("rapid.v" + str(i), False)
+        fv.close()
+    except FileNotFoundError:
+        pass

@@ -1,0 +1,5 @@
+try:
+    openfile("edgefile.v9999", False)
+    assert False, "missing explicit version should raise FileNotFoundError"
+except FileNotFoundError:
+    pass

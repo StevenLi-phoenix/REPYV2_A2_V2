@@ -1,0 +1,12 @@
+# Test: listfiles() should not show versioned names.
+try: openfile("listme", True).close()
+except: pass
+try: openfile("listme", True).close()
+except: pass
+names = listfiles()
+for n in names:
+  if ".v" in n:
+    log("FAIL")
+    break
+else:
+  log("PASS")

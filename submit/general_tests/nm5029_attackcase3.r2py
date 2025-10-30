@@ -1,0 +1,10 @@
+# <netid>_attackcase3.r2py
+x = openfile("t3_gamma", True); x.writeat("seed", 0); x.close()
+h = openfile("t3_gamma", False)
+caught = False
+try:
+  openfile("t3_gamma", True)
+except FileInUseError:
+  caught = True
+assert caught
+h.close()

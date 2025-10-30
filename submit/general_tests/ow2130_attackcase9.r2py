@@ -1,0 +1,44 @@
+B = "a9.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("z", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+made = 0
+for i in range(3):
+  try:
+    v = openfile(B, True)
+    try: v.close()
+    except: pass
+    made += 1
+  except:
+    break
+
+ns = listfiles()
+nums = []
+if B in ns:
+  nums.append(1)
+pref = B + ".v"
+for n in ns:
+  if n.startswith(pref):
+    try:
+      nums.append(int(n.split(".v")[-1]))
+    except:
+      pass
+
+nums.sort()
+if nums:
+  okseq = []
+  try:
+    okseq = list(range(1, nums[-1] + 1))
+  except:
+    i = 1
+    while i <= nums[-1]:
+      okseq.append(i); i += 1
+  if nums[0] != 1 or nums != okseq:
+    log("Version numbers not consecutive for '" + B + "' -> " + str(nums))

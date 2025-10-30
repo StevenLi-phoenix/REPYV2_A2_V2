@@ -1,0 +1,8 @@
+# Test: Creating version file without base file should not be allowed
+
+try:
+    v = openfile("versionedfile.v15", True)
+    v.close()
+    assert False, "Monitor allowed explicit creation of versioned file as a base file"
+except RepyArgumentError:
+    pass

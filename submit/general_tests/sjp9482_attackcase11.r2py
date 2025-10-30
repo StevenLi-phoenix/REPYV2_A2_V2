@@ -1,0 +1,21 @@
+file_name = "test_file"
+
+f1 = openfile(file_name, True)
+f1.writeat("Immutable V1 content", 0)
+f1.close()
+
+f2 = openfile(file_name, True)
+f2.writeat("V2 content", 0)
+f2.close()
+
+try:
+    f_base = openfile(file_name, False)
+    f_base.writeat("Direct Base Write", 0)
+    f_base.close()
+
+    raise Exception("BaseFileWriteBypassSucceeded")
+
+except FileInUseError:
+    pass
+except RepyArgumentError:
+    pass

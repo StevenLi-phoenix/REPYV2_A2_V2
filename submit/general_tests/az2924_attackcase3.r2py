@@ -1,0 +1,19 @@
+# Checks if file version has leading zero
+
+# Create new file and close it
+file = openfile("samplefile", True)
+file.close()
+
+# Try to create a version with a leading zero
+try:
+    openfile("samplefile.v01", True)
+    assert False, "Cannot create leading zero version"
+except RepyArgumentError:
+    pass
+
+# Attempt to open leading zero version; it doesn't exist
+try:
+    openfile("samplefile.v01", False)
+    assert False, "Cannot open non-existent version"
+except FileNotFoundError:
+    pass

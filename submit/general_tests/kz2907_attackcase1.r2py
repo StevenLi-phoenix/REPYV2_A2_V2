@@ -1,0 +1,10 @@
+permitted = ["admin"]
+user = "attacker"
+if user not in permitted:
+    try:
+        f = openfile("restricted_file.txt", True)
+        f.writeat("This should not work", 0)
+        f.close()
+        log("Unauthorized access to system.")
+    except:
+        pass

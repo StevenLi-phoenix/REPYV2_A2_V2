@@ -1,0 +1,10 @@
+# Specification 5: "Versioned files can be accessed using openfile(originalfilename + '.v' + str(num), create), where num starts from 1."
+# How it tests: It tries to make a test that doesn't start at 1
+
+filename = 'testfile.v0'
+try:
+    f = openfile(filename, True)
+    f.close()
+    raise ValueError(filename)
+except:
+    assert True

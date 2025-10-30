@@ -1,0 +1,17 @@
+rrbase = "readonly2"
+x = openfile(rrbase, True)
+x.writeat("abc", 0)
+x.close()
+
+y = openfile(rrbase, True)
+y.writeat("def", 3)
+y.close()
+
+ra = openfile(rrbase + ".v1", False)
+rb = openfile(rrbase + ".v1", False)
+
+assert ra.readat(None, 0) is not None
+assert rb.readat(None, 0) is not None
+
+ra.close()
+rb.close()

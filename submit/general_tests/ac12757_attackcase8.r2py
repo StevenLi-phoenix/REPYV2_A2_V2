@@ -1,0 +1,65 @@
+# ac12757_edgecase3.r2py
+# Targets: Version Persistence (simulated) - Monitor state reset
+
+# Note: This test simulates a monitor state reset.
+# In a real scenario, this would involve running multiple Repy instances
+# or manually manipulating the monitor's internal state if exposed.
+# For this exercise, we'll assume the monitor *might* forget global state
+# if openfile/listfiles doesn't re-scan the actual filesystem.
+
+try:
+    # 1. Create a file and several versions
+    asset_a = openfile("persistent_data.txt", True)
+    asset_a.writeat("V0 content", 0)
+    asset_a.close()
+
+    asset_b = openfile("persistent_data.txt", True)
+    asset_b.writeat("V1 content", 0)
+    asset_b.close()
+
+    asset_c = openfile("persistent_data.txt", True)
+    asset_c.writeat("V2 content", 0)
+    asset_c.close()
+
+    # --- SIMULATE MONITOR STATE RESET ---
+    # In a real test, this would be a new Repy run,
+    # or if the monitor exposed an internal state, we'd clear it.
+    # Since we cannot directly manipulate globals of the monitor from here,
+    # we'll test if subsequent calls correctly infer version existence.
+    # The vulnerability here would be if `openfile` or `listfiles`
+    # *only* relied on `current_file_versions` without re-scanning.
+
+    # 2. Attempt to open a specific version (V1) after versions have been created.
+    # If the monitor mistakenly "forgot" that V1 exists, this would fail.
+    try:
+        reopened_v1 = openfile("persistent_data.txt.v1", False)
+        content_v1 = reopened_v1.readat(None, 0)
+        reopened_v1.close()
+        if content_v1 != "V1 content":
+            raise Exception("Monitor failed: Content mismatch for V1 after simulated state reset!")
+    except FileNotFoundError:
+        raise Exception("Monitor failed: V1 not found after simulated state reset!")
+
+    # 3. Attempt to create a new version of the base file.
+    # If the monitor forgot the highest version, it might create V1 again or V0.
+    newest_asset = openfile("persistent_data.txt", True)
+    newest_asset.writeat("V3 content", 0)
+    newest_asset.close()
+
+    # Read the content of the newly created version (expected to be V3)
+    # The filename for V3 would be inferred by the monitor.
+    # This requires knowledge of how the monitor internally names new versions.
+    # Assuming the monitor tracks `current_file_versions` internally and applies it.
+    read_v3 = openfile("persistent_data.txt.v3", False)
+    content_v3 = read_v3.readat(None, 0)
+    read_v3.close()
+
+    if content_v3 != "V3 content":
+        raise Exception("Monitor failed: Content mismatch for newly created V3 after simulated state reset!")
+
+
+except Exception as e:
+    raise Exception("Edge Case 3 failed due to unexpected error: " + str(e))
+
+# This attack case might break reference_monitor_example1 (if current_file_versions isn't handled robustly across calls or initial state)
+# It might also break reference_monitor_example2 (similar logic with open_files/highest_version)

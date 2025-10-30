@@ -1,0 +1,67 @@
+"""
+Josh Hoge
+jsh10043@nyu.edu
+
+Attack: Write to Old Version of File
+Category: Write Protection for Old Versions (Requirement 7)
+
+This attack tests whether old version files (.v1, .v2, etc.) are properly
+protected from write operations (immutability enforcement).
+
+Attack Method:
+1. Create a base file "data" with initial content
+2. Create a new version by reopening with create=True (creates data.v1)
+3. Open the old version file "data.v1" with create=False (for reading)
+4. Attempt to write to the old version using writeat()
+
+Expected Security Layer Behavior:
+- Opening data.v1 with create=False should succeed (reading is allowed)
+- writeat() on the old version file handle should raise FileInUseError
+
+Security Requirement:
+Reading from older versions is always allowed, but writing to them is
+permanently disallowed. Any writeat() call on an old version must raise
+FileInUseError.
+
+Expected Result:
+Attack should be BLOCKED - FileInUseError raised when attempting write
+"""
+
+if callfunc == "initialize":
+    # create the initial file with content
+    f1 = openfile("data", True)
+    f1.writeat("initial content", 0)
+    f1.close()
+
+    # create a new version; creates data.v1 and makes it immutable
+    f2 = openfile("data", True)
+    f2.writeat("newer content", 0)
+    f2.close()
+
+    # data.v1 exists and should be read-only; we attempt to open and write to it
+    try:
+        # opening for reading should succeed
+        f_old = openfile("data.v1", False)
+
+        # reading should work as well
+        content = f_old.readat(None, 0)
+
+        # attempt to write; this should raise FileInUseError
+        try:
+            f_old.writeat("1337 h4xx0r", 0)
+            # ff we reach here, the attack succeeded
+            log("ATTACK SUCCEEDED: Successfully wrote to old version file data.v1\n")
+            f_old.close()
+        except FileInUseError:
+            # attack blocked; no log() to stay silent
+            f_old.close()
+        except Exception as e:
+            # unexpected exception; no log() to stay silent
+            f_old.close()
+
+    except FileNotFoundError:
+        pass
+    except FileInUseError as e:
+        pass
+    except Exception as e:
+        pass

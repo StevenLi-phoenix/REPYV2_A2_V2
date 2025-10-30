@@ -1,0 +1,15 @@
+#check versioning files 
+f = openfile("t.txt", True)
+f.writeat("X", 0)
+f.close()
+
+f = openfile("t.txt", True)
+f.close()
+
+
+try:
+    f = openfile("t.txt.v1", False)
+    f.close()
+except FileNotFoundError:
+    log("version t.txt.v1 does not exist\n")
+    exitall()

@@ -1,0 +1,26 @@
+librepythread = dy_import_module("librepythread.r2py");
+
+def main():
+  try:
+    f = openfile("myfile", True);
+    f.writeat("hi", 0);
+    f.close();
+  except FileInUseError:
+    pass;
+
+f1 = openfile("myfile", True);
+
+threads = [];
+for i in range(10):
+  thread = librepythread.Thread(target=main);
+  thread.start();
+  threads.append(thread);
+
+sleep(1);
+f1.writeat("bye", 0);
+f1.close();
+
+f2 = openfile("myfile", False);
+assert f2.readat(None, 0) == "bye";
+f2.close();
+

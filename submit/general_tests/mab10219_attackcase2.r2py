@@ -1,0 +1,11 @@
+#ATTACK CASE 2: Check if removeFile raises exceptions correctly 
+
+f = openfile("testfile", True)
+f.writeat("hello", 0)
+f.close()
+
+try:
+    removefile("testfile")
+    raise Exception("Expected error not raised!")
+except RepyArgumentError:
+    pass

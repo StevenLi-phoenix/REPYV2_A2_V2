@@ -1,0 +1,12 @@
+# Test: creating a new version when base exists
+f = openfile("v1test", True)
+f.writeat("X", 0)
+f.close()
+# creating new version
+try:
+  v = openfile("v1test", True)
+  v.close()
+  openfile("v1test.v1", False).close()
+  log("PASS")
+except Exception as e:
+  log("FAIL " + str(type(e)))

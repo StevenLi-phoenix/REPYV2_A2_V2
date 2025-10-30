@@ -1,0 +1,21 @@
+# Test 1: This test case checks if versioning and writing to specific offsets
+# in files is handled correctly by the reference monitor.
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("1", 0)
+f2.close()
+
+f3 = openfile("testfile", True)
+f3.writeat("2", 0)
+f3.close()
+
+f4 = openfile("testfile", True)
+f4.writeat("Test", 3)
+f4.close()
+
+f5 = openfile("testfile.v3", False)
+assert f5.readat(None, 0) == "2elTestrld"
+f5.close()

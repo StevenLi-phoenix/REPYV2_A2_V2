@@ -1,0 +1,25 @@
+try:
+    f = openfile("statebypass.txt", True)
+    f.writeat("data", 0)
+    
+    try:
+        f.writeat("more", 4)
+        f.writeat("even more", 8)
+    except Exception as e:
+        pass
+    
+    f.close()
+    
+    v1 = openfile("statebypass.txt", True)
+    content = v1.readat(None, 0)
+    v1.close()
+    
+    try:
+        base = openfile("statebypass.txt", False)
+        base.writeat("modify base", 0)
+        base.close()
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

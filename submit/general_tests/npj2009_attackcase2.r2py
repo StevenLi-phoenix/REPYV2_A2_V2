@@ -1,0 +1,9 @@
+def main():
+    # Test manual version file creation
+    try:
+        f = openfile("npj2009_manual.v1", True)  # Unique filename
+        log("FAIL_MANUAL_VERSION")
+        f.close()
+    except:
+        pass  # Expected - should be blocked
+if callfunc == 'initialize': main()

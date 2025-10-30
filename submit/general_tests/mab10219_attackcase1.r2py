@@ -1,0 +1,6 @@
+# Empty File Scenario (Attack Case 1)
+
+files = listfiles()
+
+if len(files) != 0:
+    raise Exception("Should be empty!")

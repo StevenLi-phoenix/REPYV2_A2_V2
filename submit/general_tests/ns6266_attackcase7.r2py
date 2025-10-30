@@ -1,0 +1,13 @@
+"""
+Attack Case 7: Test that non-existent version files cannot be opened
+"""
+
+# Try to open a non-existent version file - should raise FileNotFoundError
+try:
+    f = openfile("nonexistent.v1", False)
+    raise Exception("Should not allow opening non-existent version files")
+except FileNotFoundError:
+    pass  # Expected
+except Exception as e:
+    raise Exception("Wrong exception: " + str(e))
+

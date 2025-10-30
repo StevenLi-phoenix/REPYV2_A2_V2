@@ -1,0 +1,14 @@
+# TEST FOR WRITING INTO OLD VERSIONS
+f2 = openfile("hello.txt", True)
+f2.close()
+
+f2 = openfile("hello.txt", True)
+f2.close()
+
+f2 = openfile("hello.txt", False)
+try:
+	f2.writeat("HelloWorld", 0)
+	# Close v2.
+	f2.close()
+except FileInUseError:
+	pass

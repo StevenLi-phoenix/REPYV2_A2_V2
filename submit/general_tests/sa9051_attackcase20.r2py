@@ -1,0 +1,10 @@
+ev = openfile("explicitdup", True)
+ev.close()
+
+v1 = openfile("explicitdup.v1", False)
+try:
+    openfile("explicitdup.v1", False)
+    assert False, "Opening same explicit version twice should raise FileInUseError"
+except FileInUseError:
+    pass
+v1.close()

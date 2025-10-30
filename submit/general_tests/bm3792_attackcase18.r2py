@@ -1,0 +1,20 @@
+# bm3792_attackcase18.r2py
+# Test: Create versions with different content lengths and verify copy
+
+f1 = openfile("testfile", True)
+f1.writeat("short", 0)
+f1.close()
+
+# Create v1 with long content
+f2 = openfile("testfile", True)
+content2 = f2.readat(None, 0)
+f2.writeat("verylongcontenthere", 0)
+f2.close()
+
+# Create v2 and check it copied v1's content
+f3 = openfile("testfile", True)
+content3 = f3.readat(None, 0)
+f3.close()
+
+if content3 != "verylongcontenthere":
+    log("ACCURACY BUG: Version did not copy previous long content\n")

@@ -1,0 +1,17 @@
+#As is the case in normal RepyV2, if an openfile call with create=False, open the file only if that version exists; otherwise, raise FileNotFoundError.
+
+
+try:
+    f = openfile("testfile", True)
+    f.writeat("HelloWorld1", 0)
+    ftxt = f.readat(None, 0 )
+    f.close()
+    
+    f1 = openfile("testfile.v1", False)
+
+        
+except Exception as e:
+    pass
+
+else:
+    log('failed')

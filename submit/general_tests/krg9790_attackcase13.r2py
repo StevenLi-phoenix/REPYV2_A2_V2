@@ -1,0 +1,18 @@
+#attack 13: test files w .v in name
+f = openfile("test.v.data", True)
+f.writeat("ValidFile", 0)
+f.close()
+
+#shoulddd be able to version it
+f2 = openfile("test.v.data", True)
+content = f2.readat(None, 0)
+if content != "ValidFile":
+    log("Womp womp -- File with .v in name doesn't work correctly!\n")
+f2.close()
+
+#appears in listfiles??
+files = listfiles()
+if "test.v.data" not in files:
+    log("Womp womp -- File with .v not in listfiles!\n")
+if "test.v.data.v1" in files:
+    log("Womp womp -- Version of .v file appears in listfiles!\n")

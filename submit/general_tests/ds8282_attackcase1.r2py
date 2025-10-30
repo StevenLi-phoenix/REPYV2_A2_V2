@@ -1,0 +1,22 @@
+try:
+    myfile1 = openfile("testfile1.txt", True)
+    myfile1.writeat("data", 0)
+    
+    try:
+        myfile2 = openfile("testfile1.txt", False)
+        myfile2.close()
+        myfile1.close()
+        log("VULNERABLE: Concurrent file access was allowed\n")
+        exitall()
+    except FileInUseError:
+        try:
+            myfile1.close()
+        except:
+            pass
+    except Exception, e:
+        try:
+            myfile1.close()
+        except:
+            pass
+except Exception, e:
+    pass

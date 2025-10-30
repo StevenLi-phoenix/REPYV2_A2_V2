@@ -1,0 +1,8 @@
+# Test: openfile with create=False on non-existent file raises error
+
+try:
+    fmissing = openfile("doesnotexist5", False)
+    fmissing.close()
+    assert False, "Should raise error for non-existent file"
+except FileNotFoundError:
+    pass

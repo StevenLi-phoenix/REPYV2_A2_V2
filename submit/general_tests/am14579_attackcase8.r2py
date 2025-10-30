@@ -1,0 +1,8 @@
+# Attack: Do they raise the CORRECT exception type?
+
+try:
+    removefile("test")
+except RepyArgumentError:  # Correct type
+    pass
+except:  # Wrong exception type = violation
+    log("ATTACK SUCCESSFUL: Wrong exception type\n")

@@ -1,0 +1,18 @@
+# Test: listfiles() should not show version files
+
+f1 = openfile("listtest10", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("listtest10", True)
+f2.writeat("data2", 0)
+f2.close()
+
+f3 = openfile("listtest10", True)
+f3.writeat("data3", 0)
+f3.close()
+
+files = listfiles()
+assert "listtest10" in files, "Should show base file"
+assert "listtest10.v1" not in files, "Should hide v1"
+assert "listtest10.v2" not in files, "Should hide v2"

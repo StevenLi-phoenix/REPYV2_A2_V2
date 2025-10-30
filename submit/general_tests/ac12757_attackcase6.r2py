@@ -1,0 +1,39 @@
+# ac12757_edgecase1.r2py
+# Targets: Filename parsing - .v in middle of filename
+
+try:
+    # 1. Attempt to open a file with '.v' in its name, but not as a version suffix
+    filename = "document.vfinal.txt"
+    asset_with_v_in_name = openfile(filename, True)
+    asset_with_v_in_name.writeat("This is the final document content.", 0)
+    asset_with_v_in_name.close() # Close to ensure content is flushed before reading or listing
+
+    # 2. Re-open for reading to verify content
+    read_asset = openfile(filename, False)
+    read_content = read_asset.readat(None, 0)
+    read_asset.close()
+
+    if read_content != "This is the final document content.":
+        # Corrected: Using .format() instead of f-string for Python 2.x compatibility
+        raise Exception("Monitor failed: Content mismatch for file '{0}' with .v in name! Expected: 'This is the final document content.', Got: '{1}'".format(filename, read_content))
+
+    # 3. Check that listfiles() shows the file correctly and not as a base file for versions
+    files_listed = listfiles()
+
+    # The file itself must be present in the list
+    if filename not in files_listed:
+        # Corrected: Using .format() instead of f-string
+        raise Exception("Monitor failed: File '{0}' not listed correctly by listfiles()!".format(filename))
+
+    # Crucial check: Ensure that "document" is NOT listed if it wasn't explicitly created.
+    if "document" in files_listed and "document" != filename:
+        # Corrected: Using .format() instead of f-string
+        raise Exception("Monitor failed: 'document' was incorrectly listed by listfiles() when only '{0}' was created. This indicates faulty .v parsing.".format(filename))
+
+
+except Exception as e:
+    # Corrected: Using + for string concatenation or .format()
+    raise Exception("Edge Case 1 failed due to unexpected error: " + str(e))
+
+# This attack case likely breaks reference_monitor_example1 (due to _get_version logic)
+# It might also break reference_monitor_example2 (due to its .v parsing)

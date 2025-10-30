@@ -1,0 +1,17 @@
+# Test 5: Create two files and open the latest file and make a write
+# This is an accepted functionality
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodMorning", 0)
+f1.close()
+
+f1 = openfile("testfile.v1", False)
+f1.writeat("GoodAfternoon", 0)
+f1.close()
+
+f2 = openfile("testfile.v1", False)
+assert f2.readat(None, 0) == "GoodAfternoon"
+f2.close()

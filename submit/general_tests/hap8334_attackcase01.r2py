@@ -1,0 +1,15 @@
+# CASE 1 Create base file, write data and read data.
+
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+name, data = "atk1", "A1"
+write(name, data)
+v = openfile(name, True)
+try:
+    assert v.readat(None, 0) == data
+finally:
+    v.close()

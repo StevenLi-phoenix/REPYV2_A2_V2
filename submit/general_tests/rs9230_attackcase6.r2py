@@ -1,0 +1,34 @@
+# Test Case 6: Test invalid filename characters
+# Should reject filenames with special characters, uppercase, spaces, etc.
+
+invalid_names = [
+    "File With Spaces.txt",
+    "UPPERCASE.txt",
+    "has@symbol.txt",
+    "has$dollar.txt",
+    "has#hash.txt",
+    "has!exclaim.txt",
+    "/path/traversal.txt",
+    "../parent.txt",
+    "has\\backslash.txt",
+    "ends_with_slash/",
+]
+
+attack_successful = False
+
+for name in invalid_names:
+    try:
+        f = openfile(name, True)
+        f.writeat("invalid", 0)
+        log("ATTACK SUCCESSFUL: Created file with invalid name: " + name + "\n")
+        f.close()
+        attack_successful = True
+        break
+    except Exception as e:
+        # Expected - invalid filenames should be rejected
+        pass
+
+if attack_successful:
+    exitall()
+
+log("Test passed - invalid filenames rejected\n")

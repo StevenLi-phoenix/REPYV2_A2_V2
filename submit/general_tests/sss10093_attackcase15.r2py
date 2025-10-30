@@ -1,0 +1,26 @@
+mycontext['lock'] = createlock()
+mycontext['errors'] = []
+
+def thread_create_file(filename):
+    try:
+        f = openfile(filename, True)
+        f.writeat("data", 0)
+        f.close()
+        
+        for i in range(3):
+            v = openfile(filename, True)
+            v.writeat("v" + str(i), 0)
+            v.close()
+    except Exception as e:
+        mycontext['lock'].acquire(True)
+        mycontext['errors'].append(str(e))
+        mycontext['lock'].release()
+
+try:
+    for i in range(5):
+        createthread(thread_create_file, ["file" + str(i) + ".txt"])
+    
+    sleep(1.0)
+
+except Exception as e:
+    pass

@@ -1,0 +1,8 @@
+# Test: Empty file versioning
+
+fempty = openfile("emptyfile11", True)
+fempty.close()
+
+fempty2 = openfile("emptyfile11", True)
+assert fempty2.readat(None, 0) == "", "Empty version should be empty"
+fempty2.close()

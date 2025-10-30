@@ -1,0 +1,13 @@
+# Test 7: Have multiple opens on the same file created in False mode
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile", False)
+
+try:
+    f2 = openfile("testfile", False)
+except FileInUseError:
+    pass
+else:
+    assert False, "Expected FileInUseError not raised"

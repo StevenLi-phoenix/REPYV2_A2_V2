@@ -1,0 +1,13 @@
+#ATTACK CASE 7: Trying to open the same file twice concurrently
+#Threading 
+
+def thread():
+    try:
+        f = openfile("testfile1", True)
+        f.writeat("threaddata", 0)
+        f.close()
+    except Exception:
+        pass
+#run two threads at the same time:
+createthread(thread)
+createthread(thread)

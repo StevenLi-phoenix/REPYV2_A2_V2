@@ -1,0 +1,27 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("base", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    f3 = openfile("testfile", True)
+    f3.writeat("v2", 0)
+    f3.close()
+    
+    files = listfiles()
+    
+    done = False
+    for filename in files:
+        if ".v1" in filename or ".v2" in filename:
+            if filename == "testfile.v1" or filename == "testfile.v2":
+                done = True
+                break
+    
+    if done:
+        log("ATTACKED\n")
+        
+except Exception:
+    pass

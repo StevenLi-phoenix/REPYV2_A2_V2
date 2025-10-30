@@ -1,0 +1,32 @@
+# Attack Case 21: Stale file reopening scenarios
+# Tests complex scenarios with opening and closing different versions
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+# Create base file
+fstalebase = openfile("stale21", True)
+fstalebase.close()
+
+# Open latest, try to create new - should block
+h1 = openfile("stale21", False)
+expect_error(openfile, ("stale21", True), FileInUseError)
+h1.close()
+
+# Create new version
+h2 = openfile("stale21", True)
+h2.close()
+
+# Open v1 (now latest), try to create new - should block
+h3 = openfile("stale21.v1", False)
+expect_error(openfile, ("stale21", True), FileInUseError)
+h3.close()
+
+# Should be able to create now
+h4 = openfile("stale21", True)
+h4.close()
+

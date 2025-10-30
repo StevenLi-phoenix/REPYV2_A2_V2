@@ -1,0 +1,49 @@
+# Test Case 12: Test that old versions remain unchanged when new versions are created
+# Creating new version should not modify old versions
+
+# Create first version
+f1 = openfile("preserve.txt", True)
+f1.writeat("version one content", 0)
+f1.close()
+
+# Create second version with different content
+f2 = openfile("preserve.txt", True)
+f2.writeat("version two content", 0)
+f2.close()
+
+# Read first version - should still have original content
+try:
+    fread = openfile("preserve.txt.v1", False)
+    content = fread.readat(None, 0)
+    fread.close()
+    
+    if content != "version one content":
+        log("ATTACK SUCCESSFUL: Old version was modified when new version created\n")
+        log("Expected: version one content\n")
+        log("Got: " + content + "\n")
+        exitall()
+except Exception as e:
+    log("ATTACK SUCCESSFUL: Cannot access old version file\n")
+    exitall()
+
+# Create third version
+f3 = openfile("preserve.txt", True)
+f3.writeat("version three content", 0)
+f3.close()
+
+# Read first version again - should STILL have original content
+try:
+    fread2 = openfile("preserve.txt.v1", False)
+    content2 = fread2.readat(None, 0)
+    fread2.close()
+    
+    if content2 != "version one content":
+        log("ATTACK SUCCESSFUL: Old version changed after creating multiple new versions\n")
+        log("Expected: version one content\n")
+        log("Got: " + content2 + "\n")
+        exitall()
+except Exception as e:
+    log("ATTACK SUCCESSFUL: Cannot access old version after creating more versions\n")
+    exitall()
+
+log("Test passed - old versions remain unchanged\n")

@@ -1,0 +1,65 @@
+#pragma repy
+"""
+Creates two versions (v0, v1), then explicitly opens version 0 ('basename')
+and version 1 ('basename.v1') with create=False and tries to write to them.
+Expects FileInUseError for both write attempts.
+Should produce NO output on success.
+"""
+
+basename = "testfile_immutable_explicit"
+
+h0 = None
+h1 = None
+h0_explicit = None
+h1_explicit = None
+
+try:
+  # Create v0
+  h0 = openfile(basename, True)
+  h0.writeat("v0", 0)
+  h0.close()
+  h0 = None
+
+  # Create v1
+  h1 = openfile(basename, True)
+  h1.writeat("-v1", 2)
+  h1.close()
+  h1 = None
+
+  h1_explicit = openfile(basename + ".v1", False) # Open v1 explicitly (immutable)
+  try:
+    h1_explicit.writeat("fail_v1", 0)
+    # If write succeeded, log failure
+    log("[FAIL] Write to explicit older version '", basename + ".v1", "' succeeded.\n")
+  except FileInUseError:
+    pass # Expected behavior
+  except Exception, e:
+    log("[FAIL] Unexpected error during v1 write attempt: ", str(type(e)), ": ", str(e), "\n")
+  finally:
+    if h1_explicit: h1_explicit.close(); h1_explicit = None
+
+  try:
+    h0_explicit = openfile(basename, False) # Open base file explicitly (immutable)
+    try:
+      h0_explicit.writeat("fail_v0", 0)
+      log("[FAIL] Write to explicit base file '", basename, "' succeeded.\n")
+    except FileInUseError:
+      pass # Expected behavior
+    except Exception, e:
+      log("[FAIL] Unexpected error during v0 write attempt: ", str(type(e)), ": ", str(e), "\n")
+    finally:
+      if h0_explicit: h0_explicit.close(); h0_explicit = None
+
+  except FileNotFoundError:
+    log("[INFO] Could not open base file '", basename, "' explicitly for read-only test.\n")
+  except Exception, e:
+    log("[FAIL] Unexpected error during Test 3 setup (opening v0): ", str(e), "\n")
+
+
+except Exception, e:
+  log("[FAIL] Unexpected error during Test 3 setup: ", str(e), "\n")
+finally:
+  if h0: h0.close()
+  if h1: h1.close()
+  if h0_explicit: h0_explicit.close()
+  if h1_explicit: h1_explicit.close()

@@ -1,0 +1,14 @@
+#test different invalid file names
+
+names = ["", ".", "..", "file.v.v1", "trailing_space ", " leading_space"]
+
+for n in names:
+    try:
+        f = openfile(n, True)
+    except Exception:
+        f = None
+
+    if f is not None:
+        try: f.close()
+        except Exception: 
+            pass

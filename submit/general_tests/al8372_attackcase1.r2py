@@ -1,0 +1,10 @@
+# Attack Case 1: Basic version creation and content copying
+
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+assert f2.readat(None, 0) == "HelloWorld", "New version should copy previous content"
+f2.close()
+

@@ -1,0 +1,22 @@
+# bm3792_attackcase2.r2py
+# Test: Close file and try to reopen and modify (tests immutability after close)
+
+f1 = openfile("testfile", True)
+f1.writeat("original", 0)
+f1.close()
+
+# Try to reopen and modify
+try:
+    f2 = openfile("testfile", False)
+    f2.writeat("modified", 0)
+    f2.close()
+    
+    # Check if modification succeeded
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    if content == "modified":
+        log("SECURITY BUG: Modified immutable file after reopening\n")
+except:
+    pass

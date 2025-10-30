@@ -1,0 +1,18 @@
+# jd5517_attackcase20.r2py
+# boundary filename checks (leading dot, too-long name)
+
+threw_any = False
+try:
+    try:
+        openfile(".case20", True)
+    except RepyArgumentError:
+        threw_any = True
+    longname = "a" * 200
+    try:
+        openfile(longname, True)
+    except RepyArgumentError:
+        threw_any = True
+except:
+    pass
+
+assert threw_any

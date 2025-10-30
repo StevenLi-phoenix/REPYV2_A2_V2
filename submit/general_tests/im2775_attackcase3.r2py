@@ -1,0 +1,11 @@
+try:
+    f = openfile("hack.v1", True)
+    f.close()
+except RepyArgumentError:
+    pass
+
+try:
+    f = openfile("hack.v999", True)
+    f.close()
+except RepyArgumentError:
+    pass

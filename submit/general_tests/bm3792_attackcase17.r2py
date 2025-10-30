@@ -1,0 +1,26 @@
+# bm3792_attackcase17.r2py
+# Test: Try to delete a version file (should be blocked)
+
+f1 = openfile("testfile", True)
+f1.writeat("base", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("v1", 0)
+f2.close()
+
+# Try to delete version file
+try:
+    removefile("testfile.v1")
+    
+    # Check if deleted
+    try:
+        check = openfile("testfile.v1", False)
+        check.close()
+    except FileNotFoundError:
+        log("SECURITY BUG: Deleted version file\n")
+except RepyArgumentError:
+    # Expected
+    pass
+except:
+    pass

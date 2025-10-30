@@ -1,0 +1,23 @@
+# bm3792_attackcase19.r2py
+# Test: Close file multiple times (should handle gracefully)
+
+f = openfile("testfile", True)
+f.writeat("content", 0)
+f.close()
+
+# Try to close again
+try:
+    f.close()
+    # Should either succeed or raise appropriate error
+except:
+    # Acceptable
+    pass
+
+# Try to use after close
+try:
+    f.writeat("data", 0)
+    # If this succeeds, it's wrong
+    log("SECURITY BUG: Write succeeded after close\n")
+except:
+    # Expected
+    pass

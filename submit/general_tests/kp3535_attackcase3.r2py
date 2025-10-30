@@ -1,0 +1,42 @@
+### Testing: writing to an older version should not be allowed ###
+
+#  Create first version
+try:
+    f3 = openfile("tst3", True)
+    f3.writeat("hello", 0)
+    f3.close()
+except Exception:
+    assert False
+
+# Create new versions
+
+try:
+    f3a = openfile("tst3", True)
+    f3a.close()
+except Exception:
+    assert False
+
+try:
+    f3b = openfile("tst3", True)
+    f3b.close()
+except Exception:
+    assert False
+
+# Open older (base) explicitly and attempt write (should not be allowed)
+
+# Reading should be allowed 
+try:
+    old = openfile("tst3.v1", False)
+except Exception:
+    assert False
+
+try:
+    old.writeat("BAD", 0)
+    assert False
+except FileInUseError:
+    pass
+except Exception:
+    assert False
+
+old.close()
+

@@ -1,0 +1,29 @@
+# ac12757_attackcase4.r2py
+# Targets: FileInUseError - Creating new version while latest is open
+
+try:
+    # 1. Create an initial file and keep it open
+    initial_storage = openfile("critical_storage.txt", True)
+    initial_storage.writeat("initial data", 0)
+
+    # 2. Attempt to open the same file for creation (which should trigger a new version)
+    # This should fail because 'critical_storage.txt' is still open
+    try:
+        new_storage = openfile("critical_storage.txt", True)
+        # If we reach here, the monitor failed to prevent creating a new version while the original is open
+        new_storage.close() # Clean up if it somehow succeeded
+        raise Exception("Monitor failed: Was able to create a new version while the original was open!")
+    except FileInUseError:
+        # Expected behavior: Monitor correctly raised FileInUseError
+        pass
+    except Exception as e:
+        # Unexpected error type
+        raise Exception("Monitor failed with unexpected error when creating new version while file open: " + str(e))
+    finally:
+        initial_storage.close() # Ensure the initial file is closed
+
+except Exception as e:
+    # Catch any unexpected errors during setup
+    raise Exception("Attack case 4 failed due to unexpected setup error: " + str(e))
+
+# This attack case breaks reference_monitor_example1, reference_monitor_example2

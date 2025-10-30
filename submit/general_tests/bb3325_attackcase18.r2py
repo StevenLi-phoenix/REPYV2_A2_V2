@@ -1,0 +1,17 @@
+base = "write_after_close"
+try:
+  h = openfile(base, True)
+  try: h.write("1")
+  except: pass
+  try: h.close()
+  except: pass
+
+  try:
+    # some wrappers keep underlying handle alive; try writing again
+    h.write("oops")
+    try: log("VULN: write_allowed_after_close")
+    except: pass
+  except:
+    pass
+except:
+  pass

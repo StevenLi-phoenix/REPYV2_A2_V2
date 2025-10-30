@@ -1,0 +1,33 @@
+
+# rk4299_attackcase8.r2py
+# exception
+fname = "error_misuse.txt"
+try:
+    try:
+        theFile = open(fname, "w")
+        theFile.write("start\n")
+    except Exception:
+        theFile = None
+    try:
+        if theFile:
+            theFile.close()
+            theFile.close()
+    except Exception:
+        pass
+    try:
+        if theFile:
+            _ = theFile.read()
+    except Exception:
+        pass
+    try:
+        fh = open(fname, "z")
+        fh.close()
+    except Exception:
+        try:
+            fh = open(fname, "r")
+            _ = fh.read()
+            fh.close()
+        except Exception:
+            pass
+except Exception:
+    pass

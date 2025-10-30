@@ -1,0 +1,18 @@
+# Attack Case 24: Sequential version numbering verification
+
+fseq = openfile("sequential", True)
+fseq.close()
+
+fseq1 = openfile("sequential", True)
+fseq1.close()
+
+fseq2 = openfile("sequential", True)
+fseq2.close()
+
+all_files = listfiles()
+assert "sequential" in all_files, "Base file should be in listfiles"
+
+for name in all_files:
+    if name.startswith("sequential"):
+        assert ".v" not in name or not name.split(".v")[-1].isdigit(), "Version files should be hidden"
+

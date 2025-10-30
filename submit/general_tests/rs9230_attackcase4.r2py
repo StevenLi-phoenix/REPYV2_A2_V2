@@ -1,0 +1,35 @@
+# Test Case 4: Try to delete files and version files
+# All files should be non-deletable
+
+# Create a file with versions
+f1 = openfile("protected.txt", True)
+f1.writeat("v1", 0)
+f1.close()
+
+f2 = openfile("protected.txt", True)
+f2.writeat("v2", 0)
+f2.close()
+
+# Try to delete base file
+try:
+    removefile("protected.txt")
+    log("ATTACK SUCCESSFUL: Deleted base file (should be forbidden)\n")
+    exitall()
+except RepyArgumentError:
+    # Expected - deletion should not be allowed
+    pass
+except Exception as e:
+    # Expected - any exception that prevents deletion
+    pass
+
+# Try to delete version file directly
+try:
+    removefile("protected.txt.v1")
+    log("ATTACK SUCCESSFUL: Deleted version file (should be forbidden)\n")
+    exitall()
+except RepyArgumentError:
+    pass
+except Exception as e:
+    pass
+
+log("Test passed - files cannot be deleted\n")

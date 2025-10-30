@@ -1,0 +1,36 @@
+# Spec 6: Non-existent files/versions -> FileNotFoundError (silent on success)
+
+# names = ["s6", "s6.v1", "s6.v2"]
+
+
+# --- Test opening non-existent base ---
+try:
+    f = openfile("s6", False)
+    f.close()
+    raise Exception("Opened non-existent base file")
+except FileNotFoundError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected while opening non-existent base: %s" % e)
+
+# --- Setup: create base and v1 ---
+try:
+    b = openfile("s6", True)
+    b.writeat("b6", 0)
+    b.close()
+    v1 = openfile("s6", True)
+    v1.close()
+except Exception, e:
+    raise Exception("Setup failed: %s" % e)
+
+# --- Test opening non-existent version (v99) ---
+try:
+    ghost = openfile("s6.v99", False)
+    ghost.close()
+    raise Exception("Opened non-existent version v99")
+except FileNotFoundError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected while opening v99: %s" % e)
+
+# silent on success

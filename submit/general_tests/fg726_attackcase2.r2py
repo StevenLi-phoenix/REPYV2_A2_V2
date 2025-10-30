@@ -1,0 +1,28 @@
+# Spec 8: removefile() forbidden (silent on success, raises on failure)
+
+# --- Setup ---
+try:
+    b = openfile("s8", True); b.writeat("x", 0); b.close()
+    v1 = openfile("s8", True); v1.close()
+except Exception, e:
+    raise Exception("Setup failed: %s" % e)
+
+# --- Test removefile on base ---
+try:
+    removefile("s8")
+    raise Exception("removefile(base) was allowed")
+except RepyArgumentError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected removing base: %s" % e)
+
+# --- Test removefile on version ---
+try:
+    removefile("s8.v1")
+    raise Exception("removefile(v1) was allowed")
+except RepyArgumentError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected removing v1: %s" % e)
+
+# silent on success

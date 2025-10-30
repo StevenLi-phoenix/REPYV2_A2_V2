@@ -1,0 +1,4 @@
+"Creating a tricky file"
+
+f1 = openfile("testfile.very", True)
+f1.close()

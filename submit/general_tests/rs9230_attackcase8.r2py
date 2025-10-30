@@ -1,0 +1,33 @@
+# Test Case 8: Test that opening base filename returns latest version
+# When opening "file.txt" without version, should open latest version
+
+f1 = openfile("latest.txt", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("latest.txt", True)
+f2.writeat("updated version", 0)
+f2.close()
+
+# Open using base name (should get latest content)
+f3 = openfile("latest.txt", False)
+content = f3.readat(None, 0)
+f3.close()
+
+if content != "updated version":
+    log("ATTACK SUCCESSFUL: Opening base name didn't return latest version\n")
+    log("Got: " + content + "\n")
+    exitall()
+
+# Verify cannot write when opening base name
+try:
+    f4 = openfile("latest.txt", False)
+    f4.writeat("trying to modify", 0)
+    log("ATTACK SUCCESSFUL: Wrote to file opened by base name\n")
+    f4.close()
+    exitall()
+except Exception as e:
+    # Expected
+    f4.close()
+
+log("Test passed - base name opens latest version as read-only\n")

@@ -1,0 +1,12 @@
+#try to close file twice
+
+myfile = openfile("testfile", True)
+myfile.writeat("Data", 0)
+myfile.close()
+
+#try to close again 
+try:
+    myfile.close()
+    log("Double close should not be allowed\n")
+except:
+    log("Double close raises exception\n")

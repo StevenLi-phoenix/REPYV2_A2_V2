@@ -1,0 +1,10 @@
+# jd5517_attackcase2.r2py
+# explicit-version create forbidden
+
+threw = False
+try:
+    openfile("case2_base.v1", True)
+except RepyArgumentError:
+    threw = True
+
+assert threw

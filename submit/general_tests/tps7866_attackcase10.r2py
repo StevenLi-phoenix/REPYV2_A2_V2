@@ -1,0 +1,7 @@
+# Latest writable via base name
+
+f = openfile("t10", True); f.writeat("AA",0); f.close()
+openfile("t10", True).close()
+latest = openfile("t10", False)
+latest.writeat("BB", 0)  # should be allowed on latest
+latest.close()

@@ -1,0 +1,10 @@
+#File deletion (removefile) is not allowed for any file. Any attempt must raise a RepyArgumentError
+
+
+try:
+    f = removefile("testfile")
+
+except Exception as e:
+    pass
+else:
+    log('failed')

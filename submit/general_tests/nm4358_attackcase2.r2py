@@ -1,0 +1,72 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase2.r2py
+Goal: Try to confuse version counter by concurrent writes
+'''
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass    
+                        
+
+ctr_lock = createlock()
+ctr = [0]  # using a list as a mutable box
+
+def YIELD():
+    try: sleep(0)    # hint to scheduler
+    except: pass
+    try: sleep(0.01)    # coarse fallback if subsecond not allowed
+    except: pass
+
+def next_len():
+    acquired = False
+    try:
+        ctr_lock.acquire(True)
+        acquired = True
+        v = ctr[0]
+        ctr[0] = v + 1
+        return v + 1
+    finally:
+        if acquired:
+            try:
+                ctr_lock.release()
+            except:
+                pass
+
+def writer():
+    try:
+        for i in range(10):
+            # small yields to encourage interleavings
+            YIELD()
+            h = openfile("test2.txt", True)       # all threads target same logical name
+            n = next_len()                       # 1,2,3,...
+            payload = "X" * n                    # unique length per thread
+            h.writeat(payload, 0)
+            debug_log("Write Successful: " + payload + "\n")
+            YIELD()
+            h.close()
+    except Exception as e:
+        # suppress all expected errors (e.g., FileInUseError), keep test silent 
+        # Log the exception class/message for debugging. 
+        try:    
+            debug_log("Writer exception: " + str(e) + "\n")
+        except: 
+            pass    
+    finally: # so we don’t leave the latest version open and accidentally mask other races.
+        try:
+            if h is not None:
+                h.close()
+        except:
+            pass
+
+# spin up many writers on the same name
+for i in range(32):                      # bump up if you want more pressure
+    createthread(writer)
+
+# keep main alive so threads run
+sleep(6)    

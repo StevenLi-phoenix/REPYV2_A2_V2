@@ -1,0 +1,31 @@
+# --- Create first version of "testfile" ---
+f1 = openfile("testfile", True)          # create v1
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# --- Create second version of "testfile"  ---
+f2 = openfile("testfile", True)          # should create v2 copied from v1
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()
+
+# attacker repeatedly polls and pre-creates testfile.v2
+while True:
+    files = underlyinglistfiles()
+    if "testfile" in files:
+        # compute victim's likely next number (same logic as layer)
+        versions = [1] if "testfile" in files else []
+        for f in files:
+            if f.startswith("testfile.v"):
+                try:
+                    versions.append(int(f.rsplit('.v',1)[1]))
+                except:
+                    pass
+        next_v = max(versions) + 1 if versions else 2
+        vname = "testfile.v" + str(next_v)
+        try:
+            af = underlyingopenfile(vname, True)
+            af.writeat("ATTACKER_PAYLOAD", 0)
+            af.close()
+            break
+        except Exception:
+            continue

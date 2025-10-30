@@ -1,0 +1,7 @@
+h1 = openfile("singular", True)
+try:
+    openfile("singular", False)
+    assert False, "Opening latest again should raise FileInUseError"
+except FileInUseError:
+    pass
+h1.close()

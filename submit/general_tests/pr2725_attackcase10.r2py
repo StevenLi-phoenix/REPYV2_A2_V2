@@ -1,0 +1,57 @@
+# Test 10: This is a TOCTOU attack case.
+# Four threads write to the same file at overlapping times and offsets.
+finished = [0]
+
+def writer(delay, data, offset):
+    sleep(delay)
+    f = openfile("testfile", True)
+    try:
+        f.writeat(data, offset)
+    finally:
+        try:
+            f.close()
+        except:
+            pass
+    finished[0] += 1
+
+
+def start_threads():
+    createthread(writer_HelloWorld)
+    createthread(writer_1)
+    createthread(writer_2)
+    createthread(writer_Test)
+
+
+def writer_HelloWorld():
+    writer(0.00, "HelloWorld" * 10000, 0)
+
+
+def writer_1():
+    writer(0.01, "1" * 200, 0)
+
+
+def writer_2():
+    writer(0.02, "2" * 200, 0)
+
+
+def writer_Test():
+    writer(0.03, "Test", 3)
+
+
+start_threads()
+
+while finished[0] < 4:
+    sleep(0.02)
+
+try:
+    f = openfile("testfile.v3", False)
+    data = f.readat(None, 0)
+    f.close()
+except Exception as e:
+    assert False, "could not open or read testfile.v3"
+else:
+    expected = "222" + "Test" + "2" * 193 + "HelloWorld" * 9980
+    if data == expected:
+        pass
+    else:
+        assert False, "data mismatch"

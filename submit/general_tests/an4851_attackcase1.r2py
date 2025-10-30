@@ -1,0 +1,60 @@
+
+# --- ATTACK CORE: Exploit Concurrency Lock Bypass ---
+# Goal: Use a non-standard filename ("attackfile_v1") to open a second write handle
+# while the base file ("attackfile") is already locked, proving concurrent access is possible.
+
+# 1. Establish the initial lock (Handle 1).
+try:
+    write_handle_one = openfile("attackfile", True) 
+except Exception as e:
+    raise AssertionError("SETUP FAIL: Could not establish initial write lock on 'attackfile': " + str(e))
+
+
+# 2. Attempt the exploit: Open the second versioning handle.
+bypass_succeeded = False
+write_handle_two = None 
+
+try:
+    # Illegal operation: Monitor fails to block "attackfile_v1" while "attackfile" is open.
+    write_handle_two = openfile("attackfile_v1", True) 
+    
+    # --- CRITICAL TEST: Concurrent Write and Live Read ---
+    
+    data_one = "Compromised Data (HANDLE 1 - Base)"
+    data_two = "Compromised Data (HANDLE 2 - Bypass)"
+    
+    # Write unique data simultaneously to both handles.
+    write_handle_one.writeat(data_one, 0)
+    write_handle_two.writeat(data_two, 0)
+    
+    # IMMEDIATE VERIFICATION: Read back immediately to verify successful concurrent writes.
+    read_data_one_live = write_handle_one.readat(None, 0)
+    read_data_two_live = write_handle_two.readat(None, 0)
+
+    # Assert that both unique writes persisted.
+    assert read_data_one_live.startswith(data_one), "FAIL: Live read from original handle failed."
+    assert read_data_two_live.startswith(data_two), "FAIL: Live read from bypass handle failed."
+
+    bypass_succeeded = True
+    
+except Exception as e:
+    pass # Monitor worked correctly, raising an exception.
+    
+# 3. Final Verification and Cleanup
+
+# Confirm the exploit successfully breached the concurrency lock.
+assert bypass_succeeded, "FAIL: Concurrency lock not bypassed using non-standard file naming."
+
+# Clean up both handles.
+try:
+    write_handle_one.close()
+except:
+    pass
+try:
+    if write_handle_two:
+        write_handle_two.close()
+except:
+    pass
+    
+# We have successfully proven the vulnerability. Raise a success message.
+log("SUCCESS: Concurrency Lock Bypass Confirmed!")

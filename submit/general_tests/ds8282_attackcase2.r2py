@@ -1,0 +1,21 @@
+try:
+    myfile = openfile("testfile1.txt", True)
+    myfile.writeat("v0", 0)
+    myfile.close()
+    
+    myfile = openfile("testfile1.txt", True)
+    myfile.writeat("v1", 0)
+    myfile.close()
+    
+    try:
+        myfile = openfile("testfile1.txt.v1", False)
+        myfile.writeat("hacked", 0)
+        myfile.close()
+        log("VULNERABLE: Write to old version was allowed\n")
+        exitall()
+    except FileInUseError:
+        pass
+    except Exception, e:
+        pass
+except Exception, e:
+    pass

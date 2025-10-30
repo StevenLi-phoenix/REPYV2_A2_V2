@@ -1,0 +1,10 @@
+f = openfile("testfile4", True)
+f.writeat("Attack4", 0)
+f.close()
+
+#do not allow removefile to execute
+try:
+    removefile("testfile4")
+    assert False
+except RepyArgumentError:
+    pass

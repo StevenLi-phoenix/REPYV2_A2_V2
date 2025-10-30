@@ -1,0 +1,15 @@
+"""
+Try and create an unallowed filename
+"""
+
+try:
+    for unallowed in [".secret", "../escape.txt", "bad..name", "unallowed!name"]:
+        try:
+            f = openfile(unallowed, True)
+            f.close()
+            log("Bug: unallowed filename allowed")
+        except Exception:
+            pass
+except Exception:
+    log("Bug: Error in allowed operations")
+

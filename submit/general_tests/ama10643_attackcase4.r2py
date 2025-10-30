@@ -1,0 +1,20 @@
+
+##6.As is the case in normal RepyV2, if an openfile call with
+# create=False, open the file only if that version exists; otherwise,
+# raise FileNotFoundError.
+
+IsVulnerable = True 
+wrongException=False
+try:
+    f1 = openfile("abuhasan", False)
+except FileNotFoundError,e:
+    IsVulnerable=False
+    pass
+except Exception,e:
+    wrongException=True
+    pass
+
+if IsVulnerable==True:
+    log("The exception of FileNotFoundError was not trigirred --> the reference monitor is vulnerable")
+if wrongException==True:
+    log("The reference monitor is Vulnerable, because it raise unexpectable exception.")

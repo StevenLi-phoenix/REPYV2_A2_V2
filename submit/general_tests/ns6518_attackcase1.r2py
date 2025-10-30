@@ -1,0 +1,10 @@
+
+# Test 1 — Explicit version creation should be forbidden.
+# Behavior: openfile('name.v1', True) must raise an exception (RepyArgumentError or similar).
+try:
+    f = openfile("tc1_explicit.v1", True)
+    # If we get here, security layer allowed explicit version creation — FAIL
+    assert False
+except Exception:
+    # Expected: exception raised. Suppress.
+    pass

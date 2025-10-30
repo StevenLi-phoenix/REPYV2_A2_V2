@@ -1,0 +1,24 @@
+f1 = openfile("testfile3.txt", True)
+f1.writeat("v0", 0)
+f1.close()
+
+f2 = openfile("testfile3.txt", True)
+f2.writeat("v1", 0)
+f2.close()
+
+f3 = openfile("testfile3.txt", True)
+f3.writeat("v2", 0)
+f3.close()
+
+files = listfiles()
+
+for filename in files:
+    if ".v" in filename and "testfile3.txt" in filename:
+        # Extract suffix after .v
+        v_index = filename.rfind(".v")
+        if v_index > 0:
+            suffix = filename[v_index+2:]
+            # Check if suffix is all digits (version number)
+            if suffix and suffix.isdigit():
+                log("Version files exposed in listfiles")
+                break

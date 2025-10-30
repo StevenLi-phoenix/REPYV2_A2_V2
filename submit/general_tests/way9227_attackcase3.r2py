@@ -1,0 +1,18 @@
+"""
+Create a new version while previous is open
+"""
+
+try:
+    f1 = openfile("openver.txt", True)
+    f1.writeat("lock", 0)
+    try:
+        f2 = openfile("openver.txt", True)
+        f2.close()
+        log("Bug: allowed new version to be made when old version was open")
+    except Exception:
+        pass
+    f1.close()
+except Exception:
+    log("Bug: failed to openfile as allowed or close file as allowed")
+
+

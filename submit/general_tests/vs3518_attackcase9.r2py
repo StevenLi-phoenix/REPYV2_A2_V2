@@ -1,0 +1,35 @@
+marker = "compromised_vs3518_attackcase13"
+name = "protected_attack13.txt"
+deep = "..\\..\\escape_root_attack13.txt"
+temp = "temp_attack13.txt"
+
+try:
+    f = open(temp, "w")
+    try:
+        f.write("EVIL13\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        os.rename(temp, deep)
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(deep, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    if "EVIL13" in c:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

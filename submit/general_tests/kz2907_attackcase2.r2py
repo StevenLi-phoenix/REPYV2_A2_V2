@@ -1,0 +1,31 @@
+shared_file = "target.txt"
+counter = [0]
+
+def security_operation():
+    i = counter[0]
+    counter[0] += 1
+    try:
+        if shared_file in listfiles():
+            f = openfile(shared_file, True)
+            f.writeat("data" + str(i), 0)
+            f.close()
+    except:
+        log("TOCTOU error")
+
+def attacker_operation():
+    i = counter[0] 
+    counter[0] += 1
+    try:
+        removefile(shared_file)
+        f = openfile(shared_file, True)
+        f.close()
+    except:
+        pass
+
+f = openfile(shared_file, True)
+f.close()
+
+#take turns to try to simulate parallelism like with bankers algorithm 
+while counter[0] < 200:
+    createthread(security_operation)
+    createthread(attacker_operation)

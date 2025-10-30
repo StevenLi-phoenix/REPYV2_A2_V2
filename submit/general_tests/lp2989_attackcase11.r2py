@@ -1,0 +1,202 @@
+# MEGA ATTACK 21: Delete Repy Dependencies
+# Tests: File system manipulation, security layer bypass via dependency deletion
+# This attack attempts to delete critical Repy runtime files to crash monitors
+
+# Try to delete various critical Repy files that the system depends on
+critical_files = [
+    "encasementlib.r2py",
+    "emulfile.py",
+    "emulmisc.py",
+    "namespace.py",
+    "virtual_namespace.py",
+    "safe.py",
+    "restrictions.default",
+    "repy.py",
+    "repyportability.py",
+    "nonportable.py"
+]
+
+# Test 1: Try to delete encasementlib.r2py (the security layer framework)
+try:
+    removefile("encasementlib.r2py")
+    log("ATTACK SUCCESSFUL: Deleted encasementlib.r2py\n")
+except FileNotFoundError:
+    pass
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 2: Try to delete the monitor's own file
+try:
+    # Try common monitor naming patterns
+    monitor_names = [
+        "reference_monitor.r2py",
+        "reference_monitor_test.r2py",
+        "security_layer.r2py"
+    ]
+    
+    for monitor in monitor_names:
+        try:
+            removefile(monitor)
+            log("ATTACK SUCCESSFUL: Deleted monitor file " + monitor + "\n")
+        except Exception:
+            pass
+except Exception:
+    pass
+
+# Test 3: Try to delete restrictions file
+try:
+    removefile("restrictions.default")
+    log("ATTACK SUCCESSFUL: Deleted restrictions.default\n")
+except FileNotFoundError:
+    pass
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 4: List all files and try to delete any .r2py or .py files
+try:
+    all_files = listfiles()
+    
+    for filename in all_files:
+        if filename.endswith(".r2py") or filename.endswith(".py"):
+            try:
+                removefile(filename)
+                log("ATTACK SUCCESSFUL: Deleted system file " + filename + "\n")
+            except Exception:
+                pass
+except Exception:
+    pass
+
+# Test 5: Try to delete repy runtime files
+runtime_files = ["repy.py", "safe.py", "namespace.py", "emulfile.py"]
+
+for rfile in runtime_files:
+    try:
+        removefile(rfile)
+        log("ATTACK SUCCESSFUL: Deleted runtime file " + rfile + "\n")
+    except FileNotFoundError:
+        pass
+    except RepyArgumentError:
+        pass
+    except Exception:
+        pass
+
+# Test 6: Create a file with a system filename to overwrite it
+try:
+    f = openfile("encasementlib.r2py", True)
+    f.writeat("# HACKED", 0)
+    f.close()
+    log("ATTACK SUCCESSFUL: Overwrote encasementlib.r2py\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 7: Try to delete the attack case itself (recursive deletion)
+try:
+    attack_files = []
+    all_files = listfiles()
+    for fname in all_files:
+        if "attackcase" in fname:
+            attack_files.append(fname)
+    
+    for afile in attack_files:
+        try:
+            removefile(afile)
+            log("ATTACK SUCCESSFUL: Deleted attack file " + afile + "\n")
+        except Exception:
+            pass
+except Exception:
+    pass
+
+# Test 8: Try to access parent directory files via path traversal in removefile
+path_traversal_attempts = [
+    "../encasementlib.r2py",
+    "../../repy.py",
+    "/tmp/test.txt",
+    "./encasementlib.r2py",
+    "encasementlib.r2py/../../safe.py"
+]
+
+for path in path_traversal_attempts:
+    try:
+        removefile(path)
+        log("ATTACK SUCCESSFUL: Path traversal delete " + path + "\n")
+    except RepyArgumentError:
+        pass
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+# Test 9: Mass deletion attempt - try to delete everything
+try:
+    all_files = listfiles()
+    deleted_count = 0
+    
+    for fname in all_files:
+        try:
+            removefile(fname)
+            deleted_count += 1
+        except Exception:
+            pass
+    
+    if deleted_count > 0:
+        log("ATTACK SUCCESSFUL: Mass deleted " + str(deleted_count) + " files\n")
+except Exception:
+    pass
+
+# Test 10: Delete version files with system names
+try:
+    # Create and version a file with a system-like name
+    f = openfile("repy.txt", True)
+    f.writeat("fake", 0)
+    f.close()
+    
+    f = openfile("repy.txt", True)
+    f.close()
+    
+    # Now try to confuse the system
+    removefile("repy.txt.v1")
+    log("ATTACK SUCCESSFUL: Deleted versioned system-named file\n")
+except Exception:
+    pass
+
+# Test 11: Create files with illegal names that might bypass filters
+illegal_names = [
+    "con.txt",  # Windows reserved
+    "prn.txt",  # Windows reserved
+    "nul.txt",  # Windows reserved
+    "..",
+    ".",
+    ""
+]
+
+for illegal in illegal_names:
+    try:
+        f = openfile(illegal, True)
+        f.close()
+        removefile(illegal)
+        log("ATTACK SUCCESSFUL: Created and deleted illegal filename " + illegal + "\n")
+    except Exception:
+        pass
+
+# Test 12: Rapid create-delete cycle to cause race conditions
+for i in range(100):
+    try:
+        fname = "temp" + str(i) + ".txt"
+        f = openfile(fname, True)
+        f.close()
+        removefile(fname)
+    except Exception:
+        pass
+
+try:
+    remaining = len([f for f in listfiles() if "temp" in f])
+    if remaining > 0:
+        log("ATTACK SUCCESSFUL: Rapid create-delete left orphaned files\n")
+except Exception:
+    pass

@@ -1,0 +1,33 @@
+# Calling openfile with create=True with file name testfile.vf should proceed as usual as with any other files since it is not a version file
+
+
+f1 = openfile("testfile.vf", True)
+
+
+# Write initial content at offset 0.
+f1.writeat("Held3456", 0)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile.vf", True)
+
+#Assert old contents are present
+assert f2.readat(None, 0) == "Held3456"
+
+#Write new content into file
+f2.writeat("HelloWorldHello", 0)
+
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+#Call openfile, version 2 should be created
+f3 = openfile("testfile.vf", True)
+
+#Assert version 1 contents are present
+assert f3.readat(None, 0) == "HelloWorldHello"
+
+# Close the file to finalize the second version's contents.
+f3.close()

@@ -1,0 +1,8 @@
+# Test: Create a filename that contains ".vNUM" in the middle and multiple dots; creation must be allowed.
+
+try:
+    f = openfile("multi.name.v10.newfile.txt", True)
+    f.writeat("Doty", 0)
+    f.close()
+except Exception as e:
+    raise AssertionError("Monitor blocked creation of filename with multiple periods and vNUM in middle: " + str(e))

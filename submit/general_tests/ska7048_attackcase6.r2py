@@ -1,0 +1,11 @@
+f1 = openfile("readcreate6.txt", True)
+f1.writeat("test", 0)
+
+try:
+    content = f1.readat(4, 0)
+    if content != "test":
+        log("BUG FOUND\n")
+except:
+    log("BUG FOUND\n")
+
+f1.close()

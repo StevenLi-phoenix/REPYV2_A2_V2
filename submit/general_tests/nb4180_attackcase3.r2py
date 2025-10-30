@@ -1,0 +1,8 @@
+try:
+  f = openfile("test.txt.v0", True)
+  f.close()
+  log("TEST14 VULNERABLE: .v0 pattern was allowed\n")
+except (FileError, RepyArgumentError):
+  pass
+except Exception, e:
+  log("TEST14 VULNERABLE: Wrong exception\n")

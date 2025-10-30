@@ -1,0 +1,28 @@
+# Test if the monitor might incorrectly make a file writable again if it's
+# closed and reopened
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return 
+  except Exception, e:
+    raise 
+  raise AssertionError("Monitor failed to raise expected exception")
+
+f0 = openfile("permanent.txt", True)
+f0.close()
+f1 = openfile("permanent.txt", True)
+f1.close()
+
+f2 = openfile("permanent.txt", True)
+f2.close()
+
+handle1 = openfile("permanent.txt.v1", False)
+handle1.close()
+
+handle2 = openfile("permanent.txt.v1", False)
+
+expect_error(FileInUseError, handle2.writeat, "ATTACK", 0)
+
+handle2.close()

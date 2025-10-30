@@ -1,0 +1,14 @@
+# Test: Cannot create new version while latest is open
+
+fopen = openfile("locktest2", True)
+fopen.writeat("data", 0)
+
+try:
+    fconcurrent = openfile("locktest2", True)
+    fconcurrent.close()
+    fopen.close()
+    assert False, "Should not create version while latest is open"
+except FileInUseError:
+    pass
+
+fopen.close()

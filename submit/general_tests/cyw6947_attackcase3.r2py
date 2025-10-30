@@ -1,0 +1,16 @@
+# This test case checks to make sure removefile is not allowed.
+file = openfile("test_remove", True)
+file.writeat("X", 0)
+file.close()
+
+try:
+    try:
+        removefile("test_remove")
+        try:
+            log("UNDEXPECTED: removefile succeeded")
+        except Exception:
+            pass
+    except Exception:
+        pass
+except Exception:
+    pass

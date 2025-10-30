@@ -1,0 +1,11 @@
+### create a new version file and read from it
+
+f1 = openfile("testfile", True)
+f1.writeat("first", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("second", 0)
+assert f2.readat(None, 0) == "second", "ERROR: reading failed; reading or writing not allowed properly"
+
+f2.close()

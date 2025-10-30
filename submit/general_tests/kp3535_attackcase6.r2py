@@ -1,0 +1,28 @@
+# Testing: there should not be versioned files in listfiles()
+
+# Create a base file and versions
+try:
+    f6 = openfile("tst6", True)
+    f6.writeat("data", 0)
+    f6.close()
+
+    f6a = openfile("tst6", True)
+    f6a.close()
+
+    f6b = openfile("tst6", True)
+    f6b.close()
+except Exception:
+    assert False
+
+# Check listfiles()
+try:
+    files = listfiles()
+except Exception:
+    assert False
+
+# base filename should be in listfiles
+assert "tst6" in files
+
+# versions of filename should not be in listfiles
+for f in files:
+    assert ".v" not in f

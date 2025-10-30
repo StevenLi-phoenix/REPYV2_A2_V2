@@ -1,0 +1,29 @@
+#Call removefile() on a versioned file should result in an error.
+
+f1 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+#Delete file
+try:
+    removefile("testfile.v1")
+except RepyArgumentError:
+    log("")
+except Exception as e:
+    error_name = str(type(e)).split("'")[1].split(".")[-1]
+    if(error_name != "RepyArgumentError"):
+        log("Exception " + str(type(e)) +  " thrown but expected RepyArgumentError")
+else:
+    log("No exception thrown but expected RepyArgumentError")
+
+
+
+
+

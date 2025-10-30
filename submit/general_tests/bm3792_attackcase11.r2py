@@ -1,0 +1,42 @@
+# bm3792_attackcase11.r2py
+# Test: Ensure versions increment correctly (v1, v2, v3...)
+
+# Create original
+f1 = openfile("testfile", True)
+f1.writeat("v0", 0)
+f1.close()
+
+# Create v1
+f2 = openfile("testfile", True)
+f2.close()
+
+# Create v2
+f3 = openfile("testfile", True)
+f3.close()
+
+# Create v3
+f4 = openfile("testfile", True)
+f4.close()
+
+# Check that v1, v2, v3 exist
+missing = []
+try:
+    check1 = openfile("testfile.v1", False)
+    check1.close()
+except:
+    missing.append("v1")
+
+try:
+    check2 = openfile("testfile.v2", False)
+    check2.close()
+except:
+    missing.append("v2")
+
+try:
+    check3 = openfile("testfile.v3", False)
+    check3.close()
+except:
+    missing.append("v3")
+
+if len(missing) > 0:
+    log("ACCURACY BUG: Version numbering incorrect, missing versions\n")

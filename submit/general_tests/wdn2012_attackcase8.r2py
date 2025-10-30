@@ -1,0 +1,36 @@
+"""
+Attack 8: Invalid filenames should be rejected.
+Expected secure behavior: invalid names (., .., leading dot, uppercase, spaces, separators, too long, empty) must be rejected.
+This test logs ONLY if any invalid name is wrongly accepted.
+"""
+
+invalid_names = [
+    "",
+    ".",
+    "..",
+    ".hidden",
+    "CAPS",
+    "has space",
+    "name/withslash",
+    ("a" * 121)
+]
+
+for nm in invalid_names:
+    opened = False
+    try:
+        f = openfile(nm, True)
+        opened = True
+    except Exception:
+        opened = False
+    if opened:
+        try:
+            f.close()
+        except Exception:
+            pass
+        try:
+            log("EXPLOIT: invalid filename accepted: " + nm)
+        except Exception:
+            # Ensure no unexpected errors propagate
+            pass
+
+

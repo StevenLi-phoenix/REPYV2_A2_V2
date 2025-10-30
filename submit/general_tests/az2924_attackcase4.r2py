@@ -1,0 +1,8 @@
+# Checks for invalid characters in file name
+
+# Try to open file with invalid name
+try:
+    openfile("$amplefile", True)
+    assert False, "Cannot have invalid characters in file name"
+except Exception:
+    pass

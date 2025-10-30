@@ -1,0 +1,22 @@
+# close twice
+
+f = openfile("test", True)
+
+f.writeat("X",0)
+
+f.close()
+
+try:
+    f.close()
+except Exception:
+    log("problem")
+    pass
+
+g = openfile("test", True)
+
+g.close()
+
+try: 
+    g.close()
+except Exception: 
+    pass

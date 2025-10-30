@@ -1,0 +1,21 @@
+# write to older explicit version
+f = openfile("atkfile", True)
+f.writeat("ORIG", 0)
+f.close()
+
+v1 = openfile("atkfile", True)
+v1.close()
+v2 = openfile("atkfile", True)
+v2.close()
+
+v1exp = openfile("atkfile.v1", False)
+try:
+    v1exp.writeat("HAX", 0)
+    v1exp.close()
+    # if write succeeded, verify it changed v1
+    check = openfile("atkfile.v1", False)
+    content = check.readat(None, 0)
+    check.close()
+    assert content == "HAX"
+except FileInUseError:
+    pass

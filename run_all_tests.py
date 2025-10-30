@@ -31,6 +31,10 @@ from tqdm import tqdm
 
 BASE_URL = "http://100.88.83.27:8000"
 DEFAULT_MAX_WORKERS = 8  # Default: maximum number of concurrent test executions
+TEST_FILE_PATTERNS = [
+    "submit/general_tests/test*.r2py",
+    "submit/general_tests/*_attackcase*.r2py",
+]
 
 def check_server_health():
     """Check if the remote server is available"""
@@ -55,6 +59,35 @@ def compute_file_md5(filepath):
     """Compute MD5 hash of a file"""
     with open(filepath, 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
+
+def discover_test_files():
+    """
+    Locate all test files in submit/general_tests/ that match either the legacy
+    testNN.r2py naming convention or the newer <netid>_attackcaseM.r2py format.
+    Returns a list sorted by netid and case number when available.
+    """
+    test_files = set()
+    for pattern in TEST_FILE_PATTERNS:
+        for path in glob.glob(pattern):
+            test_files.add(path)
+    
+    # Fallback: if no files match explicit patterns, include every .r2py file
+    if not test_files:
+        test_files = set(glob.glob("submit/general_tests/*.r2py"))
+    
+    def sort_key(path):
+        name = os.path.basename(path)
+        attack_match = re.match(r'(.+?)_attackcase(\d+)\.r2py$', name)
+        if attack_match:
+            netid, case_num = attack_match.groups()
+            return (netid, int(case_num), name)
+        legacy_match = re.match(r'test(\d+)\.r2py$', name)
+        if legacy_match:
+            num = int(legacy_match.group(1))
+            return ("zzzz_legacy", num, name)
+        return ("zzzz_other", float('inf'), name)
+    
+    return sorted(test_files, key=sort_key)
 
 def run_test(monitor_file, test_file):
     """
@@ -438,11 +471,11 @@ Examples:
         print("❌ ERROR: No monitor files found in submit/reference_monitor/")
         sys.exit(1)
     
-    # Get all test files
-    test_files = sorted(glob.glob("submit/general_tests/test*.r2py"))
+    # Get all test files (support both legacy and <netid>_attackcase formats)
+    test_files = discover_test_files()
     
     if not test_files:
-        print("❌ ERROR: No test files found in submit/general_tests/")
+        print("❌ ERROR: No test files found in submit/general_tests/ (expected names like testNN.r2py or <netid>_attackcaseM.r2py)")
         sys.exit(1)
     
     print(f"Found {len(monitor_files)} monitors to test")
@@ -455,7 +488,7 @@ Examples:
     # Store all results for CSV output
     # results_matrix[netid][test_name] = "PASS" or "FAIL"
     results_matrix = {}
-    all_test_names = sorted([os.path.basename(t) for t in test_files])
+    all_test_names = [os.path.basename(t) for t in test_files]
     
     # Store all execution logs for JSON output
     all_execution_logs = []
@@ -616,4 +649,3 @@ Examples:
 
 if __name__ == "__main__":
     main()
-

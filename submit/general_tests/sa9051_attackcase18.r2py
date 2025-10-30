@@ -1,0 +1,8 @@
+dc = openfile("doubleclose", True)
+dc.writeat("x", 0)
+res = dc.close()
+
+try:
+    dc.close()
+except Exception:
+    pass

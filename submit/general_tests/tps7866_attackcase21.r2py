@@ -1,0 +1,14 @@
+# Base open blocks create but not other base creates
+
+a = openfile("t21a", True); a.writeat("A",0); a.close()
+b = openfile("t21b", True); b.writeat("B",0); b.close()
+ha = openfile("t21a", False)
+try:
+  openfile("t21a", True)
+  raise Exception("created version while latest open (same base)")
+except FileInUseError:
+  pass
+# Other base should still allow create
+openfile("t21sb", True).close()
+ha.close()
+

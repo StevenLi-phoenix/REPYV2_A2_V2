@@ -1,0 +1,15 @@
+# when a new version is created, it must start with the predecessor content
+
+# 1. create first version and write data
+f1 = openfile("hi", True)
+f1.writeat("abc123", 0)
+f1.close()
+
+# create a new version of the same logical file, start as a copy of the old contents
+f2 = openfile("hi", True)
+copied = f2.readat(6, 0)  # read abc123
+f2.close()
+
+# copied shouldnt equal abc123
+assert copied == "abc123"
+

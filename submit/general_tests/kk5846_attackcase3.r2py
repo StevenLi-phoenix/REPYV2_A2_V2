@@ -1,0 +1,7 @@
+# Monitors that think "test.valid" is a version file
+try:
+    f = openfile("test.valid", True)
+    f.close()
+except RepyArgumentError:
+    # Incorrectly rejected non-version name
+    log("ATTACK SUCCESSFUL: Rejected valid filename as version file\n")

@@ -1,0 +1,91 @@
+"""
+Josh Hoge
+jsh10043@nyu.edu
+
+Attack: Version Content Copying Verification
+Category: Version Content Copying (Requirement 3)
+
+This attack tests whether new versions are properly initialized with the
+complete contents of the previous version during version creation.
+
+Attack Method:
+1. Create a base file "document" with specific content
+2. Close the file
+3. Reopen with create=True to trigger version creation (creates document.v1)
+4. Read from the newly created version before writing anything
+5. Verify the content matches the original file
+
+Expected Security Layer Behavior:
+- When openfile("document", True) is called on an existing file:
+  - A new version file (document.v1) should be created
+  - The new version should be initialized with the complete contents from "document"
+  - Content should be copied automatically during version creation
+
+Security Requirement:
+When openfile(filename, True) is called on an existing file:
+- Create a new version file with naming pattern: filename.v1, filename.v2, etc.
+- Initialize the new version with the complete contents of the latest existing version
+- This ensures version history preserves all data
+
+Expected Result:
+Attack should be BLOCKED - new version should contain copied content
+If version is empty, this violates Requirement 3 (ATTACK SUCCEEDED)
+"""
+
+if callfunc == 'initialize':
+    try:
+        # create the initial file with content
+        original_content = "OG content that should be preserved in version history."
+
+        f1 = openfile("document", True)
+        f1.writeat(original_content, 0)
+        f1.close()
+
+        # verify the original file has the content
+        f_verify = openfile("document", False)
+        verify_content = f_verify.readat(None, 0)
+        f_verify.close()
+
+        # now we create a new version by reopening with create=True
+        # this should create document.v1 with copied content
+        f2 = openfile("document", True)
+
+        # read from the new version before writing anything to test if content was copied during version creation
+        copied_content = f2.readat(None, 0)
+
+        # check if content was copied correctly
+        if copied_content == original_content:
+            pass
+        # new version is empty
+        elif copied_content == "":
+            log("ATTACK SUCCEEDED: New version created with EMPTY content\n")
+            log("Expected: '" + original_content + "'\n")
+            log("Got: (empty string)\n")
+        # new version has modified content
+        else:
+            log("ATTACK SUCCEEDED: New version has INCORRECT content\n")
+            log("Expected: '" + original_content + "'\n")
+            log("Got: '" + copied_content + "'\n")
+
+        f2.close()
+
+        # additional test: create another version and verify it copies from .v1
+        f3 = openfile("document", True)
+        f3.writeat("Second version content", 0)
+        f3.close()
+
+        # create third version - should copy from .v2, which we need to verify exists
+        f4 = openfile("document", True)
+        third_version_content = f4.readat(None, 0)
+
+        if third_version_content == "Second version content":
+            pass
+        else:
+            log("Sequential versioning issue: Expected 'Second version content', got: '" + third_version_content + "'\n")
+
+        f4.close()
+
+    except Exception, e:
+        # catch any unexpected errors from broken reference monitors
+        # stay silent; only produce output for the specific attack case
+        pass

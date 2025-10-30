@@ -1,0 +1,41 @@
+# Calling openfile with create=False and version older than the current one and try to write to it should raise FileInUseError
+
+f1 = openfile("testfile", True)
+
+# Write initial content at offset 0.
+f1.writeat("Held3456", 0)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+
+#Write new content into file
+f2.writeat("HelloWorldHello", 0)
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+#try opening current version and writing to -> it should be fine
+f4 = openfile("testfile.v1", False)
+
+f4.writeat("HelloWorldHelloingg", 0)
+
+f4.close()
+
+#Call openfile with original file name and create False and write to it
+f3 = openfile("testfile", False)
+
+#FileInUseError expected
+try:
+    f3.writeat("Held3456", 0)
+except FileInUseError:
+    log("")
+except Exception as e:
+    log("Exception " + str(type(e)) +  " thrown but expected FileInUseError")
+else:
+    log("No exception but expected FileInUseError")
+finally:
+    f3.close()

@@ -1,0 +1,21 @@
+#attack 21: special characters in filename
+specialname = "test-file_123.txt"
+
+f = openfile(specialname, True)
+f.writeat("data", 0)
+f.close()
+
+f2 = openfile(specialname, True)
+f2.close()
+
+#version exists with special chars??
+try:
+    fv = openfile(specialname + ".v1", False)
+    fv.close()
+except FileNotFoundError:
+    log("Welp -- Special char filename versioning failed!\n")
+
+#look at listfiles
+files = listfiles()
+if specialname not in files:
+    log("Welp -- Special char file not in listfiles!\n")

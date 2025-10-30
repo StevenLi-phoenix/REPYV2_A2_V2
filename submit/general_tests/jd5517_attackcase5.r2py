@@ -1,0 +1,18 @@
+# jd5517_attackcase5.r2py
+# listfiles hides versioned names
+
+f = openfile("case5_base", True)
+f.writeat("a", 0)
+f.close()
+
+# try to create a version; suppress expected FileInUseError
+try:
+    f2 = openfile("case5_base", True)
+    f2.close()
+except FileInUseError:
+    pass
+
+names = listfiles()
+assert "case5_base" in names
+for n in names:
+    assert ".v" not in n

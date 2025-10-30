@@ -1,0 +1,20 @@
+#test The listfiles() call in RepyV2 should not show that versions of files exist. It should just show the listing of all files that were created, regardless of how many versions of those file exist.
+#should only show file not version
+
+
+try:
+    f = openfile("testfile", True)
+    f.writeat("HelloWorld1", 0)
+    f.close()
+    
+    f1 = openfile("testfile", True)
+    f1.writeat("HelloWorld2", 0)
+    f1.close()
+    
+    files = listfiles()
+    for f in files:
+        pos = f.rfind('.v')  # find the last occurrence of ".v"
+        if pos != -1:
+            log("Failed")
+except Exception as e:
+    log("listfiles() failed: " + str(e))

@@ -1,0 +1,23 @@
+# bm3792_attackcase1.r2py
+# Test: Write twice to same file without closing (tests immutability enforcement)
+
+f = openfile("testfile", True)
+f.writeat("first", 0)
+
+try:
+    f.writeat("second", 5)
+    f.close()
+    
+    # If we get here, check if both writes succeeded
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    # If second write succeeded, it's a bug
+    if "second" in content:
+        log("SECURITY BUG: Multiple writes in same session succeeded\n")
+except:
+    try:
+        f.close()
+    except:
+        pass

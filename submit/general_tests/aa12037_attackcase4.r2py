@@ -1,0 +1,14 @@
+# Test: Cannot create new version while latest is open
+
+f1 = openfile("ac4_testfile", True)
+f1.writeat("data", 0)
+
+try:
+    f2 = openfile("ac4_testfile", True) # Should not be able to create new version as the latest one is still open
+    f2.close()
+    f1.close()
+    assert False, "Should not create version while latest is open"
+except FileInUseError:
+    pass
+
+f1.close()

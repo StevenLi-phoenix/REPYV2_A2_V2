@@ -1,0 +1,26 @@
+def main():
+    # Test opening file multiple times
+    try:
+        # Open file and keep it open
+        f1 = openfile("concurrent_test", True)
+        
+        # Try to open same file again
+        try:
+            f2 = openfile("concurrent_test", False)
+            log("FAIL_CONCURRENT_READ: Opened file twice for reading")
+            f2.close()
+        except:
+            pass  # Expected
+        
+        # Try to create version while file is open
+        try:
+            f3 = openfile("concurrent_test", True)
+            log("FAIL_CONCURRENT_CREATE: Created version while file open")
+            f3.close()
+        except:
+            pass  # Expected
+        
+        f1.close()
+    except:
+        pass
+if callfunc == 'initialize': main()

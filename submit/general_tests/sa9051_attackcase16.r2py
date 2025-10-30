@@ -1,0 +1,12 @@
+try:
+    openfile("somefile.v0", False)
+    try:
+        f = openfile("somefile.v0", False)
+        f.close()
+    except Exception:
+        pass
+    assert False, ".v0 should not be treated as valid explicit version"
+except FileNotFoundError:
+    pass
+except Exception:
+    pass

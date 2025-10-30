@@ -1,0 +1,26 @@
+# Test: filenames containing ".v" substrings should not be mis-parsed by listfiles()
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+# create a normal base
+f1 = openfile("case5_ambase", True)
+f1.writeat("1", 0)
+f1.close()
+
+# create a file whose name contains ".v" but is not a version suffix
+g = openfile("case5_strange.v1.backup", True)
+g.writeat("x", 0)
+g.close()
+
+# Query listfiles() and check that both names appear
+bases = listfiles()
+if "case5_ambase" not in bases or "case5_strange.v1.backup" not in bases:
+    raise Exception("LPlistfiles mis-parsed filenames (case5)")
+# otherwise silent (pass)

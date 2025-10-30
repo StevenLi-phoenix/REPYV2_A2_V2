@@ -1,0 +1,12 @@
+
+#Creating explicit versioned file names (like .v1) is invalid.
+try:
+    f = openfile("testfile4", True)
+    f.close()
+    try:
+        openfile("testfile4.v1", True)
+        log("TEST FAILED: testcase4 -> expected RepyArgumentError not raised")
+    except RepyArgumentError:
+        pass
+except Exception as e:
+    log("TEST FAILED: testcase4 -> " + str(e))

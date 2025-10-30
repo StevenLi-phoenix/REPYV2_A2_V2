@@ -1,0 +1,32 @@
+# Test Case 15: Verify new version copies content from latest version
+# When creating new version, it should copy latest version's content
+
+# Create base
+f1 = openfile("copy.txt", True)
+f1.writeat("initial", 0)
+f1.close()
+
+# Create v2 - should copy content from base
+f2 = openfile("copy.txt", True)
+content_v2 = f2.readat(None, 0)
+
+if content_v2 != "initial":
+    log("ATTACK SUCCESSFUL: New version didn't copy content from previous version\n")
+    log("Expected: initial, Got: " + content_v2 + "\n")
+    f2.close()
+    exitall()
+
+f2.writeat("modified", 0)
+f2.close()
+
+# Create v3 - should copy from v2 (latest), not v1
+f3 = openfile("copy.txt", True)
+content_v3 = f3.readat(None, 0)
+f3.close()
+
+if content_v3 != "modified":
+    log("ATTACK SUCCESSFUL: New version didn't copy from LATEST version\n")
+    log("Expected: modified, Got: " + content_v3 + "\n")
+    exitall()
+
+log("Test passed - new version copies content from latest version\n")

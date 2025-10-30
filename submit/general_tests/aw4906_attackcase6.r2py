@@ -1,0 +1,5 @@
+# try:
+#     f1= openfile("random", False)
+#     raise Exception("Failed to raise FileNotFoundError") 
+# except FileNotFoundError: 
+#     pass

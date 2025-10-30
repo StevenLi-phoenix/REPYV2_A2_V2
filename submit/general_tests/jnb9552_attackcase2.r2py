@@ -1,0 +1,30 @@
+# Tests writing to older file
+filename = "testtwo"
+try:
+    f1 = openfile(filename, True)
+    f1.writeat("hello", 0)
+    f1.close()
+except:
+    filename = "testtwor"
+    try:
+        f1 = openfile(filename, True)
+        f1.writeat("hello", 0)
+        f1.close()
+    except:
+        exitall()
+
+try: 
+   f2 = openfile(filename, False)
+
+   f2.writeat("world", 5)
+
+   f2.close()
+
+   log("attackcase 2 success\n")
+
+except FileInUseError:
+    exitall()
+
+except:
+    log("Defense layer raised incorrect error\n")
+    exitall()

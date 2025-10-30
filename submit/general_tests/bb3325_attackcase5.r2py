@@ -1,0 +1,21 @@
+# Old versions must be immutable.
+
+base = "immutable_test.txt"
+
+try:
+  f = openfile(base, True); f.write("initial"); f.close()
+  g = openfile(base, True); g.write("second"); g.close()
+except:
+  pass
+
+try:
+  h = openfile(base + ".v1", False)
+  try:
+    h.write("tamper")
+    log("VULN: write_old_version")
+  except:
+    pass
+  try: h.close()
+  except: pass
+except:
+  pass

@@ -1,0 +1,28 @@
+# Test to see if the monitor fails to make old file versions read-only.
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  raise AssertionError("Test case failed to raise expected exception: " + str(exception_type))
+
+
+f0 = openfile("immutable_test.txt", True)
+f0.writeat("v0 data", 0)
+f0.close()
+
+f1 = openfile("immutable_test.txt", True)
+f1.writeat("v1 data", 0)
+f1.close()
+
+f2 = openfile("immutable_test.txt", True)
+f2.close()
+
+old_file_handle = openfile("immutable_test.txt.v1", False)
+
+expect_error(FileInUseError, old_file_handle.writeat, "ATTACK", 0)
+
+old_file_handle.close()

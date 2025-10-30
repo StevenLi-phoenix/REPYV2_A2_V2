@@ -1,0 +1,12 @@
+a = openfile("filename", True)
+a.writeat("t", 0)
+a.close()
+
+# Create two versions
+v1 = openfile("filename", True); v1.close()
+v2 = openfile("filename", True); v2.close()
+
+lst = listfiles()
+assert "filename" in lst
+assert "filename.v1" not in lst
+assert "filename.v2" not in lst

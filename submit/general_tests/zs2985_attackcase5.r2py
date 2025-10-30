@@ -1,0 +1,25 @@
+# Attack Case 5: Listfiles Filtering Test
+# This test verifies that version files are properly hidden from listfiles output
+
+try:
+    # Create file and generate version
+    f1 = openfile("testfile", True)
+    f1.writeat("Hello", 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    # Check if listfiles hides version files
+    files = listfiles()
+
+    # Check if version files are visible in output
+    if ".v" in str(files):
+        log("SECURITY FLAW: Version files are visible in listfiles!")
+    else:
+        # Expected behavior - version files are properly hidden
+        pass
+
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

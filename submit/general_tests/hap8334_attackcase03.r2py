@@ -1,0 +1,13 @@
+# CASE 3 Creating new version to write
+
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+write("atk3", "J0")
+j2 = openfile("atk3", True)
+j2.writeat("J1", 0)
+assert j2.readat(None, 0) == "J1"
+j2.close()

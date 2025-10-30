@@ -1,0 +1,9 @@
+#try to open nonexistent file
+
+try:
+    myfile = openfile("nonexistent.txt", False)
+    log("ACCURACY FLAW: Opened nonexistent file!\n")
+    myfile.close()
+except Exception as e:
+    log("Nonexistent file properly rejected\n")
+

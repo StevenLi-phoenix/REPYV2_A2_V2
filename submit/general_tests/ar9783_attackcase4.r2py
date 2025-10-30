@@ -1,0 +1,12 @@
+#try to read file after closing
+
+myfile = openfile("testfile", True)
+myfile.writeat("Secret data", 0)
+myfile.close()
+
+#try to read after closing - should raise exception
+try:
+    data = myfile.readat(None, 0)
+    log("SECURITY FLAW: Able to read after close! Data: " + data + "\n")
+except:
+    log("Read after close properly blocked\n")

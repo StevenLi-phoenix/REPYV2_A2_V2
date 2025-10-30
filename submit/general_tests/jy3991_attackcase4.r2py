@@ -1,0 +1,17 @@
+
+def _safe_close(h):
+  try: h.close()
+  except Exception: pass
+
+try:
+  f = openfile("afterclose", True)
+  f.writeat("A", 0)
+  _safe_close(f)
+
+  try:
+    f.writeat("B", 1)
+    log("FAIL: write succeeded after close\n")
+  except Exception:
+    pass
+except Exception:
+  pass

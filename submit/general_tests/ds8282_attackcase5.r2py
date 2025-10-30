@@ -1,0 +1,20 @@
+try:
+    myfile = openfile("race_test.txt", True)
+    myfile.writeat("initial", 0)
+    myfile.close()
+    
+    # Try to exploit race condition by rapidly creating versions
+    try:
+        f1 = openfile("race_test.txt", True)
+        f2 = openfile("race_test.txt", True)
+        # If both succeed, race condition exists
+        f1.close()
+        f2.close()
+        log("VULNERABLE: Race condition - multiple version creation allowed\n")
+        exitall()
+    except FileInUseError:
+        pass
+    except Exception, e:
+        pass
+except Exception, e:
+    pass

@@ -1,0 +1,24 @@
+try:
+    f = openfile("copytest.txt", True)
+    f.writeat("ABC", 0)
+    f.close()
+    
+    f2 = openfile("copytest.txt", True)
+    initial = f2.readat(3, 0)
+    f2.writeat("DEF", 3)
+    f2.close()
+    
+    f3 = openfile("copytest.txt", True)
+    content = f3.readat(6, 0)
+    f3.close()
+    
+    v1 = openfile("copytest.txt.v1", False)
+    v1_content = v1.readat(None, 0)
+    v1.close()
+    
+    v2 = openfile("copytest.txt.v2", False)
+    v2_content = v2.readat(None, 0)
+    v2.close()
+
+except Exception as e:
+    pass

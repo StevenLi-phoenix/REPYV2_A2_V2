@@ -1,0 +1,4 @@
+# --- 1) create base and write ---
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()

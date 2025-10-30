@@ -1,0 +1,8 @@
+# open empty filename
+try:
+    f2 = openfile("", False)
+    log("opened empty filename\n")
+    f2.close()
+    exitall()
+except (ValueError, RepyArgumentError, FileNotFoundError):
+    pass

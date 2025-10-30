@@ -1,0 +1,29 @@
+# Attack Case 6: Direct Version File Creation
+# Tests monitors that allow direct creation of version files
+
+
+# Try to create version files directly
+try:
+    f1 = openfile("testfile6.v1", True)
+    f1.writeat("Direct version", 0)
+    f1.close()
+    
+    # Try to create another version
+    f2 = openfile("testfile6.v2", True)
+    f2.writeat("Another version", 0)
+    f2.close()
+    
+    # Try to access the files
+    f3 = openfile("testfile6.v1", False)
+    data1 = f3.readat(None, 0)
+    f3.close()
+    
+    f4 = openfile("testfile6.v2", False)
+    data2 = f4.readat(None, 0)
+    f4.close()
+    
+    raise Exception("VULNERABLE: Direct version file creation succeeded")
+except Exception as e:
+    if "VULNERABLE:" in str(e):
+        raise e
+    pass

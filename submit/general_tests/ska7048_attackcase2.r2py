@@ -1,0 +1,10 @@
+f1 = openfile("locktest2.txt", True)
+f1.writeat("data", 0)
+
+try:
+    f2 = openfile("locktest2.txt", False)
+    log("BUG FOUND\n")
+    f2.close()
+    f1.close()
+except FileInUseError:
+    f1.close()

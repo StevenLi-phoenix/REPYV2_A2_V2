@@ -1,0 +1,9 @@
+#Opening nonexistent version without create=True raises FileNotFoundError.
+try:
+    try:
+        openfile("testfile5.v99", False)
+        log("TEST FAILED: testcase5 -> expected FileNotFoundError not raised")
+    except FileNotFoundError:
+        pass
+except Exception as e:
+    log("TEST FAILED: testcase5 -> " + str(e))

@@ -1,0 +1,10 @@
+# Test 9: Repeatedly open, write to, and close a file creating 14 files
+# ag10656 assumes every version filename has exactly 3 trailing characters
+for i in range (1,15):
+    f1 = openfile("testfile", True)
+    f1.writeat("A", 0)
+    f1.close()
+
+f2 = openfile("testfile.v13", False)
+assert f2.readat(None, 0) == "A"
+f2.close()

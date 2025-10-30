@@ -1,0 +1,26 @@
+# Test: reopening an existing file with create=False should not allow writes.
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+# Create a file
+f = openfile("case8_existing", True)
+f.writeat("content", 0)
+f.close()
+
+# Reopen with create=False (should be read-only / immutable)
+g = openfile("case8_existing", False)
+try:
+    # Writing to a non-create-opened file should raise an error
+    ar(Exception, g.writeat, "badwrite", 0)
+finally:
+    try:
+        g.close()
+    except:
+        pass

@@ -1,0 +1,12 @@
+#Versioned files can be accessed using openfile(originalfilename + '.v' + str(num), create), where num starts from 1. If create=True is used on a versioned file, raise RepyArgumentError("Cannot create explicit version files"), as manual version creation is not allowed.
+
+
+
+try:
+    f = openfile("testfile.v1", True)
+
+        
+except Exception as e:
+   pass
+else:
+    log('fail')

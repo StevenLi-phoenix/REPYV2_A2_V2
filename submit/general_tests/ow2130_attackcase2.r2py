@@ -1,0 +1,11 @@
+VNAME = "a2.txt.v5"
+
+try:
+  f = openfile(VNAME, True)
+  try:
+    log("Was able to create a explicit version '" + VNAME + "'")
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass

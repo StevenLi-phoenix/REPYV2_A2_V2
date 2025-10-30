@@ -1,0 +1,21 @@
+##tries to write to old files
+
+for i in range(12):
+	try:
+		f1 = openfile("zestfile",True)
+		f1.writeat(str(i),0)
+		f1.close
+	except FileInUseError:
+		continue
+	except FileNotFoundError:
+		log("Did not make file correctly")
+	if i > 1:
+		f2 = openfile(("zestfile.v"+str(i)), False)
+		try:
+			f2.writeat(str(i*1000),0)
+		except FileInUseError:
+			continue
+		except FileNotFoundError:
+			log("Did not find file that was made")
+		finally:
+			assert f2.readat(None, 0) == str(i), "Wrote onto old file"

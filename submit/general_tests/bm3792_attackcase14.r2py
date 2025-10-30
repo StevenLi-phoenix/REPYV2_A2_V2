@@ -1,0 +1,15 @@
+# bm3792_attackcase14.r2py
+# Test: Try to open non-existent file with create=False (must raise FileNotFoundError)
+
+try:
+    f = openfile("nonexistent", False)
+    f.close()
+    
+    # If we got here without error, it's wrong
+    log("ACCURACY BUG: Opened non-existent file\n")
+except FileNotFoundError:
+    # Expected behavior
+    pass
+except:
+    # Wrong error type
+    pass

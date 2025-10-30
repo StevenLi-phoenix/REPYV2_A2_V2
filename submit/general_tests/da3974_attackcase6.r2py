@@ -1,0 +1,23 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("base", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    latest = openfile("testfile.v1", False)
+    
+    try:
+        new_version = openfile("testfile", True)
+        new_version.writeat("v2", 0)
+        new_version.close()
+        log("ATTACKED\n")
+    except FileInUseError:
+        pass
+    finally:
+        latest.close()
+        
+except Exception:
+    pass

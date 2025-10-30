@@ -1,0 +1,14 @@
+# Attack: Reopen latest version after closing
+
+f1 = openfile("reopen", True)
+f1.writeat("data", 0)
+f1.close()
+
+# Reopen same version
+try:
+    f2 = openfile("reopen", False)
+    f2.writeat("ATTACK", 0)
+    log("ATTACK SUCCESSFUL: Reopened and wrote to closed file\n")
+    f2.close()
+except:
+    pass

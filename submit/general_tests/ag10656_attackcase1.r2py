@@ -1,0 +1,35 @@
+# Testing for writing into latest version files, checking if output is taken from latest version
+# Expected result: 
+# Files created: testfile.py | testfile.py.v1 | testfile.py.v2
+# Error Thrown: None
+# Contents: f1: lololololol f2: sskssskksol f3: sskssskksol
+
+try: 
+    f1 = openfile("testfile", True)
+    f1.writeat("lololololol", 0)
+    f1.close()
+
+
+    f2 = openfile("testfile", True)
+    f2.writeat("sskssskks", 0)
+    f2.close()
+    f3 = openfile("testfile", True)
+    f3.close()
+
+    f1 = openfile("testfile", False)
+    f2 = openfile("testfile.v1", False)
+    f3 = openfile("testfile.v2", False)
+    f1_contents = f1.readat(11,0)
+    f2_contents = f2.readat(11,0)
+    f3_contents = f3.readat(11,0)
+    if f1_contents != 'lololololol' or f2_contents != 'sskssskksol' or f3_contents != 'sskssskksol':
+        raise Exception('File contents wrong')
+    f1.close()
+    f2.close()
+    f3.close()
+except Exception as e:
+
+    if str(e) == 'File contents wrong':
+        log("[VIOLATION] File incorrectly written"+f1_contents+f2_contents+f3_contents)
+    else:
+        log("[VIOLATION] Raised wrong exception:", str(e))

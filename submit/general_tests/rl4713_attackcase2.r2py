@@ -1,0 +1,21 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("Test content", 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    f3 = openfile("testfile", True)
+    f3.close()
+
+    f4 = openfile("testfile.v1", False)
+
+    f5 = openfile("testfile", True)
+
+    f4.close()
+    f5.close()
+except Exception as e:
+    log("An error occurred: " + str(e) + "\n")
+
+

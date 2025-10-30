@@ -1,0 +1,27 @@
+# Calling openfile with create=False and file name with version number that does exist should throw should be fine.
+
+f1 = openfile("testfile", True)
+
+# Write initial content at offset 0.
+f1.writeat("Held3456", 0)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+f3 = openfile("testfile", True)
+
+f3.close()
+
+
+#Call openfile with existing version number 
+f4 = openfile("testfile.v1", False)
+
+assert f4.readat(None, 0) == "Held3456"
+
+f4.close()

@@ -1,0 +1,64 @@
+
+##7.Reading from older versions is always allowed,
+# but writing to them is permanently disallowed.
+# Any attempt to write to an older version should
+# raise a FileInUseError. –S 6  Attack case 5
+
+
+try:
+    f1 = openfile("testfile", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Write initial content at offset 0.
+try:
+    f1.writeat("HelloWorld", 0)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Close the file to finalize the first version's contents.
+try:
+    f1.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# --- Create second version of "testfile"  ---
+# Calling openfile again with create=True should create the next version, and copy the previous version's contents into the new version.
+try:
+    f2 = openfile("testfile", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Read the entire file from offset 0 (pass None to read the whole file) and verify the copy occurred.
+try:
+    assert f2.readat(None, 0) == "HelloWorld"
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Close v2.
+try:
+    f2.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+isVulnerable=True
+try:
+    f3 = openfile("testfile.v1", False)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+    
+wrongException=False
+try:
+    f3.writeat("HelloWorld", 0)
+except FileInUseError:
+    isVulnerable=False
+    pass
+except Exception,e:
+    wrongException=True
+    pass
+
+if isVulnerable==True:
+    log("it should not allow writing to versioned file, it violate the 7th specification")
+if wrongException==True:
+    log("The reference monitor is Vulnerable, because it raise unexpectable exception.")

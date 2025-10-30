@@ -1,0 +1,18 @@
+# cannot create a new version of the same logical file while the previous one is still opem
+
+f1= openfile("doubleopen", True)
+f1.writeat("abc123", 0)
+
+caught_ok = False
+try:
+    # This should fail because doubleopen is already open
+    f2 = openfile("doubleopen", True)
+except FileInUseError:
+    caught_ok = True
+
+# close the first handle
+f1.close()
+
+# If the second open was allowed, or raised the wrong kind of error,
+# caught_ok will still be False and this assert will trip
+assert caught_ok

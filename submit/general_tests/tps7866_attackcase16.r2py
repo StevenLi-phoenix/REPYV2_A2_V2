@@ -1,0 +1,9 @@
+# Cross-file isolation
+
+a = openfile("t16a", True); a.writeat("A",0); a.close()
+b = openfile("t16b", True); b.writeat("B",0); b.close()
+ha = openfile("t16a", False)
+try:
+  hb = openfile("t16b", True); hb.close()
+finally:
+  ha.close()

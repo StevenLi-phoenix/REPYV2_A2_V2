@@ -1,0 +1,57 @@
+marker = "compromised_vs3518_attackcase16"
+dirname = "vdir_attack16"
+inside = dirname + "\\protected_attack16.txt"
+temp = "temp_attack16.txt"
+
+try:
+    try:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
+    except Exception:
+        pass
+    f = open(inside, "w")
+    try:
+        f.write("ORIG16\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    f = open(temp, "w")
+    try:
+        f.write("EVIL16\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        os.rmdir(dirname)
+    except Exception:
+        pass
+    try:
+        os.mkdir(dirname)
+    except Exception:
+        pass
+    try:
+        os.rename(temp, inside)
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(inside, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    if "EVIL16" in c:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

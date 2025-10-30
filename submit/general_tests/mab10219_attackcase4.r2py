@@ -1,0 +1,13 @@
+#ATTACK CASE 4: New verison shouldnt be able to be created while latest version is open.
+#openfile(name, True) must raise FileInUseError.
+
+
+f = openfile("lockTest", True)
+try:
+    openfile("lockTest", True)
+    raise Exception("Expected error not raised!")
+
+except FileInUseError:
+    pass
+finally:
+    f.close()

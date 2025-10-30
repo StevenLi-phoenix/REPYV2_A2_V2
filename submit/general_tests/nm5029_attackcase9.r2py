@@ -1,0 +1,10 @@
+# <netid>_attackcase9.r2py
+a = openfile("t9_eps", True); a.writeat("E", 0); a.close()
+b = openfile("t9_eps", True); b.close()
+lst = listfiles()
+assert "t9_eps" in lst
+i = 0
+while i < len(lst):
+  nm = lst[i]
+  assert ".v" not in nm
+  i = i + 1

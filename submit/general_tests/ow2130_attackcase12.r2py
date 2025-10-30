@@ -1,0 +1,38 @@
+B = "a12.txt"
+
+f2 = None
+try:
+  f = openfile(B, True)
+  try:
+    try: f.writeat("hello", 0)
+    except: pass
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass
+
+try:
+  f2 = openfile(B, False)
+  try:
+    pass
+  finally:
+    try: f2.close()
+    except: pass
+except:
+  f2 = None
+
+if f2 is not None:
+  try:
+    try:
+      f2.writeat("", 0)
+      log("Zero length write after close succeeded on '" + B + "'")
+    except:
+      pass
+    try:
+      f2.writeat("x", 0)
+      log("Write after close succeeded on '" + B + "'")
+    except:
+      pass
+  except:
+    pass

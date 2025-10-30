@@ -1,0 +1,47 @@
+mycontext['lock'] = createlock()
+mycontext['completed'] = 0
+
+def thread_interleaved_ops(thread_id):
+    try:
+        filename = "interleave.txt"
+        
+        if thread_id == 0:
+            f = openfile(filename, True)
+            f.writeat("thread0", 0)
+            sleep(0.1)
+            f.close()
+        
+        sleep(0.2)
+        
+        if thread_id % 2 == 0:
+            try:
+                f = openfile(filename + ".v1", False)
+                data = f.readat(None, 0)
+                f.close()
+            except:
+                pass
+        else:
+            try:
+                f = openfile(filename, True)
+                f.writeat("thread" + str(thread_id), 0)
+                f.close()
+            except:
+                pass
+        
+        mycontext['lock'].acquire(True)
+        mycontext['completed'] += 1
+        mycontext['lock'].release()
+        
+    except Exception as e:
+        mycontext['lock'].acquire(True)
+        mycontext['completed'] += 1
+        mycontext['lock'].release()
+
+try:
+    for i in range(6):
+        createthread(thread_interleaved_ops, [i])
+    
+    sleep(1.5)
+
+except Exception as e:
+    pass

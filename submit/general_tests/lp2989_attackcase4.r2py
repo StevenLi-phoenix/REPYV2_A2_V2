@@ -1,0 +1,26 @@
+# MEGA ATTACK 4: Resource Exhaustion - Multiple Handles (breaks 27 monitors)
+
+f = openfile("handles.txt", True)
+f.writeat("data", 0)
+f.close()
+
+handles = []
+try:
+    for i in range(100):
+        fh = openfile("handles.txt", False)
+        handles.append(fh)
+except Exception:
+    pass
+
+try:
+    fnew = openfile("handles.txt", True)
+    fnew.close()
+    log("ATTACK SUCCESSFUL: Created version with multiple handles\n")
+except Exception:
+    pass
+
+for h in handles:
+    try:
+        h.close()
+    except Exception:
+        pass

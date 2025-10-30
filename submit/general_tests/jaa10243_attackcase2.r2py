@@ -1,0 +1,16 @@
+# open file twice while creating a new version 
+
+f1 = openfile("testfile.txt", True)
+f1.writeat("helloworld", 0)
+f1.close()
+
+# create a new version and try to access the original
+f2 = openfile("testfile.txt", True)
+try:
+    f3 = openfile("testfile.txt", False)
+    log("confused the monitor and opened the file\n")
+    f3.close()
+    f2.close()
+    exitall()
+except FileInUseError:
+    f2.close()

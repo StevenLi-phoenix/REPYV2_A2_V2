@@ -1,0 +1,8 @@
+try:
+    f = openfile("multi.v99", True)
+    f.writeat("ninetynine", 0)
+    f.close()
+except RepyArgumentError:
+    pass
+except Exception:
+    log("Wrong exception type for explicit version creation")

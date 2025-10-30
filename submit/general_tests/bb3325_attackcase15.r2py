@@ -1,0 +1,23 @@
+base = "list_leak_test"
+try:
+  a = openfile(base, True); a.write("X"); a.close()
+  b = openfile(base, True); b.write("Y"); b.close()
+except: pass
+
+lf = listfiles()
+# If listfiles contains base.v1 (or other .vN) -> leak
+foundv = False
+for f in lf:
+  if f.endswith(".v1") or (".v" in f and f.split(".v")[-1].isdigit()):
+    foundv = True
+    break
+if foundv:
+  try: log("VULN: listfiles_exposes_version_files")
+  except: pass
+
+# Also check wrapper LPlistfiles (should show base at least once)
+try:
+  shown = listfiles()
+except:
+  shown = []
+# no further action here (some monitors return base-only already)

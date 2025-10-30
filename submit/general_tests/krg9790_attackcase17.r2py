@@ -1,0 +1,7 @@
+#attack 17: try to make negative version
+try:
+    f = openfile("hack.v-1", True)
+    f.close()
+    log("Oh no -- Created negative version file!\n")
+except RepyArgumentError:
+    pass

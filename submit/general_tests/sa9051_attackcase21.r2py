@@ -1,0 +1,17 @@
+cbase = "immutchain"
+c = openfile(cbase, True)
+c.writeat("start", 0)
+c.close()
+
+for i in range(3):
+    tmp = openfile(cbase, True)
+    tmp.writeat("X" + str(i), 5 + i)
+    tmp.close()
+
+old = openfile(cbase + ".v1", False)
+try:
+    old.writeat("hax", 0)
+    assert False, "Should not be able to write to old version"
+except FileInUseError:
+    pass
+old.close()

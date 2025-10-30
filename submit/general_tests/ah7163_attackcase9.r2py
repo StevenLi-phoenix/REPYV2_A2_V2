@@ -1,0 +1,21 @@
+# Check if able to Write to older version 
+f1 = openfile("testfile", True)
+f1.writeat("A", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("Hello", 1)
+f2.close()
+
+# open explicit older version
+try:
+    old = openfile("testfile", False)
+    try:
+        old.writeat("bad", 0)
+        log("BAD: wrote to old version")
+    except Exception as e:
+        pass
+    finally:
+        old.close()
+except Exception as e:
+    log("Could not open testfile: " + str(e))

@@ -1,0 +1,13 @@
+# create big content
+f = openfile("testfile", True)
+big = "A" * 100000  
+f.writeat(big, 0)
+f.close()
+
+try:
+    v = openfile("testfile", True)
+    if v.readat(None, 0) != big:
+        log("Big Content copy failed")
+    v.close()
+except Exception as e:
+    log("bigfile version creation error: " + str(e))

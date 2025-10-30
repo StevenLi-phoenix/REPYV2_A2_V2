@@ -1,0 +1,24 @@
+# Ensure "default" exists so removefile can be tested
+try:
+    f = openfile("default", True)
+    try:
+        f.writeat("X", 0)
+    except Exception:
+        pass
+    try:
+        f.close()
+    except Exception:
+        pass
+except Exception:
+    # if creation fails, still attempt removefile test
+    pass
+
+# Now call removefile; it should raise an exception
+try:
+    removefile("default")
+except Exception:
+    # expected behavior
+    pass
+else:
+    # If removefile succeeded without raising, that's a monitor failure
+    raise Exception("Bug detected: removefile('default') succeeded but deletions should be forbidden")

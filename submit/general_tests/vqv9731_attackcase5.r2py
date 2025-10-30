@@ -1,0 +1,89 @@
+# Test for Spec #10: Invalid filenames raise RepyArgumentError.
+# Checks various invalid name patterns for openfile().
+
+invalid_names = [
+    "",                # Empty
+    ".",               # Dot
+    "..",              # Double dot
+    ".hidden",         # Starts with dot
+    "file/name",       # Contains slash
+    "file\\name",      # Contains backslash
+    "UPPERCASE",       # Contains uppercase
+    "with space",      # Contains space
+    "with!symbol",     # Contains symbol (! not in a-z0-9._-)
+    "a" * 121,         # Too long
+    "a.v0",            # Specific check for .v0 (invalid version number)
+    "a.v",             # Ends with .v but no number
+    "a.vXYZ",          # Ends with .v but not numbers
+    " leading_space",  # Leading space (if allowed chars are strict)
+    "trailing_space "  # Trailing space (if allowed chars are strict)
+]
+
+test_failed = False
+opened_files = [] # Keep track of handles if any succeed unexpectedly
+
+try:
+    for name in invalid_names:
+        handle_create = None
+        handle_open = None
+        current_test_failed = False # Flag for failure within this specific name test
+
+        # --- Test with create=True ---
+        try:
+            handle_create = openfile(name, True)
+            # If we reach here, it was allowed. FLAWED monitor for this name.
+            opened_files.append(handle_create) # Add to list for cleanup
+            current_test_failed = True
+        except RepyArgumentError:
+            # CORRECT behavior for invalid names.
+            pass
+        except AssertionError:
+            raise # Propagate failure signal
+        except Exception:
+            # Any OTHER error is also potentially a flaw.
+            # Depending on strictness, maybe allow FileNotFoundError if name is empty?
+            # But safer to flag any non-RepyArgumentError as potential failure.
+            current_test_failed = True
+
+        # --- Test with create=False ---
+        # Should ideally raise RepyArgumentError for invalid format,
+        # or FileNotFoundError if the name is invalid *and* doesn't correspond to any valid file.
+        try:
+            handle_open = openfile(name, False)
+            # If we reach here, it was allowed (or potentially found unexpected file). FLAWED.
+            opened_files.append(handle_open)
+            current_test_failed = True
+        except RepyArgumentError:
+            # CORRECT behavior for invalid names.
+            pass
+        except FileNotFoundError:
+             # Also acceptable for create=False if name is invalid *and* doesn't exist.
+            pass
+        except AssertionError:
+            raise # Propagate failure signal
+        except Exception:
+            # Any OTHER error is potentially a flaw.
+            current_test_failed = True
+
+        # If either create=True or create=False failed incorrectly for this name, mark overall test as failed
+        if current_test_failed:
+            test_failed = True
+            # Optional: Log which filename failed if debugging is needed (but REMOVE log for submission)
+            # log("Test failed for filename:", name)
+
+
+    # After checking all names, assert based on the overall flag
+    if test_failed:
+        assert(False) # Signal failure
+
+except AssertionError:
+    raise # Propagate failure signal
+except Exception:
+    # Unexpected error during test loop itself
+    assert(False) # Signal failure
+finally:
+    # Cleanup any handles that were unexpectedly created
+    for h in opened_files:
+        try:
+            if h and not h.VMfile.closed: h.close()
+        except Exception: pass

@@ -1,0 +1,144 @@
+if "exploit.txt" in listfiles():
+    removefile("exploit.txt")
+
+# Create base file
+f = openfile("exploit.txt", True)
+f.writeat("base", 0)
+f.close()
+
+vulnerable = [False]
+race_exploited = [False]
+files_opened = [0]
+same_version = [False]
+
+def exploit_version_race():
+    """
+    EXPLOIT 1: Multiple threads can call _get_highest_version() simultaneously
+    and get the same version number, then both create files with same version
+    """
+    try:
+        # Sleep briefly to synchronize threads
+        sleep(0.01)
+        
+        f = openfile("exploit.txt", True)
+        files_opened[0] += 1
+        
+        # If we successfully opened, we got a version number
+        # Write identifying data
+        f.writeat("thread_data", 0)
+        
+        # Keep open briefly to increase race window
+        sleep(0.02)
+        f.close()
+        
+    except FileInUseError:
+        # Expected if locking works properly
+        pass
+    except:
+        vulnerable[0] = True
+
+def exploit_dict_race():
+    """
+    EXPLOIT 2: open_files dict is not thread-safe
+    Multiple threads can corrupt it by concurrent modifications
+    """
+    try:
+        sleep(0.005)
+        
+        for i in range(10):
+            try:
+                f = openfile("exploit.txt", False)
+                # Immediately close to stress dict operations
+                f.close()
+            except FileInUseError:
+                pass
+            except:
+                vulnerable[0] = True
+                
+    except:
+        vulnerable[0] = True
+
+def exploit_close_race():
+    """
+    EXPLOIT 3: close() deletes from open_files without checking if key exists
+    Also no synchronization on dict deletion
+    """
+    try:
+        sleep(0.015)
+        
+        for i in range(5):
+            try:
+                f = openfile("exploit.txt", False)
+                
+                # Try rapid close operations
+                f.close()
+                
+            except FileInUseError:
+                pass
+            except:
+                vulnerable[0] = True
+                
+    except:
+        vulnerable[0] = True
+
+# Launch synchronized attack - all threads start nearly simultaneously
+# This maximizes race condition probability
+createthread(exploit_version_race)
+createthread(exploit_version_race)
+createthread(exploit_version_race)
+createthread(exploit_version_race)
+createthread(exploit_dict_race)
+createthread(exploit_close_race)
+
+# Wait for threads to complete
+sleep(0.2)
+
+# VERIFICATION 1: Check if multiple threads opened for writing
+if files_opened[0] > 1:
+    race_exploited[0] = True
+    vulnerable[0] = True
+    log("VULNERABLE: Multiple threads opened for writing - race in version assignment")
+
+# VERIFICATION 2: Check for version number collision
+try:
+    files = listfiles()
+    version_numbers = []
+    
+    for fname in files:
+        if "exploit.txt.v" in fname:
+            parts = fname.split(".v")
+            if len(parts) == 2 and parts[1].isdigit():
+                version_numbers.append(int(parts[1]))
+    
+    # Check for duplicate version numbers
+    if len(version_numbers) != len(set(version_numbers)):
+        same_version[0] = True
+        vulnerable[0] = True
+        log("VULNERABLE: Duplicate version numbers created - critical race condition")
+        
+    # Check if we have fewer versions than successful opens
+    if files_opened[0] > len(version_numbers):
+        vulnerable[0] = True
+        log("VULNERABLE: Version collision - files overwritten")
+        
+except:
+    vulnerable[0] = True
+    log("VULNERABLE: System corruption from race condition")
+
+# VERIFICATION 3: Check system consistency
+try:
+    test = openfile("exploit.txt", False)
+    test.close()
+except:
+    vulnerable[0] = True
+    log("VULNERABLE: File system corrupted - cannot access file")
+
+# Final verdict
+if race_exploited[0]:
+    log("VULNERABLE: Race condition exploited with threading")
+elif same_version[0]:
+    log("VULNERABLE: Version numbering system broken")
+elif vulnerable[0]:
+    log("VULNERABLE: Thread safety violations detected")
+else:
+    log("SECURE: No race conditions exploited")

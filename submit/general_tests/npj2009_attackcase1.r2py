@@ -1,0 +1,18 @@
+def main():
+    # Test writing to old versions
+    try:
+        f1 = openfile("npj2009_test2", True)
+        f1.writeat("v1", 0)
+        f1.close()
+        
+        f2 = openfile("npj2009_test2", True)
+        f2.close()
+        
+        # Use a safe variable name - avoid underscores or special names
+        foldversion = openfile("npj2009_test2.v1", False)
+        foldversion.writeat("hacked", 0)
+        log("FAIL_VERSION_WRITE")
+        foldversion.close()
+    except:
+        pass  # Expected - should be blocked
+if callfunc == 'initialize': main()

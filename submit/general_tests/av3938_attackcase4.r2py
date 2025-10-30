@@ -1,0 +1,9 @@
+try:
+  f = openfile("hello.txt.v0", True)
+  f.close()
+  # Should not reach here
+  log("Reference Monitor is vuln: .v0 pattern was allowed\n")
+except (FileError, RepyArgumentError):
+  pass
+except:
+  log("Reference Monitor is vulnerable\n")

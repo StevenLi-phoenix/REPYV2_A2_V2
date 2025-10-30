@@ -1,0 +1,13 @@
+file_to_delete = "test_file"
+
+f = openfile(file_to_delete, True)
+f.writeat("Data", 0)
+f.close()
+
+try:
+    removefile(file_to_delete)
+
+    raise Exception("FileDeletionSucceeded")
+
+except RepyArgumentError:
+    pass

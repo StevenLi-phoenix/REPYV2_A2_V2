@@ -1,0 +1,13 @@
+f = openfile("testfile6", True)
+f.writeat("Attack6", 0)
+
+
+#do not allow creation of a new version when the original is open
+try:
+    openfile("testfile6", True)
+    assert False
+
+except FileInUseError:
+    pass
+finally:
+    f.close()

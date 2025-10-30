@@ -1,0 +1,16 @@
+# CASE 09 Copying big data
+
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+big = "X" * 8192
+write("atk09", big)
+file = openfile("atk09", False)
+try:
+    m = file.readat(None, 0)
+    assert m == big
+finally:
+    file.close()

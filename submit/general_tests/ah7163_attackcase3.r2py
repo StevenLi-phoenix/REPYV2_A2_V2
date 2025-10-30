@@ -1,0 +1,16 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("HelloWorld", 0)
+    f1.close()
+except Exception as e:
+    log("Unable to create File\nError: ", e)
+
+# Try to remove the file. According to the spec, removefile() must raise RepyArgumentError.
+try:
+    removefile("testfile")
+except RepyArgumentError:
+    pass
+except Exception as e:
+    log("removefile raised unexpected exception: " + str(e))
+else:
+    log("removefile did NOT raise RepyArgumentError (deletion succeeded or different behavior).")

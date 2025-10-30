@@ -1,0 +1,12 @@
+
+# Multithreading 
+
+def fileop():
+f1 = openfile('testfile', True)
+    f1.close()
+
+t1 = createthread(fileop)
+t2 = createthread(fileop)
+
+
+

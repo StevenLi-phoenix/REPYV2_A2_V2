@@ -1,0 +1,8 @@
+# Explicit version creation disallowed
+
+f = openfile("t05", True); f.close()
+try:
+  openfile("t05.v1", True)
+  raise Exception("explicit version create allowed")
+except RepyArgumentError:
+  pass

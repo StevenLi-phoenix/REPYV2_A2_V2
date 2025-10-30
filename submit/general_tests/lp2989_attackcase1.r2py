@@ -1,0 +1,34 @@
+# MEGA ATTACK 1: Content Copying Failures (breaks 73 monitors)
+# Tests: Empty files, v1 content, content inheritance
+
+# Test 1: Empty file versioning
+f1 = openfile("empty.txt", True)
+f1.close()
+
+f2 = openfile("empty.txt", True)
+content = f2.readat(None, 0)
+f2.close()
+
+if content != "":
+    log("ATTACK SUCCESSFUL: Empty file versioning broken\n")
+
+try:
+    fv1 = openfile("empty.txt.v1", False)
+    content = fv1.readat(None, 0)
+    if content != "":
+        log("ATTACK SUCCESSFUL: v1 not empty\n")
+    fv1.close()
+except Exception:
+    pass
+
+# Test 2: Content not copied to new version
+f1 = openfile("copy.txt", True)
+f1.writeat("original content", 0)
+f1.close()
+
+f2 = openfile("copy.txt", True)
+content = f2.readat(None, 0)
+f2.close()
+
+if content != "original content":
+    log("ATTACK SUCCESSFUL: Content not copied\n")

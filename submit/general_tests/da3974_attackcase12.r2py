@@ -1,0 +1,17 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("data", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    try:
+        removefile("testfile.v1")
+        log("ATTACKED\n")
+    except (RepyArgumentError, ValueError):
+        pass
+        
+except Exception:
+    pass

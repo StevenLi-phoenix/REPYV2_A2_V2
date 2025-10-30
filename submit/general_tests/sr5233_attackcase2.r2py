@@ -1,0 +1,30 @@
+# --- Create first version of "testfile" ---
+# Calling openfile with create=True should create a new version.
+#TEST TO OPEN AN ALREADY OPEN FILE
+
+f1 = openfile("hello10.txt", True)
+
+
+# Write initial content at offset 0.
+f1.writeat("HelloWorld", 0)
+start_time = 0
+end_time = 0
+
+try:
+	start_time = getruntime()
+	f3 = openfile("hello10.txt", True)
+	end_time = getruntime()
+
+	if((end_time - start_time) > 4):
+		raise TimeoutError
+except FileInUseError as e:
+	pass
+except exception_hierarchy.FileInUseError:
+	pass
+except TimeoutError:
+	log("Takes too long, likely an infinite loop")
+
+
+# Close the file to finalize the first version's contents.
+f1.close()
+

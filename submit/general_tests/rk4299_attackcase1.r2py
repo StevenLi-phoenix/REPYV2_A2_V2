@@ -1,0 +1,39 @@
+
+# rk4299_attackcase1.r2py
+# TOCTOU / rename-race
+try:
+    import os, time
+except Exception:
+    os = None
+    time = None
+
+base = "attackfile_temp.txt"
+target = "attackfile_target.txt"
+
+try:
+    targetFile = open(target, "w")
+    targetFile.write("secret\n")
+    targetFile.close()
+except Exception:
+    pass
+try:
+    targetFile = open(base, "w")
+    targetFile.write("temp\n")
+    targetFile.flush()
+    try:
+        for i in range(60):
+            try:
+                os.rename(base, target)
+                os.rename(target, base)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        fh = open(base, "r")
+        _ = fh.read()
+        fh.close()
+    except Exception:
+        pass
+except Exception:
+    pass

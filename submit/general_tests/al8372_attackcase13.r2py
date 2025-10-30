@@ -1,0 +1,10 @@
+# Attack Case 13: Empty file handling
+
+fempty = openfile("empty", True)
+fempty.close()
+
+fempty2 = openfile("empty", False)
+data = fempty2.readat(None, 0)
+assert data == "", "Empty file should return empty string"
+fempty2.close()
+

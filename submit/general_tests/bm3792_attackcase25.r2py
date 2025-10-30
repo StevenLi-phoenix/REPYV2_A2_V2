@@ -1,0 +1,17 @@
+# bm3792_attackcase25.r2py
+# Test: Write zero-length data
+
+f = openfile("testfile", True)
+f.writeat("", 0)
+f.close()
+
+# Create version
+try:
+    f2 = openfile("testfile", True)
+    f2.close()
+    
+    # Check if version exists
+    vfile = openfile("testfile.v1", False)
+    vfile.close()
+except:
+    log("ACCURACY BUG: Version not created after zero-length write\n")

@@ -1,0 +1,14 @@
+f1 = openfile("testfile1.txt", True)
+f1.writeat("original content", 0)
+f1.close()
+
+f2 = openfile("testfile1.txt", True)
+f2.writeat("new version content", 0)
+f2.close()
+
+f3 = openfile("testfile1.txt", False)
+base_content = f3.readat(None, 0)
+f3.close()
+
+if base_content != "original content":
+    log("Base file read returns incorrect content")

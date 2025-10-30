@@ -1,0 +1,19 @@
+#ATTACK CASE 5: You should always be allowed to read older versions
+#Make sure the right content is in the previous file
+
+
+f1 = openfile("testingFile", True)
+f1.writeat("previousData", 0)
+f1.close()
+
+f2 = openfile("testingFile", True)
+f2.writeat("newData", 0)
+f2.close()
+
+old = openfile("testingFile.v1", False)
+try:
+    content = old.readat(None, 0)
+    if content != "previousData":
+        raise Exception("Old version does not contain the right content")
+finally:
+    old.close()

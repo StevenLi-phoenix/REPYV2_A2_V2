@@ -1,0 +1,181 @@
+# MEGA ATTACK 18: Permission and Access Control Edge Cases
+# Tests: FileInUseError handling, concurrent access patterns
+
+# Test 1: Open base file and version simultaneously
+f = openfile("simul.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("simul.txt", True)
+f.close()
+
+try:
+    fbase = openfile("simul.txt", False)
+    fv = openfile("simul.txt.v1", False)
+    
+    # Both should be readable simultaneously
+    base_content = fbase.readat(None, 0)
+    v1_content = fv.readat(None, 0)
+    
+    fbase.close()
+    fv.close()
+except FileInUseError:
+    log("ATTACK SUCCESSFUL: Cannot open base and version simultaneously\n")
+    try:
+        fbase.close()
+    except Exception:
+        pass
+    try:
+        fv.close()
+    except Exception:
+        pass
+except Exception:
+    pass
+
+# Test 2: Multiple readers on version file
+f = openfile("multiv.txt", True)
+f.writeat("data", 0)
+f.close()
+
+f = openfile("multiv.txt", True)
+f.close()
+
+handles = []
+try:
+    for i in range(10):
+        fv = openfile("multiv.txt.v1", False)
+        handles.append(fv)
+    
+    # All should be able to read
+    for h in handles:
+        content = h.readat(None, 0)
+        h.close()
+        
+except FileInUseError:
+    log("ATTACK SUCCESSFUL: Multiple readers blocked on version file\n")
+    for h in handles:
+        try:
+            h.close()
+        except Exception:
+            pass
+except Exception:
+    for h in handles:
+        try:
+            h.close()
+        except Exception:
+            pass
+
+# Test 3: Write to base while reading version
+f = openfile("writev.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("writev.txt", True)
+f.close()
+
+success = [False]
+
+def version_reader():
+    try:
+        fv = openfile("writev.txt.v1", False)
+        sleep(0.1)
+        content = fv.readat(None, 0)
+        fv.close()
+        success[0] = True
+    except Exception:
+        pass
+
+def base_writer():
+    sleep(0.05)
+    try:
+        fbase = openfile("writev.txt", False)
+        fbase.writeat("modified", 0)
+        fbase.close()
+    except Exception:
+        pass
+
+t1 = createthread(version_reader)
+t2 = createthread(base_writer)
+sleep(0.3)
+
+if not success[0]:
+    log("ATTACK SUCCESSFUL: Version read blocked by base write\n")
+
+# Test 4: Create new version while old version is open
+f = openfile("openold.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("openold.txt", True)
+f.close()
+
+try:
+    fv1 = openfile("openold.txt.v1", False)
+    
+    # Now try to create v2 while v1 is open
+    fnew = openfile("openold.txt", True)
+    fnew.close()
+    
+    fv1.close()
+    
+    # Check if v2 was created
+    try:
+        fv2 = openfile("openold.txt.v2", False)
+        fv2.close()
+    except FileNotFoundError:
+        log("ATTACK SUCCESSFUL: v2 not created while v1 was open\n")
+except Exception:
+    try:
+        fv1.close()
+    except Exception:
+        pass
+
+# Test 5: Exhaust file handle limit
+handles = []
+try:
+    for i in range(200):
+        f = openfile("handle" + str(i) + ".txt", True)
+        handles.append(f)
+    
+    log("ATTACK SUCCESSFUL: No file handle limit enforced\n")
+except Exception:
+    pass
+
+for h in handles:
+    try:
+        h.close()
+    except Exception:
+        pass
+
+# Test 6: Concurrent delete and open
+f = openfile("delopn.txt", True)
+f.writeat("data", 0)
+f.close()
+
+results = [None, None]
+
+def deleter():
+    sleep(0.02)
+    try:
+        removefile("delopn.txt")
+        results[0] = "deleted"
+    except Exception:
+        results[0] = "failed"
+
+def opener():
+    sleep(0.03)
+    try:
+        f = openfile("delopn.txt", False)
+        f.close()
+        results[1] = "opened"
+    except FileNotFoundError:
+        results[1] = "notfound"
+    except Exception:
+        results[1] = "error"
+
+t1 = createthread(deleter)
+t2 = createthread(opener)
+sleep(0.1)
+
+if results[0] == "deleted" and results[1] == "opened":
+    log("ATTACK SUCCESSFUL: Opened deleted file\n")

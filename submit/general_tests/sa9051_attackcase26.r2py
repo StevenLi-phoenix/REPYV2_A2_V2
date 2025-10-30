@@ -1,0 +1,13 @@
+chain = "chaincopy"
+c0 = openfile(chain, True)
+c0.writeat("first", 0)
+c0.close()
+
+c1 = openfile(chain, True)
+assert c1.readat(None, 0).find("first") != -1
+c1.writeat("second", 5)
+c1.close()
+
+c2 = openfile(chain, True)
+assert "second" in c2.readat(None, 0)
+c2.close()

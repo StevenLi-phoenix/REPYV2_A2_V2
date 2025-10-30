@@ -1,0 +1,12 @@
+# Test: Cannot manually create version files
+
+f1 = openfile("manualtest4", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    fmanual = openfile("manualtest4.v99", True)
+    fmanual.close()
+    assert False, "Should not allow manual version creation"
+except RepyArgumentError:
+    pass

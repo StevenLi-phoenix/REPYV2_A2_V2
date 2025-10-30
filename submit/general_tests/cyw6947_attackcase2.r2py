@@ -1,0 +1,16 @@
+# This test attempts to create an explicit versioned file "explicit.v1"
+try:
+    try:
+        file = openfile("explicit.v1", True)
+        try:
+            log("UNEXPECTED: explicit create of explicit.v1 succeeded")
+        except Exception:
+            pass
+        try: file.close()
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+except Exception:
+    pass

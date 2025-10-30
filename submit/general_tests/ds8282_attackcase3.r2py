@@ -1,0 +1,16 @@
+try:
+    myfile = openfile("testfile1.txt", True)
+    myfile.writeat("data", 0)
+    myfile.close()
+    
+    try:
+        myfile = openfile("testfile1.txt.v0", False)
+        myfile.close()
+        log("VULNERABLE: Version v0 was accessible\n")
+        exitall()
+    except FileNotFoundError:
+        pass
+    except Exception, e:
+        pass
+except Exception, e:
+    pass

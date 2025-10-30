@@ -1,0 +1,10 @@
+# Test: creating a file with an explicit version suffix must be rejected.
+
+caught_ok = False
+try:
+    f = openfile("ok123.v42", True)
+except RepyArgumentError:
+    caught_ok = True
+
+# no RepyArgumentError, the monitor is in violation
+assert caught_ok

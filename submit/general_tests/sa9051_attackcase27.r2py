@@ -1,0 +1,5 @@
+try:
+    openfile("absolutely_no_such_file_zz", False)
+    assert False, "Opening non-existent base with create=False should raise FileNotFoundError"
+except FileNotFoundError:
+    pass

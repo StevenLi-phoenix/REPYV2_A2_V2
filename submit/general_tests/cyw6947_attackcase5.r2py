@@ -1,0 +1,17 @@
+# This test case checks that a new version of a file cannot be created while the latest version is still open.
+file = openfile("test_lockcreate", True)
+file.writeat("X", 0)
+
+try:
+    try:
+        new_file = openfile("test_lockcreate", True)
+        try:
+            log("UNEXPECTED: created new version while latest version is open")
+        except Exception: pass
+        try: new_file.close()
+        except Exception: pass
+    except Exception:
+        pass
+finally:
+    try: file.close()
+    except Exception: pass

@@ -1,0 +1,20 @@
+f1 = openfile("concurrenttest9.txt", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("concurrenttest9.txt", True)
+f2.writeat("newdata", 0)
+f2.close()
+
+try:
+    f3 = openfile("concurrenttest9.txt.v1", True)
+    log("BUG FOUND\n")
+    f3.close()
+except RepyArgumentError:
+    pass
+
+f4 = openfile("concurrenttest9.txt.v1", False)
+content = f4.readat(None, 0)
+if content != "data":
+    log("BUG FOUND\n")
+f4.close()

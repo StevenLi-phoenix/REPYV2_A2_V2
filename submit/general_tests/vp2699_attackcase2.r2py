@@ -1,0 +1,18 @@
+#this code detects version leak and prints "Monitor broken" if there's a versioned file in the output when we call the ListFile() function 
+
+a = openfile("test", True)
+a.writeat("x", 0)
+a.close()
+
+b = openfile("test", True)
+b.close()
+
+files = listfiles()
+
+i = 0
+while i < len(files):
+	if ".v" in files[i]:
+            log("Reference Monitor Faulty: Showing versioned files in Listfiles() output\n")
+            i = len(files)
+            break
+    	i = i + 1

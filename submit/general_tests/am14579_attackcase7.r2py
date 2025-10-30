@@ -1,0 +1,10 @@
+# Attack: Test that opening non-existent file raises FileNotFoundError
+
+# Try to open a file that definitely doesn't exist
+try:
+    f = openfile("nonexistent_file_xyz123", False)
+    log("ATTACK SUCCESSFUL: Opening non-existent file did not raise FileNotFoundError\n")
+    f.close()
+except Exception:
+    # Expected behavior - reference monitor correctly raised an error
+    pass

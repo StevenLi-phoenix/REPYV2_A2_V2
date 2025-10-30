@@ -1,0 +1,23 @@
+file_name = "test_file"
+
+f_init = openfile(file_name, True)
+f_init.writeat("V1", 0)
+f_init.close()
+f_init2 = openfile(file_name, True)
+f_init2.writeat("V2", 0)
+f_init2.close()
+
+try:
+    f_ver_read = openfile(file_name + '.v1', False)
+    f_create_new = openfile(file_name, True)
+    f_create_new.close()
+
+    raise Exception("LockHoleSucceeded")
+
+except FileInUseError:
+    pass
+finally:
+    try:
+        f_ver_read.close()
+    except:
+        pass

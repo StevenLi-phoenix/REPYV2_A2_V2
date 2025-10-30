@@ -1,0 +1,12 @@
+# Test: removefile() must be forbidden.
+
+# Create the file (should be allowed)
+f = openfile("filedelete", True)
+f.writeat("DeletefileNotAllowed", 0)
+f.close()
+
+try:
+    removefile("filedelete")
+    assert False, "Monitor allowed removefile() which must be forbidden"
+except RepyArgumentError:
+    pass

@@ -1,0 +1,25 @@
+# Test if the monitor's tracking of open files is flawed
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  raise AssertionError("Monitor failed to raise expected exception: " + str(exception_type))
+
+f0 = openfile("statetest.txt", True)
+f0.close()
+
+latest_handle = openfile("statetest.txt", True)
+
+expect_error(FileInUseError, openfile, "statetest.txt", True)
+
+latest_handle.close()
+
+try:
+  fnew = openfile("statetest.txt", True)
+  fnew.close()
+except Exception, e:
+  raise

@@ -1,0 +1,15 @@
+# Specification 4: No writing to older versions
+
+basename = 'testfile'
+
+f = openfile(basename, True)
+f.writeat("this is an attack. I plan to write over this with something benign", 0)
+f.close()
+
+f = openfile(basename, False)
+try:
+    f.writeat("red leather, yellow leather, red leather, yellow leather, red leather, yellow leather", 0)
+    f.close()
+    raise ValueError("I've overwritten an attack")
+except:
+    assert True

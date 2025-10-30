@@ -1,0 +1,34 @@
+# Attack Case 22: Intermediate version access with mixed operations
+# Tests complex scenario with multiple versions and simultaneous access
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+# Create base and first version
+finterbase = openfile("inter22", True)
+finterbase.close()
+
+finterv1 = openfile("inter22", True)
+finterv1.close()
+
+# Open v1 and base for reading
+hv1 = openfile("inter22.v1", False)
+hbase = openfile("inter22", False)
+
+# Try to create new version - should fail since v1 is open (latest)
+expect_error(openfile, ("inter22", True), FileInUseError)
+
+# Close v1
+hv1.close()
+
+# Now should be able to create new version
+hv2 = openfile("inter22", True)
+hv2.close()
+
+# Close base
+hbase.close()
+

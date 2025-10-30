@@ -1,0 +1,16 @@
+# Attack Case 12: Multiple writes and reads on same handle
+
+fw = openfile("multiwrite", True)
+fw.writeat("AAA", 0)
+fw.writeat("BBB", 3)
+fw.writeat("CCC", 6)
+content = fw.readat(None, 0)
+assert content == "AAABBBCCC", "Multiple writes should work"
+fw.close()
+
+frw = openfile("readwrite", True)
+frw.writeat("test data", 0)
+result = frw.readat(None, 0)
+assert result == "test data", "Should be able to read after write"
+frw.close()
+

@@ -1,0 +1,33 @@
+mycontext['lock'] = createlock()
+mycontext['exception_count'] = 0
+
+def thread_write_old_version():
+    try:
+        sleep(0.05)
+        old = openfile("raceversion.txt.v1", False)
+        old.writeat("exploit", 0)
+        old.close()
+    except FileInUseError:
+        mycontext['lock'].acquire(True)
+        mycontext['exception_count'] += 1
+        mycontext['lock'].release()
+    except Exception as e:
+        mycontext['lock'].acquire(True)
+        mycontext['exception_count'] += 1
+        mycontext['lock'].release()
+
+try:
+    f1 = openfile("raceversion.txt", True)
+    f1.writeat("version 0", 0)
+    f1.close()
+    
+    createthread(thread_write_old_version)
+    
+    f2 = openfile("raceversion.txt", True)
+    f2.writeat("version 1", 0)
+    f2.close()
+    
+    sleep(0.3)
+    
+except Exception as e:
+    pass

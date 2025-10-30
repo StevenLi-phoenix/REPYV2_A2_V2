@@ -1,0 +1,10 @@
+# <netid>_attackcase09_write_old_version_blocked.r2py
+name = "t09_write_old"
+f0 = openfile(name, True); f0.writeat("K", 0); f0.close()
+_ = openfile(name, True); _.close()          # v1 latest
+old = openfile(name + ".v1", False)
+caught = False
+try: old.writeat("X", 1)
+except FileInUseError: caught = True
+assert caught
+old.close()

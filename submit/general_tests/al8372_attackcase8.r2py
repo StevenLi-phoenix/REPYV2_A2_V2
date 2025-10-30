@@ -1,0 +1,14 @@
+# Attack Case 8: Post-close write attempts
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+fpostclose = openfile("postclose", True)
+fpostclose.writeat("data", 0)
+fpostclose.close()
+
+expect_error(fpostclose.writeat, ("more-data", 0), FileInUseError)

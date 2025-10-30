@@ -1,0 +1,11 @@
+try:
+    f = openfile("file.v.txt", True)
+    f.close()
+except RepyArgumentError:
+    pass
+
+try:
+    f = openfile("test.vabc", True)
+    f.close()
+except RepyArgumentError:
+    pass

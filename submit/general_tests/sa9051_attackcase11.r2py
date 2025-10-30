@@ -1,0 +1,7 @@
+try:
+    openfile("foo.v0", True)
+    assert False, "Creating .v0 should not be allowed"
+except RepyArgumentError:
+    pass
+except Exception:
+    pass

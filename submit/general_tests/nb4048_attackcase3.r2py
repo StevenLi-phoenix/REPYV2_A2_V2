@@ -1,0 +1,17 @@
+w = openfile("filename", True)
+w.writeat("A", 0)
+
+w.close()
+
+r = openfile("filename", True)
+r.writeat("B", 1)
+
+r.close()
+
+s = openfile("filename", False)
+caught2 = False
+try:
+    s.writeat("C", 0)
+except FileInUseError:
+    caught2 = True
+assert caught2

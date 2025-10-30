@@ -1,0 +1,11 @@
+#attack 5: open already open file
+f1 = openfile("duplicate", True)
+f1.writeat("data", 0)
+
+try:
+    f2 = openfile("duplicate", True)
+    f2.close()
+    f1.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Opened same file twice!\n")
+except FileInUseError:
+    f1.close()

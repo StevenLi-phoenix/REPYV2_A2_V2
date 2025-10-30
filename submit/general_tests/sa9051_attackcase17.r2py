@@ -1,0 +1,14 @@
+longname = "a" * 121
+try:
+    openfile(longname, True)
+    try:
+        t = openfile(longname, False)
+        t.close()
+        try:
+            removefile(longname)
+        except RepyArgumentError:
+            pass
+    except Exception:
+        pass
+except Exception:
+    pass

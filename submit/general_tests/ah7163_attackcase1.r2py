@@ -1,0 +1,34 @@
+# Create File Versions
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("HelloWorld", 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    f3 = openfile("testfile", True)
+    f3.close()
+
+    f4 = openfile("testfile", True)
+    f4.close()
+    
+except Exception as e:
+    log("ERROR during setup (version creation): ", e)
+
+# now check testfile.v3
+try:
+    vf = openfile("testfile.v3", False)   # open existing explicit version
+    content = vf.readat(None, 0)
+
+    # assertion and reporting
+    if content != "HelloWorld":
+        log("ASSERT FAILED: testfile.v3 content mismatch.")
+
+
+except FileNotFoundError:
+    log("ERROR: testfile.v3 does not exist")
+
+except Exception as e:
+    # Catch any other unexpected errors during the file check
+    log("ERROR during version check: {e}")

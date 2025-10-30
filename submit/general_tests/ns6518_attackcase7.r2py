@@ -1,0 +1,16 @@
+
+# Test 7 — Copy-on-create correctness for large content.
+# Write a reasonably large payload, create new version, verify exact content.
+
+payload = "0123456789" * 200  # 2000 bytes-ish
+
+f1 = openfile("tc7_copy", True)
+f1.writeat(payload, 0)
+f1.close()
+
+# Create new version
+f2 = openfile("tc7_copy", True)
+readback = f2.readat(None, 0)
+# Exact match required
+assert readback == payload
+f2.close()

@@ -1,0 +1,37 @@
+
+# --- Setup: create base s5 ---
+try:
+    b = openfile("s5", True)
+    b.writeat("t", 0)
+    b.close()
+except Exception, e:
+    raise Exception("Setup failed: %s" % e)
+
+# --- Test: explicit v1 creation must be rejected ---
+try:
+    f = openfile("s5.v1", True)
+    try:
+        f.close()
+    except:
+        pass
+    raise Exception("Explicit v1 allowed")
+except RepyArgumentError:
+    pass
+except Exception, e:
+    # If it's not the specific RepyArgumentError, fail the test
+    raise Exception("Unexpected while testing explicit v1: %s" % e)
+
+# --- Test: explicit v2 creation must be rejected ---
+try:
+    f = openfile("s5.v2", True)
+    try:
+        f.close()
+    except:
+        pass
+    raise Exception("Explicit v2 allowed")
+except RepyArgumentError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected while testing explicit v2: %s" % e)
+
+# silent on success

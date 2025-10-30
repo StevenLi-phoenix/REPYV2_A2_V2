@@ -1,0 +1,11 @@
+# f1 = openfile("testfile", True) 
+# f1.writeat("HelloWorld", 0) 
+# f1.close()
+
+# f2 = openfile("testfile", False) 
+
+# try: 
+#     f2.writeat("helloworld", 0)  
+#     raise Exception("Failed to raise FileInUseError")
+# except FileInUseError:
+#     pass

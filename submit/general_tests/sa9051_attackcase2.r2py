@@ -1,0 +1,7 @@
+a1 = openfile("dupfile", True)
+try:
+    openfile("dupfile", False)
+    assert False, "Opening same underlying latest file twice should raise FileInUseError"
+except FileInUseError:
+    pass
+a1.close()

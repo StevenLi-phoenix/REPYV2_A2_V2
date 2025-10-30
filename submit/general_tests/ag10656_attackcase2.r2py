@@ -1,0 +1,19 @@
+# Test with a .v extension
+# Expected behaviour
+# Files created: testfile.v | testfile.v.v1
+# Error thrown: None
+# Output: lololololol
+
+try:
+    f1 = openfile("testfile.v", True)
+    f1.writeat("lololololol", 0)
+    f1.close()
+
+    f2 = openfile("testfile.v", True)
+    f2.close()
+    f3 = openfile("testfile.v.v1", False)
+    log(f3.readat(11,0))
+    f3.close()
+except Exception as e:
+    log("[VIOLATION] Raised wrong exception")
+    

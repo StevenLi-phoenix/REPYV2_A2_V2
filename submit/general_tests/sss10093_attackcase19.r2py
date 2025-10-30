@@ -1,0 +1,46 @@
+try:
+    try:
+        f = openfile("nonexistent.txt", False)
+        f.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        v = openfile("nonexistent.txt.v1", False)
+        v.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    f = openfile("exists.txt", True)
+    f.writeat("exists", 0)
+    f.close()
+    
+    try:
+        v = openfile("exists.txt.v1", False)
+        v.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+    
+    f2 = openfile("exists.txt", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    v1 = openfile("exists.txt.v1", False)
+    v1.close()
+    
+    try:
+        v2 = openfile("exists.txt.v2", False)
+        v2.close()
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

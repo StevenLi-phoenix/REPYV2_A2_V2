@@ -1,0 +1,86 @@
+## 3.	When a user calls openfile(filename, True),
+# if filename already exists, your security layer must
+# create a new “version” — a new file initialized with
+# the contents of the latest version and given a new
+# version number
+
+## The idea is, I will create a file 3 times, then I will
+## open it to read
+
+# --- Create first version of "ali" ---
+# Calling openfile with create=True should create a new version.
+try:
+    f1 = openfile("abu-husain", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+# Write initial content at offset 0.
+try:
+    f1.writeat("AbuHusain is attacking", 0)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+# Close the file to finalize the first version's contents.
+try:
+    f1.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+# --- Create second version of "ali"  ---
+# Calling openfile again with create=True should create the next version, and copy the previous version's contents into the new version.
+try:
+    f2 = openfile("abu-husain", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+# Read the entire file from offset 0 (pass None to read the whole file) and verify the copy occurred.
+try:
+    assert f2.readat(None, 0) == "AbuHusain is attacking"
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Close v2.
+try:
+    f2.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+# --- Create Third version of "ali"  ---
+# Calling openfile again with create=True should create the next version, and copy the previous version's contents into the new version.
+try:
+    f3 = openfile("abu-husain", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Read the entire file from offset 0 (pass None to read the whole file) and verify the copy occurred.
+try:
+    assert f3.readat(None, 0) == "AbuHusain is attacking"
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Close v2.
+try:
+    f3.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+
+isVunerable=False
+wrongException=False
+try:
+    f4=openfile("abu-husain.v2", False)
+except FileNotFoundError,e:
+    isVunerable=True
+    pass
+except Exception,e:
+    wrongException=True
+    pass
+if isVunerable ==True:
+    log("The reference monitor is Vulnerable, because it does not comply with versioning criteria.")
+if wrongException==True:
+    log("The reference monitor is Vulnerable, because it raise unexpectable exception.")

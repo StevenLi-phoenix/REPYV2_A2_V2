@@ -1,0 +1,6 @@
+# Attack: Try to manually create a versioned file
+try:
+    f1=openfile("crazyhacker.v.v.v.v.v67",True) # Should raise RepyArgumentError
+    assert False, "Should not allow manual version creation"
+except RepyArgumentError:
+    pass

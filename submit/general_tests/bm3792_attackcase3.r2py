@@ -1,0 +1,31 @@
+# bm3792_attackcase3.r2py
+# Test: Try to write to an old version file (must raise FileInUseError)
+
+# Create base file
+f1 = openfile("testfile", True)
+f1.writeat("version0", 0)
+f1.close()
+
+# Create version 1
+f2 = openfile("testfile", True)
+f2.writeat("version1", 0)
+f2.close()
+
+# Try to write to old version
+try:
+    old = openfile("testfile.v1", False)
+    old.writeat("hacked", 0)
+    old.close()
+    
+    # If write succeeded, it's a bug
+    check = openfile("testfile.v1", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    if content == "hacked":
+        log("SECURITY BUG: Wrote to old version v1\n")
+except FileInUseError:
+    # Expected behavior
+    pass
+except:
+    pass

@@ -1,0 +1,25 @@
+# bm3792_attackcase13.r2py
+# Test: Try multiple writes in same session at different offsets
+
+f = openfile("testfile", True)
+f.writeat("hello", 0)
+
+try:
+    # Try second write at different offset
+    f.writeat("world", 5)
+    f.close()
+    
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    # Check if both writes succeeded
+    if content == "helloworld":
+        # This might be allowed or not depending on interpretation
+        # Most implementations should allow multiple writes in same session
+        pass
+except:
+    try:
+        f.close()
+    except:
+        pass

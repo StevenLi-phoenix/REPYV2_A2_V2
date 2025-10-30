@@ -1,0 +1,16 @@
+"""
+Attack Case 12: Test that listfiles doesn't show versioned files
+"""
+f1 = openfile("ntestfile", True)
+f1.writeat("Version1", 0)
+f1.close()
+
+# Create second version
+f2 = openfile("ntestfile", True)
+f2.writeat("Version2Data", 0)
+f2.close()
+
+# Verify listfiles doesn't show version files
+files = listfiles()
+if "ntestfile.v1" in files:
+    raise Exception("listfiles should not show version files")

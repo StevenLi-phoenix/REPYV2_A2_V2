@@ -1,0 +1,55 @@
+"""
+Josh Hoge
+jsh10043@nyu.edu
+
+Attack: Mix File Handles
+Category: File Handle Encapsulation
+
+This attack attempts to manipulate one file handle to point to a different
+file by directly modifying internal attributes like 'filename'. This tests
+whether the reference monitor properly encapsulates file handle state.
+
+Attack Method:
+1. Create two separate files and write initial content to each
+2. Attempt attribute manipulation by modifying f1.filename attribute
+3. Attempt a cross-file write by trying to write to f1
+
+Expected Security Layer Behavior:
+The reference monitor should either prevent attribute modification, or if
+attributes can be modified, still enforce security correctly based on the
+original file handle state, preventing cross-file manipulation.
+
+Security Requirement:
+File Handle Encapsulation
+The reference monitor's VMFile class must properly encapsulate file handle state such that:
+- Internal file tracking cannot be manipulated through external attribute modification
+- Each file handle maintains strong binding to its original file
+- File operations remain bound to the original file regardless of attribute tampering attempts
+
+Expected Result:
+Attack should be BLOCKED - maintain the file handle's association with the original file
+VMFile wrapper should enforce proper encapsulation practices
+"""
+
+if callfunc == "initialize":
+    f1 = openfile("mix1.txt", True)
+    f1.writeat("file1", 0)
+
+    f2 = openfile("mix2.txt", True)
+    f2.writeat("file2", 0)
+
+    # try to manipulate f1's internal filename to point to f2
+    if hasattr(f1, "filename"):
+        f1.filename = "mix2.txt"
+
+    # now try to write to f1; should still reference original file or fail
+    try:
+        f1.writeat("1337h4XX0r", 5)
+        f1.close()
+        f2.close()
+        log("ATTACK SUCCEEDED: File handle manipulation allowed cross-file write\n")
+    # exception; no log() to stay silent
+    except Exception as e:
+        f1.close()
+        f2.close()
+        pass

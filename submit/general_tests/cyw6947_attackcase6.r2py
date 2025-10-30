@@ -1,0 +1,16 @@
+# This test case checks for proper handling of missing files.
+try:
+    try:
+        file = openfile("test_missing", False)
+        try:
+            log("UNEXPECTED: opened non-existent file test_missing")
+        except Exception:
+            pass
+        try:
+            file.close()
+        except Exception:
+            pass
+    except Exception:
+        pass
+except Exception:
+    pass

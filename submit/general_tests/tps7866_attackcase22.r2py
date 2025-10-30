@@ -1,0 +1,7 @@
+# Zero-length write allowed on latest
+
+f = openfile("t22", True); f.writeat("DATA",0); f.close()
+v = openfile("t22", True); v.close()
+h = openfile("t22", False)
+h.writeat("", 0)  
+h.close()

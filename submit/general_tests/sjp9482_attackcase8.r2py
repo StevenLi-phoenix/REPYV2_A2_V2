@@ -1,0 +1,32 @@
+file_name = "test_file"
+create_blocked = [False]
+
+f_init = openfile(file_name, True)
+f_init.writeat("Immutable content", 0)
+f_init.close()
+
+def long_read_func(filename):
+    try:
+        f_read = openfile(filename, False)
+        f_read.readat(10, 0)
+        f_read.close()
+    except Exception:
+        pass
+
+def create_func(filename, blocked_flag):
+    try:
+        f_create = openfile(filename, True)
+        f_create.writeat("New version content", 0)
+        f_create.close()
+    except FileInUseError:
+        blocked_flag[0] = True
+    except Exception:
+        blocked_flag[0] = True
+
+thread_A = createthread(long_read_func, (file_name,))
+thread_B = createthread(create_func, (file_name, create_blocked))
+jointhread(thread_A)
+jointhread(thread_B)
+
+if create_blocked[0]:
+    raise Exception("CreateBlockedByReadLock")

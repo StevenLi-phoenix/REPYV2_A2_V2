@@ -1,0 +1,17 @@
+"""
+Attack Case 2: Test that explicit version file creation raises error
+"""
+# Try to create version files directly - should raise RepyArgumentError
+try:
+    f = openfile("ns626testfile.v1", True)
+    raise Exception("Should not allow creating explicit version files")
+except RepyArgumentError:
+    pass  # Expected
+except Exception as e:
+    raise Exception("Wrong exception type: " + str(e) + "\n")
+
+# Verify the file wasn't created
+files = listfiles()
+if "ns626testfile" in files:
+    raise Exception("Version file should not have been created")
+

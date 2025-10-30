@@ -1,0 +1,69 @@
+# Test: new version creation or additional opens must be blocked while latest is open.
+
+# Setup: create v1
+try:
+    a = openfile("tc7", True)
+    a.writeat("x", 0)
+    a.close()
+except Exception:
+    assert False
+
+# Create v2
+try:
+    b = openfile("tc7", True)
+    b.writeat("y",0)
+    b.close()
+except Exception:
+    assert False
+
+# Hold the latest (opening by base should open latest)
+try:
+    hold = openfile("tc7", False)
+except Exception:
+    assert False
+
+# Test 1: attempt to create a new version while latest is open -> must raise FileInUseError
+try:
+    try:
+        nv = openfile("tc7", True)
+        nv.close()
+        assert False
+    except FileInUseError:
+        pass
+    except Exception:
+        assert False
+finally:
+    # still keep hold open for subsequent tests
+
+    # Test 2: attempt to open the same base again while it's already open -> must raise FileInUseError
+    try:
+        try:
+            dup = openfile("tc7", False)
+            dup.close()
+            assert False
+        except FileInUseError:
+            pass
+        except Exception:
+            assert False
+    except Exception:
+        # no-op to ensure we proceed to next test
+        pass
+
+    # Test 3: attempt to open the explicit latest underlying name while it's open -> must raise FileInUseError
+    try:
+        try:
+            dupv = openfile("tc7.v2", False)
+            dupv.close()
+            assert False
+        except FileInUseError:
+            pass
+        except Exception:
+            assert False
+    except Exception:
+        pass
+
+    # Finally close the held handle
+    try:
+        hold.close()
+    except Exception:
+        pass

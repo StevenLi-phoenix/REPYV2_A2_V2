@@ -1,0 +1,35 @@
+# Spec 3: Versioned file creation (immutable semantics, silent on success)
+
+# names = ["s3f", "s3f.v1", "s3f.v2"]
+
+
+# --- Create base file ---
+try:
+    f = openfile("s3f", True)
+    f.writeat("data3", 0)
+    f.close()
+except Exception, e:
+    raise Exception("Base creation failed: %s" % e)
+
+# --- Create v1, verify copy, modify v1 ---
+try:
+    v1 = openfile("s3f", True)
+    c1 = v1.readat(None, 0)
+    if c1 != "data3":
+        raise Exception("v1 did not correctly copy base content (got: %s)" % c1)
+    v1.writeat("_v1", 5)
+    v1.close()
+except Exception, e:
+    raise Exception("v1 creation/modify failed: %s" % e)
+
+# --- Create v2, verify copied from latest (v1) ---
+try:
+    v2 = openfile("s3f", True)
+    c2 = v2.readat(None, 0)
+    v2.close()
+    if not c2.startswith("data3"):
+        raise Exception("v2 did not copy content from latest version (v1)")
+except Exception, e:
+    raise Exception("v2 creation failed: %s" % e)
+
+# silent on success

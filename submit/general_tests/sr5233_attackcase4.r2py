@@ -1,0 +1,7 @@
+# TEST TO REMOVE FILE
+f1 = openfile("testfile.txt", True)
+try:
+	f2 = removefile("testfile.txt")
+except RepyArgumentError:
+	pass
+

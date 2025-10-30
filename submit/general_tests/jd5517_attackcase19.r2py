@@ -1,0 +1,10 @@
+# jd5517_attackcase19.r2py
+# attempt removefile on an explicit version (forbidden)
+
+threw = False
+try:
+    removefile("case19_base.v1")
+except RepyArgumentError:
+    threw = True
+
+assert threw

@@ -1,0 +1,21 @@
+# bm3792_attackcase4.r2py
+# Test: Try to manually create a version file (must raise RepyArgumentError)
+
+# Create base file first
+f1 = openfile("testfile", True)
+f1.writeat("base", 0)
+f1.close()
+
+# Try to manually create version file
+try:
+    fakev = openfile("testfile.v1", True)
+    fakev.writeat("manual", 0)
+    fakev.close()
+    
+    # If successful, it's a security bug
+    log("SECURITY BUG: Manually created version file\n")
+except RepyArgumentError:
+    # Expected behavior
+    pass
+except:
+    pass

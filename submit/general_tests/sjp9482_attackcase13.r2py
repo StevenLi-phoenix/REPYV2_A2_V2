@@ -1,0 +1,18 @@
+file_name = "test_file"
+
+f1 = LPopenfile(file_name, True)
+f1.writeat("Data", 0)
+f1.close()
+
+try:
+    f_underlying = openfile("external_file", True)
+    f_underlying.close()
+except Exception:
+    pass
+
+file_list = LPlistfiles()
+
+if "external_file" in file_list:
+    pass
+else:
+    raise Exception("FailedToListExternalFile")

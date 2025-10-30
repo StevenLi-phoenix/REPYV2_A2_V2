@@ -1,0 +1,17 @@
+file_name = "test_file"
+DATA_SIZE_MB = 20
+CHUNK = 'X' * (1024 * 1024)
+NUM_CHUNKS = DATA_SIZE_MB
+
+try:
+    f1 = openfile(file_name, True)
+    for i in range(NUM_CHUNKS):
+        f1.writeat(CHUNK, i * len(CHUNK))
+    f1.close()
+
+    f2 = openfile(file_name, True)
+    f2.writeat("Final marker", 0)
+    f2.close()
+
+except Exception:
+    raise Exception("MonitorCrashed")

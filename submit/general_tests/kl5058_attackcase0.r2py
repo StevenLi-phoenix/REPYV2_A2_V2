@@ -1,0 +1,6 @@
+#trivial test
+try:
+ f=openfile("t0",True)
+ f.close()
+except:
+ pass

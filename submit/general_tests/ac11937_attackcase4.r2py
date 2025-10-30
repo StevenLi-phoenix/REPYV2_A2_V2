@@ -1,0 +1,18 @@
+# Test: opening a versioned name (base.v1) before such a version exists should fail.
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+# Create base
+f = openfile("case7_base", True)
+f.writeat("ok", 0)
+f.close()
+
+# Try to open an explicit version name that shouldn't exist yet
+ar(FileNotFoundError, openfile, "case7_base.v1", False)

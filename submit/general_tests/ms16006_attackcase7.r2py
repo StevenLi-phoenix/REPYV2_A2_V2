@@ -1,0 +1,12 @@
+# --- 7) listfiles hides explicit versions ---
+f = openfile("testfile", True)
+f.writeat("HelloWorld", 0)
+f.close()
+
+_ = openfile("testfile", True)
+_.close()
+
+lf = listfiles()
+assert "testfile" in lf
+for name in lf:
+    assert not (name.endswith(".v1") or ".v" in name and name.rsplit(".v", 1)[1].isdigit())

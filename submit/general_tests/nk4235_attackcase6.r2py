@@ -1,0 +1,17 @@
+# Attack: Interleave operations on multiple files
+f1 = openfile("file1", True)
+f2 = openfile("file2", True)
+f1.writeat("data1", 0)
+f2.writeat("data2", 0)
+f1.close()
+f2.close()
+
+f1v2 = openfile("file1", True)
+f2v2 = openfile("file2", True)
+f1v2.close()
+f2v2.close()
+
+# Verify independent version tracking
+assert "file1.v1" not in [f for f in listfiles() if "file1" in f]
+assert "file2.v1" not in [f for f in listfiles() if "file2" in f]
+

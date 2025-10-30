@@ -1,0 +1,20 @@
+base = "race_latest_open.txt"
+try:
+  a = openfile(base, True); a.write("A"); a.close()
+  v = openfile(base, True); v.write("V1"); v.close()
+except: pass
+
+hold = None
+try:
+  hold = openfile(base + ".v1", False)   # keep latest open for READ
+  try:
+    newh = openfile(base, True)
+    newh.write("V2"); newh.close()
+    try: log("VULN: creation_allowed_while_latest_open_read")
+    except: pass
+  except:
+    pass
+finally:
+  try:
+    if hold: hold.close()
+  except: pass

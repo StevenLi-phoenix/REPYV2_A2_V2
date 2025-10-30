@@ -1,0 +1,20 @@
+basename = 'testfile.txt'
+
+f0 = openfile(basename, True)
+f0.writeat('a'*30,0)
+f0.close()
+
+f1 = openfile(basename, True)
+f1.writeat('b'*30,0)
+f1.close()
+
+f1 = openfile(basename + ".v1", False)
+try:
+    f2 = openfile(basename, True)
+    f1.writeat('a'*20,10)
+    # writing to prev latest should be blocked
+    f2.close()
+    raise ValueError("this shouldn't have worked")
+except:
+    assert True
+f1.close()

@@ -1,0 +1,13 @@
+# Test if the monitor fails to filter versioned files from the listfiles() output
+
+
+f = openfile("listtest.txt", True)
+f.close()
+
+f2 = openfile("listtest.txt", True)
+f2.close()
+
+files = listfiles()
+
+assert "listtest.txt" in files, "listfiles() is missing the base file"
+assert "listtest.txt.v1" not in files, "listfiles() is showing versioned file"

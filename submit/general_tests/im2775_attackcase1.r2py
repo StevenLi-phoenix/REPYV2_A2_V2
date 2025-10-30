@@ -1,0 +1,10 @@
+f = openfile("testfile", True)
+f.writeat("original", 0)
+f.close()
+
+try:
+    f2 = openfile("testfile", False)
+    f2.writeat("hacked", 0)
+    f2.close()
+except FileInUseError:
+    pass

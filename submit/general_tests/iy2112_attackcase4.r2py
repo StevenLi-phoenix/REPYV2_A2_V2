@@ -1,0 +1,50 @@
+# Testing Spec 3:
+# When a user calls openfile(filename, True), if filename already exists, your security layer must create a new “version” — a new file initialized with the contents of the latest version and given a new version number.
+t1 = openfile("test", True)
+t1.writeat("Hi", 0)
+t1.close()
+
+t2 = openfile("test", True)
+t2.close()
+
+t3 = openfile("test", True)
+t3.close()
+
+# verify creation of versioned files
+openfile("test.v1", False).close()
+openfile("test.v2", False).close()
+
+# Testing Spec 4
+# Note that a new version cannot be created while the latest version is open. If openfile() is called on an already open file, it shall throw the relevant error that it would have done in RepyV2 (FileInUseError).
+try:
+    t4 = openfile("new", True)
+    t5 = openfile("new", True)
+    t4.close()
+    t5.close()
+except FileInUseError:
+    pass
+else:
+    log("Failed to raise FileInUseError\n")
+    raise Exception("Failed to raise FileInUseError")
+
+
+# Testing Spec 5
+# Versioned files can be accessed using openfile(originalfilename + '.v' + str(num), create), where num starts from 1. If create=True is used on a versioned file, raise RepyArgumentError("Cannot create explicit version files"), as manual version creation is not allowed.
+try:
+    t6 = openfile("test.v3", True)
+except RepyArgumentError:
+    pass
+else:
+    log("Failed to raise RepyArgumentError\n")
+    raise Exception("Failed to raise RepyArgumentError")
+
+
+# Testing Spec 6
+# As is the case in normal RepyV2, if an openfile call with create=False, open the file only if that version exists; otherwise, raise FileNotFoundError
+try:
+    t7 = openfile("test.v10000", False)
+except FileNotFoundError:
+    pass
+else:
+    log("Failed to raise FileNotFoundError\n")
+    raise Exception("Failed to raise FileInUseError")

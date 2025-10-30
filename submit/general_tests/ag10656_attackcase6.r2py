@@ -1,0 +1,18 @@
+# Testing if a file starts off as v1, but base file does not exist. Here, it should create .v1.v1 and so on
+# Expected behaviour
+# Files created: testfile.v1 | testfile.v1.v1 | testfile.v1.v2
+
+
+try:
+    f1 = openfile("testfile.v1", True)
+    f1.writeat("lololololol", 0)
+    f1.close()
+
+    f2 = openfile("testfile.v1", True)
+    f2.close()
+
+    f3 = openfile("testfile.v1", True)
+    f3.close()
+    log("[VIOLATION] Created files of irregular basename")
+except Exception as e:
+    pass

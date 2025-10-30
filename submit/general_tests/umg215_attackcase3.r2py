@@ -1,0 +1,14 @@
+# Test: writing at a negative offset should raise an error
+
+f = openfile("testfile_1.txt", True)
+try:
+    try:
+        f.writeat("SOMETHING", -20)
+                log("FAIL: write with negative offset succeeded")
+    except Exception:
+        log("PASS")
+finally:
+    try:
+        f.close()
+    except Exception:
+        pass

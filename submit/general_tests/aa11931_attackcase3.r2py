@@ -1,0 +1,22 @@
+# Test: Versioned files can be accessed via filename.v1, filename.v2
+
+f1 = openfile("versiontest3", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("versiontest3", True)
+f2.writeat("data2", 0)
+f2.close()
+
+f3 = openfile("versiontest3", True)
+f3.writeat("data3", 0)
+f3.close()
+
+# Access version files
+fv1 = openfile("versiontest3.v1", False)
+assert fv1.readat(None, 0) == "data2", "Can read v1"
+fv1.close()
+
+fv2 = openfile("versiontest3.v2", False)
+assert fv2.readat(None, 0) == "data3", "Can read v2"
+fv2.close()

@@ -1,0 +1,5 @@
+# try opening a file that doesn't exist, should raise FileNotFoundError
+
+f1 = openfile("nonexistentfile123456",False)
+
+raise FileNotFoundError("ERROR: Did not raise an error when opening a nonexistent file")

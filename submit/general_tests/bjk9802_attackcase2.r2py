@@ -1,0 +1,16 @@
+# --- Create first version of "testfile" ---
+f1 = openfile("testfile", True)          # create v1
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# --- Create second version of "testfile"  ---
+f2 = openfile("testfile", True)          # should create v2 copied from v1
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()
+
+for i in range(2, MAX_VERSIONS_PER_FILE + 5):
+    
+    try:
+        original_openfile("testfile.v" + str(i), True)
+    except Exception:
+        pass

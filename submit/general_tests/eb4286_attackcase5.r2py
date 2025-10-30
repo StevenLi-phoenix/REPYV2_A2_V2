@@ -1,0 +1,15 @@
+# Opening an open file
+try:
+    f1 = openfile('openingfile', True)
+    f1.writeat('test', 0)
+
+    try:
+        f2 = openfile('openingfile', False)
+    except FileInUseError:
+        pass
+    except Exception:
+        pass
+    else:
+        log("Issue: Opening an open file\n")
+except Exception:
+    pass

@@ -1,0 +1,21 @@
+# Attack: Test that creating new version while latest is open raises FileInUseError
+
+# Create and close first version
+f1 = openfile("testfile_concurrent", True)
+f1.writeat("v1", 0)
+f1.close()
+
+# Open second version but keep it open
+f2 = openfile("testfile_concurrent", True)
+f2.writeat("v2", 0)
+
+# Try to create third version while second is still open
+try:
+    f3 = openfile("testfile_concurrent", True)
+    log("ATTACK SUCCESSFUL: Created new version while latest was open\n")
+    f3.close()
+except Exception:
+    # Expected behavior - reference monitor correctly blocked concurrent creation
+    pass
+
+f2.close()

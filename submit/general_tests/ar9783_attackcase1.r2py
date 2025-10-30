@@ -1,0 +1,17 @@
+#test basic file operations
+file1 = openfile("testfile", True)
+
+#write initial content
+file1.writeat("HelloWorld", 0)
+
+#close the file to finalize the first version's contents
+file1.close()
+
+#create second version of file
+file2 = openfile("testfile", True)
+
+#read the entire file and verify the copy occurred
+assert file2.readat(None, 0) == "HelloWorld"
+
+#close file
+file2.close()

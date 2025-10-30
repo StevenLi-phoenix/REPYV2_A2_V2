@@ -1,0 +1,10 @@
+# check listfiles() for versioned names
+# log(listfiles())
+
+f1 = openfile("testfile", True)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.close()
+
+assert ("testfile.v1" not in listfiles()), "Versioned file shown in listfiles"

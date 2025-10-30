@@ -1,0 +1,44 @@
+# n13302308_attackcase2.r2py
+# Test: prove writing to an explicit older version is allowed (which is bad).
+# Silent if RM is secure. If bypasses, create "exploit_overwrite_2".
+
+def make_sentinel():
+    try:
+        s = openfile("exploit_overwrite_2", True)
+        s.writeat("1", 0)
+        s.close()
+    except Exception:
+        pass
+
+# ensure base exists (normal)
+try:
+    b = openfile("confirmfile", True)
+    b.writeat("A", 0)
+    b.close()
+except Exception:
+    pass
+
+# attempt to open explicit older version read-only then write
+try:
+    v = openfile("confirmfile.v1", False)
+    try:
+        v.writeat("BAD", 0)
+        v.close()
+        # write succeeded -> exploit success
+        make_sentinel()
+    except (FileInUseError, ValueError, AssertionError):
+        try:
+            v.close()
+        except Exception:
+            pass
+    except Exception:
+        try:
+            v.close()
+        except Exception:
+            pass
+except (FileNotFoundError, RepyArgumentError):
+    # expected secure behavior
+    pass
+except Exception:
+    pass
+

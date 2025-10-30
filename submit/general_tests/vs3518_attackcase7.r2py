@@ -1,0 +1,72 @@
+
+marker = "compromised_vs3518_attackcase11"
+target = "protected_attack11.txt"
+link1 = "link1_attack11"
+link2 = "link2_attack11"
+temp = "temp_attack11.txt"
+
+try:
+    f = open(target, "w")
+    try:
+        f.write("ORIGINAL11\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    f = open(temp, "w")
+    try:
+        f.write("EVIL11\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        if os.path.exists(link1):
+            try:
+                os.unlink(link1)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        os.symlink(target, link1)
+    except Exception:
+        pass
+
+    try:
+        if os.path.exists(link2):
+            try:
+                os.unlink(link2)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        os.symlink(link1, link2)
+    except Exception:
+        pass
+
+    try:
+        os.rename(temp, link2)
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(target, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    if "EVIL11" in c:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

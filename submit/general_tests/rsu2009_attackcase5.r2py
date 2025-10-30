@@ -1,0 +1,29 @@
+# test race conditions --> 2 threads to 1 file
+
+# thread 1 : create and write to file
+def thread1(): #create and write to file
+	try:
+		myfile = openfile("testfile.txt", True) 
+		myfile.writeat("hi", 0)
+	except Exception:
+		log("ERROR failed to write thread1")
+		pass
+	finally:
+		myfile.close()
+  
+# thread 2 : create and write to file
+def thread2():
+	try:
+		file2 = openfile("testfile.txt", True)
+		file2.writeat("hi", 0)
+	except Exception:
+		log("ERROR failed to write thread1")
+		pass
+	finally:
+		file2.close()		
+
+
+t1 = createthread(thread1)
+sleep(1)
+t2 = createthread(thread2)
+sleep(1)

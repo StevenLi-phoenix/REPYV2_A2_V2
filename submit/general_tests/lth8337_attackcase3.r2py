@@ -1,0 +1,17 @@
+f = openfile("hello", True)
+f.writeat("Hello World", 0)
+f.close()
+
+try:
+    f2 = openfile("hello", True)
+    f2.writeat("Bye World", 0)
+    f2.close()
+
+except Exception as e:
+    log("FAIL: Incorrectly raised an error when writing to versioned file \n")
+
+
+
+
+
+

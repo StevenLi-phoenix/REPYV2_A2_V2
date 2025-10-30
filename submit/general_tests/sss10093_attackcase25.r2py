@@ -1,0 +1,31 @@
+try:
+    f = openfile("baseimmutable.txt", True)
+    f.writeat("original", 0)
+    f.close()
+    
+    v1 = openfile("baseimmutable.txt", True)
+    v1.writeat("version1", 0)
+    v1.close()
+    
+    try:
+        base = openfile("baseimmutable.txt", False)
+        base.writeat("modify base", 0)
+        base.close()
+    except Exception as e:
+        pass
+    
+    v2 = openfile("baseimmutable.txt", True)
+    v2.writeat("version2", 0)
+    v2.close()
+    
+    try:
+        v1file = openfile("baseimmutable.txt.v1", False)
+        v1file.writeat("modify v1", 0)
+        v1file.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

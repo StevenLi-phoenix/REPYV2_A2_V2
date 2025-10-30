@@ -1,0 +1,44 @@
+mycontext['file_handle'] = None
+mycontext['lock'] = createlock()
+
+def thread_close_file():
+    try:
+        sleep(0.05)
+        mycontext['lock'].acquire(True)
+        handle = mycontext['file_handle']
+        mycontext['lock'].release()
+        if handle:
+            handle.close()
+    except Exception as e:
+        pass
+
+def thread_write_file():
+    try:
+        sleep(0.1)
+        mycontext['lock'].acquire(True)
+        handle = mycontext['file_handle']
+        mycontext['lock'].release()
+        if handle:
+            for i in range(10):
+                handle.writeat("data" + str(i), i * 10)
+                sleep(0.01)
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+try:
+    mycontext['file_handle'] = openfile("closerace.txt", True)
+    
+    createthread(thread_close_file)
+    createthread(thread_write_file)
+    
+    sleep(0.5)
+    
+    try:
+        mycontext['file_handle'].close()
+    except:
+        pass
+    
+except Exception as e:
+    pass

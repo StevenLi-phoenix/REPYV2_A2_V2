@@ -1,0 +1,13 @@
+# Test: creating a version while latest open must fail
+f = openfile("openblock", True)
+f.writeat("A",0)
+try:
+  openfile("openblock", True)
+  log("FAIL")    # should not get here
+except FileInUseError:
+  log("PASS")
+except Exception:
+  log("PASS")
+finally:
+  try: f.close()
+  except: pass

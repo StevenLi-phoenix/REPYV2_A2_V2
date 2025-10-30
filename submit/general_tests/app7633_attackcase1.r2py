@@ -1,0 +1,52 @@
+# Create file with content
+f = openfile("temp.txt", True)
+f.writeat("initial data", 0)
+f.close()
+
+vulnerable = [False]
+corruption_detected = [False]
+
+def writer_thread():
+    try:
+        for i in range(3):
+            f = openfile("temp.txt", True)
+            f.writeat("write" + str(i), 0)
+            sleep(0.02)
+            f.close()
+            sleep(0.01)
+    except Exception as e:
+        pass
+
+def reader_thread():
+    try:
+        sleep(0.01)
+        for i in range(5):
+            try:
+                f = openfile("temp.txt", False)
+                content = f.readat(None, 0)
+                
+                # Check for corruption or partial writes
+                if len(content) > 0 and content not in ["initial data", "write0", "write1", "write2"]:
+                    corruption_detected[0] = True
+                    log("VULNERABILITY: Data corruption detected: " + content + "\n")
+                    vulnerable[0] = True
+                
+                f.close()
+            except FileInUseError:
+                # This is expected if file is locked
+                pass
+            sleep(0.02)
+    except Exception as e:
+        pass
+
+t1 = createthread(writer_thread)
+t2 = createthread(reader_thread)
+
+sleep(0.5)
+
+if vulnerable[0]:
+    log("VULNERABLE: Concurrent read/write caused issues\n")
+elif corruption_detected[0]:
+    log("VULNERABLE: Data corruption from race condition\n")
+else:
+    log("Protected: No corruption from concurrent operations\n")

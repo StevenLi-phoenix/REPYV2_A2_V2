@@ -1,0 +1,5 @@
+try:
+    openfile("nonexist.v9", False)
+    assert False, "Should have raised FileNotFoundError for missing explicit version"
+except FileNotFoundError:
+    pass

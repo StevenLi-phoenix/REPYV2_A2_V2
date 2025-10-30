@@ -1,0 +1,8 @@
+w = openfile("file1", True)
+caught = False
+try:
+    openfile("file1", True)
+except FileInUseError:
+    caught = True
+assert caught
+w.close()

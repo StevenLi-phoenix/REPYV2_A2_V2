@@ -1,0 +1,230 @@
+"""
+Name: anf3003_attackcase1.r2py
+Attack Case: File creation race condition. In this test, we attempt to first 
+             open a base file and write "Original Content", then use threads 
+             to simultaneously overwrite the specific file with "Malicious 
+             Content", breaking immutability.
+"""
+
+# Configurations
+_ITERATIONS = 100       # Number of iterations for the opener attacker
+_MAX_VERSIONS = 5       # Maximum number of file versions to check
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+def ac_write(filename, content):
+    """
+        Name: ac_write
+        Arguments: filename, content
+        Returns: None
+        Description: Attempts to write content to a file specified by filename.
+    """
+
+    try:
+        # Initialize a safe file variable
+        file = None
+
+        try:
+            # Open an existing file, don't create a new one
+            file = openfile(filename, False)
+            # Write the content to the file at beginning
+            file.writeat(content, 0)
+
+        finally:
+            # Ensure the file is closed after writing
+            ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions that occur during write
+        pass
+
+# Create a base file
+try:
+    # Attempt to open the file with creation enabled
+    file = openfile("attack1", True)
+
+    try:
+        # Write "Original" to the file at the beginning
+        file.writeat("Original Content", 0)
+
+    finally:
+        # Ensure the file is closed after writing
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions that occur during the initial file operation
+    pass
+
+def opener():
+    """
+        Name: opener
+        Arguments: None
+        Returns: None
+        Description: Continuously attempts to write malicious content
+    """
+
+    # Loop for a set number of iterations
+    for i in range(_ITERATIONS):
+        try:
+            # Attempt to write malicious content to the base file
+            ac_write("attack1", "Malicious Content")
+
+        except Exception:
+            # Ignore any exceptions that occur during the write attempt
+            pass
+        
+        try:
+            # Sleep to allow attack to finish
+            sleep(0.001)
+
+        except Exception:
+            # Ignore any exceptions that occur during sleep
+            pass
+
+def writer():
+    """
+        Name: writer
+        Arguments: None
+        Returns: None
+        Description: Continuously attempts to write malicious content
+    """
+
+    try:
+        # Introduce a delay before starting
+        sleep(0.05)
+
+    except Exception:
+        # Ignore any exceptions that occur during sleep
+        pass
+
+    try:
+        # Attempt to open the file and read from it
+        file = openfile("attack1", True)
+
+        try:
+            try:
+                # Read content from the file at the beginning
+                tmp = file.readat(None, 0)
+
+            except Exception:
+                # If reading fails, ignore for now
+                tmp
+
+        finally:
+            # Ensure the file is closed after reading
+            ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions that occur during the file operation
+        pass
+
+# Start the attack!
+try:
+    # Create threads for the opener and writer attackers
+    createthread(opener)
+    createthread(writer)
+
+    try:
+        # Allow some time for thread creation
+        sleep(0.5)
+
+    except Exception:
+        # Catch any exceptions during sleep
+        pass
+
+    # Monitor the outcome of the attack
+    monitor_failed = False
+
+    try:
+        # Open the base file without creating it
+        file = openfile("attack1", False)
+
+        try:
+            # Content placeholder for now
+            content = None
+
+            try:
+                # Read content from the file at the beginning
+                content = file.readat(None, 0)
+
+            except Exception:
+                # If reading fails, ignore for now
+                content = None
+
+            # Check if the content matches the malicious content
+            if content == "Malicious Content":
+                monitor_failed = True
+
+        finally:
+            # Ensure the file is closed after reading
+            ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions that occur during the file operation
+        pass
+
+    # Check multiple versions of the file for malicious content
+    for i in range(1, _MAX_VERSIONS + 1):
+        # Craft the filename for the current version
+        fullname = "attack1.v" + str(i)
+
+        # Attempt to open the versioned file
+        try:
+            # Open the file without creating it
+            file = openfile(fullname, False)
+
+            try:
+                # Content placeholder for now
+                content = None
+
+                try: 
+                    # Read content from the file at the beginning
+                    content = file.readat(None, 0)
+                except Exception:
+                    # If reading fails, ignore for now
+                    content = None
+
+                # Check if the content matches the malicious content
+                if content == "Malicious Content":
+                    # The monitor failed
+                    monitor_failed = True
+                    # No need to check further versions
+                    break
+
+            finally:
+                # Ensure the file is closed after reading
+                ac_close(file)
+
+        except Exception:
+            # Ignore any exceptions that occur during the file operation
+            pass
+
+    # Log the result if the monitor failed
+    if monitor_failed:
+        try:
+            # Log the monitor failure
+            log("Attack Case 1: Monitor failed.")
+            
+        except Exception:
+            # Ignore any exceptions that occur during logging
+            pass
+
+except Exception:
+    # Ignore any exceptions that occur during the attack setup
+    pass

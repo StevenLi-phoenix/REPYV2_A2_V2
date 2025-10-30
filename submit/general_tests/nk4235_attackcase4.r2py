@@ -1,0 +1,16 @@
+# Attack: Try to delete any file
+f = openfile("deleteme", True)
+f.writeat("data", 0)
+f.close()
+
+try:
+    removefile("deleteme")  # Should raise RepyArgumentError
+    assert False, "Should not allow file deletion"
+except RepyArgumentError:
+    pass
+
+try:
+    removefile("deleteme.v1")  # Should also be blocked
+    assert False, "Should not allow version deletion"
+except RepyArgumentError:
+    pass

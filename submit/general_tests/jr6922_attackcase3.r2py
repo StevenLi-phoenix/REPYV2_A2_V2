@@ -1,0 +1,13 @@
+# Test: removefile should raise RepyArgumentError for any file
+try:
+    f = openfile("test3", True)
+    f.close()
+except:
+    # If file creation fails, skip the test silently
+    pass
+else:
+    # Only test removefile if file was created successfully
+    try:
+        removefile("test3")
+    except RepyArgumentError:
+        pass

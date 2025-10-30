@@ -1,0 +1,12 @@
+f = openfile("testfile2", True)
+f.writeat("Attack2", 0)
+f.close()
+
+# reject explicit version name creation
+try:
+    openfile("testfile2.v1", True)
+    assert False
+except RepyArgumentError:
+    pass
+except Exception:
+    raise

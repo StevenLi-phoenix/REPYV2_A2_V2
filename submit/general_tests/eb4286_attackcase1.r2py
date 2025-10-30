@@ -1,0 +1,13 @@
+try:
+    # Create explicit version of "testfile"
+    explicit_file = openfile("testfile.v100", True)
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+else:
+    log("Issue: Open explicit version\n")
+    try:
+        f.close()
+    except Exception:
+        pass

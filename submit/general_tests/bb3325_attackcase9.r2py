@@ -1,0 +1,10 @@
+try:
+  # try a benign introspection; many secure monitors block wrappers from exposing these
+  d = dir()
+  g = globals()
+  # If this script can do introspection that shouldn't be allowed inside a sandboxed layer,
+  # it's suspicious — we log for manual inspection.
+  try: log("VULN: introspection_succeeded")
+  except: pass
+except:
+  pass

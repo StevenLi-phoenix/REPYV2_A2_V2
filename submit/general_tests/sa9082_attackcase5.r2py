@@ -1,0 +1,36 @@
+# Test 5: Can we write to old version files?
+# Purpose: Test if monitor prevents writing to old versions (e.g., .v1 after .v2 exists)
+# Expected: Writing to old versions should be permanently disallowed
+
+# Step 1: Create base file
+f1 = openfile("testfile5.txt", True)
+f1.writeat("BaseVersion", 0)
+
+# Step 2: Close base file
+f1.close()
+
+# Step 3: Create version 1 by reopening with create=True
+f2 = openfile("testfile5.txt", True)
+f2.writeat("Version1", 0)
+
+# Step 4: Close version 1
+f2.close()
+
+# Step 5: Try to open version 1 for reading (should work)
+# Then try to write to it (should fail)
+try:
+    # Open the .v1 version file with create=False (read mode)
+    old_version = openfile("testfile5.txt.v1", False)
+
+    # Try to write to the old version
+    # Specification: "writing to them is permanently disallowed"
+    old_version.writeat("TryModify", 0)
+
+    # If we reach here, we were able to write to old version - FLAW!
+    log("FLAW FOUND: Was able to write to old version file!\n")
+
+    # Close to clean up
+    old_version.close()
+
+except Exception:
+    pass

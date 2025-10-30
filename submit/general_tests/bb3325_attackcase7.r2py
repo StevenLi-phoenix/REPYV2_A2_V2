@@ -1,0 +1,16 @@
+# Invalid explicit version (e.g., .v0) should be blocked.
+
+base = "explicit_v_zero.txt"
+
+try:
+  f = openfile(base, True); f.write("init"); f.close()
+except:
+  pass
+
+try:
+  g = openfile(base + ".v0", True)
+  g.write("exploit")
+  g.close()
+  log("VULN: explicit_version_zero")
+except:
+  pass

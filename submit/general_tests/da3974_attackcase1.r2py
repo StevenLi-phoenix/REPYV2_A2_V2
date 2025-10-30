@@ -1,0 +1,20 @@
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("orig", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)
+    f2.writeat("v1", 0)
+    f2.close()
+    
+    old = openfile("testfile", False)
+    try:
+        old.writeat("test", 0)
+        log("ATTACKED\n")
+    except (FileInUseError, ValueError):
+        pass
+    finally:
+        old.close()
+        
+except Exception as e:
+    pass

@@ -1,0 +1,20 @@
+# MEGA ATTACK 3: Wrong Version Numbering (breaks 44 monitors)
+
+f1 = openfile("num.txt", True)
+f1.writeat("v1", 0)
+f1.close()
+
+f2 = openfile("num.txt", True)
+f2.writeat("v2", 0)
+f2.close()
+
+try:
+    fv1 = openfile("num.txt.v1", False)
+    content = fv1.readat(None, 0)
+    fv1.close()
+    if content != "v1":
+        log("ATTACK SUCCESSFUL: Wrong version numbering\n")
+except FileNotFoundError:
+    log("ATTACK SUCCESSFUL: Version file missing\n")
+except Exception:
+    pass

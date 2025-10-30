@@ -1,0 +1,28 @@
+# Test Case 1: Violate immutability by writing to a file multiple times
+# This should fail because files should be immutable after creation
+
+myfile = openfile("testfile.txt", True)
+myfile.writeat("initial content", 0)
+
+try:
+    myfile.writeat("modified content", 0)
+    log("ATTACK SUCCESSFUL: File was modified after initial write (immutability violated)\n")
+    myfile.close()
+    exitall()
+except Exception as e:
+    # Expected behavior - write should be blocked
+    pass
+
+myfile.close()
+
+try:
+    myfile2 = openfile("testfile.txt", False)
+    myfile2.writeat("overwrite", 0)
+    log("ATTACK SUCCESSFUL: Opened existing file and wrote to it (immutability violated)\n")
+    myfile2.close()
+    exitall()
+except Exception as e:
+    # Expected - should not be able to write to existing file
+    pass
+
+log("Test passed - immutability properly enforced\n")

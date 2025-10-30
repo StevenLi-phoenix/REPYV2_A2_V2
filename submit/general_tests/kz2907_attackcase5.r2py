@@ -1,0 +1,13 @@
+
+f1 = openfile("document.txt", True)
+f1.writeat("original", 0)
+f1.close()
+f2 = openfile("document.txt", True) 
+f2.close()
+
+try:
+    removefile("document.txt") #tries to remove original file
+    log("Immutable file removed.")
+        
+ except Exception as e:
+    pass

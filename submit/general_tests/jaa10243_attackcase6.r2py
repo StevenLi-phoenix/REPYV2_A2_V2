@@ -1,0 +1,42 @@
+
+# bypass immutability
+
+# Create base file
+f1 = openfile("base.txt", True)
+f1.writeat("test", 0)
+f1.close()
+
+
+f2 = openfile("base.txt", True)
+f2.close()
+
+
+f3 = openfile("base.txt", False)
+try:
+    f3.writeat("test1", 0)
+    log("base file writable on first open\n")
+    try:
+        f3.close()
+    except:
+        pass
+    exitall()
+except FileInUseError:
+    pass  
+
+try:
+    f3.close()
+except:
+    pass
+
+f4 = openfile("base.txt", False)
+try:
+    f4.writeat("test succuess", 0)
+    log("bypassed by reopening\n")
+    try:
+        f4.close()
+    except:
+        pass
+    exitall()
+except FileInUseError:
+    pass  
+

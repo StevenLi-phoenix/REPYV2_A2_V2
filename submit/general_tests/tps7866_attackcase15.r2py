@@ -1,0 +1,12 @@
+# Stale handle (older) becomes read-only
+
+f = openfile("t15", True); f.writeat("orig",0); f.close()
+openfile("t15", True).close()  #v2
+openfile("t15", True).close()  # v1
+old = openfile("t15.v1", False)
+try:
+  old.writeat("hack", 0)
+  raise Exception("stale older write allowed")
+except FileInUseError:
+  pass
+old.close()

@@ -1,0 +1,78 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase6.r2py
+Goal: Probe for listfiles() aliasing (return-value not copied)
+'''
+
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass
+
+def _fresh_listing_has_fake():
+    try:
+        L2 = listfiles()
+    except:
+        return False
+    i = 0
+    while i < len(L2):
+        y = L2[i]
+        if (y == "fake1") or (y == "fake2") or (y == "fake3"):
+            return True
+        i = i + 1
+    return False
+
+# Ensure directory is non-empty
+try:
+    h = openfile("t4_b.txt", True)
+    h.writeat("B", 0)
+    h.close()
+except:
+    pass
+
+# Mutate returned list in place; a correct monitor must return a COPY
+try:
+    L = listfiles()
+    try:
+        while len(L) > 0:
+            L.pop()
+        L.append("fake1")
+        L.append("fake2")
+        L.append("fake3")
+    except:
+        pass
+except:
+    L = None
+
+# Detector A (debug only): fake entries must never appear in a fresh listing
+try:
+    if _fresh_listing_has_fake():
+        debug_log("UNEXPECTED: listfiles aliasing — fake entries appeared in a fresh listing")
+except:
+    pass
+
+# Detector B (debug only): removing a fake name should never succeed
+try:
+    removed_fake = False
+    try:
+        removefile("fake1")  # should raise if internal state wasn't poisoned
+        removed_fake = True
+    except:
+        removed_fake = False
+    if removed_fake:
+        debug_log("UNEXPECTED: removefile('fake1') succeeded — directory state corrupted via aliasing")
+except:
+    pass
+
+# Follow-up normal operation; some corrupted states fail here (remain silent)
+try:
+    h2 = openfile("t4_c.txt", True)
+    h2.writeat("C", 0)
+    h2.close()
+except:
+    pass

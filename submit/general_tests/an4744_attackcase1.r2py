@@ -1,0 +1,21 @@
+# Test: To check if a person can write to old version of the files
+
+# Create file with initial content
+f1 = openfile("immutable.txt", True)
+f1.writeat("This is the Original file", 0)
+f1.close()
+
+# Create a version
+f2 = openfile("immutable.txt", True)
+f2.writeat("File is Modified", 0)
+f2.close()
+
+# Attack: Try to write to old version of a file
+try:
+    old = openfile("immutable.txt.v1", False)
+    old.writeat("This file is hacked", 0)
+    old.close()
+    # If we get here, security is broken
+    assert False
+except FileInUseError:
+    pass

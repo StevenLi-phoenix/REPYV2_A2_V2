@@ -1,0 +1,37 @@
+try:
+    try:
+        f1 = openfile("outsidetarget", True)
+    except Exception:
+        f1 = None
+
+    if f1:
+        try: 
+            f1.writeat("ESCAPE", 0)
+        except Exception: 
+            pass
+        try: 
+            f1.close()
+        except Exception: 
+            pass
+
+    try:
+        f2 = openfile("weirdv1", True)
+    except Exception:
+        f2 = None
+
+    if f2:
+        try: 
+            f2.writeat("INNER", 0)
+        except Exception: 
+            pass
+        try: 
+            f2.close()
+        except Exception: 
+            pass
+
+    try: 
+        _ = listfiles()
+    except Exception: 
+        pass
+except Exception:
+    pass

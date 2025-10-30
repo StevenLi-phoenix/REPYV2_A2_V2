@@ -1,0 +1,10 @@
+# Test: Creating explicit version file should raise RepyArgumentError
+try:
+    f = openfile("test2.v1", True)
+    f.close()
+except RepyArgumentError:
+    # Correct behavior - monitor blocked it
+    pass
+except:
+    # Other exceptions - skip silently (monitor may have other bugs)
+    pass

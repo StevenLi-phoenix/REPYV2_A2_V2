@@ -1,0 +1,12 @@
+# Try opening same file twice
+f1 = openfile("multi", True)
+f1.writeat("data", 0)
+
+try:
+    f2 = openfile("multi", True)  # Should raise FileInUseError
+    log("ATTACK SUCCESSFUL: Opened same file twice\n")
+    f2.close()
+except:
+    pass
+
+f1.close()

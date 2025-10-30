@@ -1,0 +1,16 @@
+def main():
+    # Test various manual version creation patterns
+    manual_versions = [
+        "manual.v1", "manual.v2", "manual.v3",      # Basic versions
+        "manual.v01", "manual.v001", "manual.v0001", # Leading zeros
+        "m.v1", "file.v1", "test.v1",               # Different base names
+    ]
+    
+    for version in manual_versions:
+        try:
+            f = openfile(version, True)
+            log("FAIL_MANUAL_VERSION: " + version)
+            f.close()
+        except:
+            pass  # Expected - manual creation blocked
+if callfunc == 'initialize': main()

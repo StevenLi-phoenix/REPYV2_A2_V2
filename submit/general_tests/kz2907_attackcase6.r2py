@@ -1,0 +1,39 @@
+def version_naming():
+    versions_to_try = [
+        "file.txt.v_2",           
+        "file.txt.v.2",      
+        "file.txt.v 2",     
+        "file.txt.v-2",      
+        "file.txt.V2",       
+        "file.txt.v02",      
+        "file.txt.v2.backup",           
+        "file.txt.v2.tmp"   
+    ]
+    
+    for version_name in versions_to_try:
+        try:
+            f = openfile(version_name, True)
+            f.writeat("bypass_data", 0)
+            f.close()
+        except Exception as e:
+            "Not a version. Should be created."
+    for version_name in versions_to_try:
+        if version_name not in listfiles():
+            log("Should not be counted as a version.")
+
+def direct_version_creation():
+    # Try to create what look like version files directly
+    try:
+        f = openfile("new.txt.v2", True)  
+        f.writeat("direct_version", 0)
+        f.close()
+        log("BYPASS: Direct version file creation not allowed.")
+    except Exception as e:
+        pass
+
+f1 = openfile("file.txt", True)
+f1.writeat("real original", 0)
+f1.close()
+
+version_naming_attacks()
+direct_version_creation()

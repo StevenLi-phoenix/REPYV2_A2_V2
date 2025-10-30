@@ -1,0 +1,10 @@
+#create file
+f = openfile("testfile1", True)
+f.writeat("Attack1", 0)
+f.close()
+
+#create new version
+f2 = openfile("testfile1", True)
+#ensure that the contents are copied properly
+assert f2.readat(None, 0) == "Attack1"
+f2.close()

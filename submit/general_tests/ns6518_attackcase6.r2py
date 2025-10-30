@@ -1,0 +1,56 @@
+
+# Test 6 — Concurrent-create race attempt.
+# This test will start multiple threads that try to create a new version at nearly the same time.
+# A robust monitor should serialize versions cleanly (no duplicates or corrupt versions).
+
+try:
+    # Some Repy environments expose start_new_thread; we try to use it if available.
+    start_new_thread
+    have_thread = True
+except Exception:
+    have_thread = False
+
+# Create an initial base file so threads attempt to create a new version from it.
+f0 = openfile("tc6_race", True)
+f0.writeat("racebase", 0)
+f0.close()
+
+# Worker function: each thread tries to create a new version and then close it if successful.
+def worker(arg):
+    try:
+        nf = openfile("tc6_race", True)
+        # If creation succeeded, check readback (copy semantics)
+        _ = nf.readat(None, 0)
+        nf.close()
+    except Exception:
+        # Expected: some threads might get FileInUseError — that's okay
+        pass
+
+if have_thread:
+    # Launch a modest number of threads quickly
+    for i in range(8):
+        start_new_thread(worker, (i,))
+    # small busy-wait to let threads finish (Repy doesn't guarantee join)
+    # Use a simple loop sleep to yield time.
+    try:
+        import time
+        time.sleep(0.5)
+    except Exception:
+        pass
+else:
+    # If threads unavailable, attempt rapid sequential creates to try to expose races
+    for i in range(8):
+        try:
+            t = openfile("tc6_race", True)
+            t.readat(None, 0)
+            t.close()
+        except Exception:
+            pass
+
+# Final sanity: open the latest version (create=False) and ensure it exists
+try:
+    last = openfile("tc6_race", False)
+    last.close()
+except Exception:
+    # If final open fails, monitor may have broken versions — let this raise
+    assert False

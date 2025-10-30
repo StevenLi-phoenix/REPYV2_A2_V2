@@ -1,0 +1,18 @@
+"""
+Attack Case 5: Test that you cannot open a file for creation while it's open
+"""
+# Open a file
+f1 = openfile("testfile", True)
+f1.writeat("Data", 0)
+
+# Try to open the same file for creation while it's open - should raise FileInUseError
+try:
+    f2 = openfile("testfile", True)
+    raise Exception("Should not allow opening file for creation while it's already open")
+except FileInUseError:
+    pass  # Expected
+except Exception as e:
+    raise Exception("Wrong exception: " + str(e))
+
+f1.close()
+

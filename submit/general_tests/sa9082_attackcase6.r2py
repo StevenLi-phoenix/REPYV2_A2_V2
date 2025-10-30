@@ -1,0 +1,28 @@
+# Test 6: Can we open an already-open file?
+# Purpose: Test if monitor prevents opening a file that's already open
+# Expected: Should raise FileInUseError
+
+# Step 1: Create and open a file
+f1 = openfile("testfile6.txt", True)
+
+# Step 2: Write some data
+f1.writeat("Data", 0)
+
+# Step 3: Try to open the SAME file again while it's still open
+# Specification: "If openfile() is called on an already open file,
+# it shall throw the relevant error (FileInUseError)"
+try:
+    # Attempt to open already-open file
+    f2 = openfile("testfile6.txt", True)
+
+    # If we reach here, we opened the same file twice - FLAW!
+    log("FLAW FOUND: Was able to open already-open file!\n")
+
+    # Clean up
+    f2.close()
+
+except Exception:
+    pass
+
+# Clean up original file
+f1.close()

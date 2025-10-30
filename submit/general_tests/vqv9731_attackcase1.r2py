@@ -1,0 +1,42 @@
+# Test for Spec #4: Cannot create new version while latest is open.
+
+f1 = None
+f2 = None
+try:
+    # Create and open the base file
+    f1 = openfile("attack1_testfile", True)
+    f1.writeat("version0", 0)
+    # KEEP f1 OPEN
+
+    # Attempt to create the next version while f1 (latest) is open
+    # This MUST raise FileInUseError according to Spec #4
+    f2 = openfile("attack1_testfile", True)
+
+    # If we reach here, the monitor FAILED Spec #4.
+    assert(False) # Signal failure
+
+except FileInUseError:
+    # CORRECT behavior. Monitor blocked the creation. Pass silently.
+    pass
+except AssertionError:
+    # Let the explicit failure signal propagate
+    raise
+except Exception:
+    # Any OTHER exception indicates a monitor flaw or test error.
+    assert(False) # Signal failure
+finally:
+    # Cleanup: Close any handles that might have been opened
+    try:
+        if f1: f1.close()
+    except Exception: pass
+    try:
+        if f2: f2.close()
+    except Exception: pass
+
+    # Clean up created files (optional, but good practice for independence)
+    # Note: removefile should be disallowed, so this might fail if monitor is correct on Spec #8
+    # We don't check for RepyArgumentError here, just try cleanup best-effort.
+    try: removefile("attack1_testfile")
+    except Exception: pass
+    try: removefile("attack1_testfile.v1")
+    except Exception: pass

@@ -1,0 +1,58 @@
+def safe_create(filename):
+    try:
+        handle = openfile(filename, True)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_open(filename):
+    try:
+        handle = openfile(filename, False)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_write(handle, data, offset):
+    if handle is None:
+        return False
+    try:
+        handle.writeat(data, offset)
+        return True
+    except Exception:
+        return False
+
+
+def safe_close(handle):
+    if handle is None:
+        return
+    try:
+        handle.close()
+    except:
+        pass
+
+
+def main():
+    violations = []
+
+    h1, h1_allowed = safe_create("dummy")
+    if not h1_allowed or not safe_write(h1, "first write from h1", 0):
+        return
+
+    h2, h2_allowed = safe_create("dummy")
+    if h2_allowed:
+        violations.append("Policy violation: monitor allowed creating a second version of dummy")
+
+    h1_allowed = safe_write(h1, "after newer version exists", 0)
+    if h2_allowed and h1_allowed:
+        violations.append("Policy violation: stale handle remained writable after a newer version was created")
+
+    write_allowed = safe_write(h2, "write on supposedly-latest handle h2", 0)
+    if h2_allowed and write_allowed:
+        violations.append("Policy violation: writable handle returned for second creation of dummy")
+
+    for message in violations:
+        log(message + "\n")
+
+main()

@@ -1,0 +1,10 @@
+# jd5517_attackcase14.r2py
+# illegal characters in filename should be rejected
+
+threw = False
+try:
+    openfile("Case14-UPPER", True)
+except RepyArgumentError:
+    threw = True
+
+assert threw

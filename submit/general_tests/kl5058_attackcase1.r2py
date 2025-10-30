@@ -1,0 +1,134 @@
+#Attack case 1: Basic tests
+#Test basic file operations, filename validation, and immutability rules
+
+#Test 1: Basic file creation and reading
+try:
+    f=openfile("test1_basic.txt",True)
+    f.writeat("hello",0)
+    f.close()
+    f2=openfile("test1_basic.txt",False)
+    data=f2.readat(None,0)
+    f2.close()
+except:
+    pass
+
+#Test 2: Open non-existent file
+try:
+    f=openfile("test1_nonexist.txt",False)
+    f.close()
+except:
+    pass
+
+#Test 3: Empty filename
+try:
+    f=openfile("",True)
+    f.close()
+except:
+    pass
+
+#Test 4: Uppercase in filename
+try:
+    f=openfile("TestFile.txt",True)
+    f.close()
+except:
+    pass
+
+#Test 5: Hidden file
+try:
+    f=openfile(".hidden",True)
+    f.close()
+except:
+    pass
+
+#Test 6: Filename too long
+try:
+    f=openfile("a"*121,True)
+    f.close()
+except:
+    pass
+
+#Test 7: Max length filename
+try:
+    f=openfile("b"*120,True)
+    f.writeat("ok",0)
+    f.close()
+except:
+    pass
+
+#Test 8: Try removefile
+try:
+    f=openfile("test1_delete.txt",True)
+    f.writeat("data",0)
+    f.close()
+    removefile("test1_delete.txt")
+except:
+    pass
+
+#Test 9: Manual version file creation
+try:
+    f=openfile("test1_manual.txt.v5",True)
+    f.close()
+except:
+    pass
+
+#Test 10: .v0 file
+try:
+    f=openfile("test1_zero.txt.v0",False)
+    f.close()
+except:
+    pass
+
+#Test 11: Read zero bytes
+try:
+    f=openfile("test1_zerobytes.txt",True)
+    f.writeat("content",0)
+    data=f.readat(0,0)
+    f.close()
+except:
+    pass
+
+#Test 12: Empty write
+try:
+    f=openfile("test1_empty.txt",True)
+    f.writeat("",0)
+    f.writeat("data",0)
+    f.close()
+except:
+    pass
+
+#Test 13: Negative offset
+try:
+    f=openfile("test1_negative.txt",True)
+    f.writeat("test",0)
+    try:
+        f.writeat("bad",-1)
+    except:
+        pass
+    f.close()
+except:
+    pass
+
+#Test 14: Check listfiles for versions
+try:
+    f=openfile("test1_listfiles.txt",True)
+    f.writeat("v0",0)
+    f.close()
+    f1=openfile("test1_listfiles.txt",True)
+    f1.close()
+    files=listfiles()
+except:
+    pass
+
+#Test 15: Multiple readers
+try:
+    f=openfile("test1_multireader.txt",True)
+    f.writeat("shared",0)
+    f.close()
+    r1=openfile("test1_multireader.txt",False)
+    r2=openfile("test1_multireader.txt",False)
+    r3=openfile("test1_multireader.txt",False)
+    r1.close()
+    r2.close()
+    r3.close()
+except:
+    pass

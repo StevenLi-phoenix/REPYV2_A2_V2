@@ -1,0 +1,28 @@
+# Test 7: Does new version copy previous version's content?
+# Purpose: Test if creating new version copies content from previous version
+# Expected: New version should start with previous version's content
+
+# Step 1: Create base file with specific content
+f1 = openfile("testfile7.txt", True)
+f1.writeat("OriginalContent", 0)
+
+# Step 2: Close the base file
+f1.close()
+
+# Step 3: Create version 1 by reopening with create=True
+# Specification: "create a new version initialized with contents of latest version"
+f2 = openfile("testfile7.txt", True)
+
+# Step 4: Read content from new version
+# It should contain the original content
+content = f2.readat(None, 0)
+
+# Step 5: Check if content was copied
+# If content is empty or different, that's a flaw
+if content != "OriginalContent":
+    log("FLAW FOUND: New version doesn't copy previous version's content!\n")
+
+# No output if content was correctly copied
+
+# Clean up
+f2.close()

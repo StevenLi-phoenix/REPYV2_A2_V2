@@ -1,0 +1,9 @@
+# --- 3) explicit .v1 creation must be rejected ---
+f = openfile("testfile", True)
+f.close()
+
+try:
+    openfile("testfile.v1", True)
+    raise Exception("explicit-create-allowed")
+except RepyArgumentError:
+    pass

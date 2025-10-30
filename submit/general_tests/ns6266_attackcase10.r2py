@@ -1,0 +1,16 @@
+"""
+Attack Case 10: Test that movie and movie.voucher are appropriately differentiated
+"""
+
+f1 = openfile("movie", True)
+f1.writeat("movie data", 0)
+f1.close()
+
+f2 = openfile("movie.voucher", True)
+f2.writeat("voucher data", 0)
+f2.close()
+
+v = openfile("movie.voucher", True)
+if(v.readat(None, 0) != "voucher data"):
+    raise Exception("Doesn't contain data from previous version")
+v.close()

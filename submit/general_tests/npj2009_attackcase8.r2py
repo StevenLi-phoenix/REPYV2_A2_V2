@@ -1,0 +1,14 @@
+def main():
+    # Test file deletion prevention
+    try:
+        # Create a file
+        f = openfile("delete_test", True)
+        f.writeat("content", 0)
+        f.close()
+        
+        # Try to delete - should fail
+        removefile("delete_test")
+        log("FAIL_DELETION")
+    except:
+        pass  # Expected - deletion blocked
+if callfunc == 'initialize': main()

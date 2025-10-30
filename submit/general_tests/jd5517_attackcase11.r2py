@@ -1,0 +1,19 @@
+# jd5517_attackcase11.r2py
+# open-count sanity: creating new version while latest open should be blocked
+
+f = openfile("case11_base", True)
+f.writeat("x", 0)
+
+threw = False
+try:
+    try:
+        openfile("case11_base", True)
+    except FileInUseError:
+        threw = True
+finally:
+    try:
+        f.close()
+    except:
+        pass
+
+assert threw

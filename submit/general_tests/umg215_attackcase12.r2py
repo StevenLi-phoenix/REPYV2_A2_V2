@@ -1,0 +1,15 @@
+# Test: filenames with uppercase/special chars must be rejected
+
+try:
+  openfile("BadName", True); log("FAIL")
+except RepyArgumentError:
+  log("PASS")
+except Exception:
+  log("PASS")
+
+try:
+  openfile("bad@name", True); log("FAIL")
+except RepyArgumentError:
+  log("PASS")
+except Exception:
+  log("PASS")

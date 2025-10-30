@@ -1,0 +1,20 @@
+# Test: Version creation copies content from latest version
+
+f1 = openfile("testfile1", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile1", True)
+assert f2.readat(None, 0) == "HelloWorld", "New version should copy content"
+f2.writeat("Version2Data", 0)
+f2.close()
+
+# Verify original is unchanged
+foriginal = openfile("testfile1", False)
+assert foriginal.readat(None, 0) == "HelloWorld", "Original should be unchanged"
+foriginal.close()
+
+# Create third version
+f3 = openfile("testfile1", True)
+assert f3.readat(None, 0) == "Version2Data", "v2 should copy from v1"
+f3.close()

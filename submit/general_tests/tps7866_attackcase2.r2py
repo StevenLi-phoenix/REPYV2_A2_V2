@@ -1,0 +1,13 @@
+# listfiles hides versions; returns list; base once
+
+f = openfile("t02", True); f.close()
+openfile("t02", True).close()
+openfile("t02", True).close()
+lst = listfiles()
+if not isinstance(lst, list): raise Exception("listfiles not list")
+count = 0; i = 0
+while i < len(lst):
+  if ".v" in str(lst[i]): raise Exception("versions leaked in listfiles")
+  if lst[i] == "t02": count = count + 1
+  i = i + 1
+if count != 1: raise Exception("base not exactly once in listfiles")

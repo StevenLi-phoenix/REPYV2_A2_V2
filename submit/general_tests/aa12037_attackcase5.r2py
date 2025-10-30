@@ -1,0 +1,8 @@
+# Test: Cannot open file that does not exist
+
+try:
+    f1 = openfile("filedoesnotexist", False)
+    f1.readat(None, 0)
+    assert False, "This file doesn't exist so cannot be opened"
+except FileNotFoundError:
+    pass

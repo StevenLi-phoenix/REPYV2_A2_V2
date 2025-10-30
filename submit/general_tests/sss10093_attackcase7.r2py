@@ -1,0 +1,43 @@
+try:
+    base = openfile("rapid.txt", True)
+    base.writeat("start", 0)
+    base.close()
+    
+    for i in range(20):
+        try:
+            f = openfile("rapid.txt", True)
+            f.writeat("version" + str(i), 0)
+            f.close()
+        except Exception as e:
+            pass
+    
+    for i in range(1, 21):
+        try:
+            v = openfile("rapid.txt.v" + str(i), False)
+            content = v.readat(None, 0)
+            v.close()
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            pass
+    
+    try:
+        v1 = openfile("rapid.txt.v1", False)
+        v1.writeat("should fail", 0)
+        v1.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        v10 = openfile("rapid.txt.v10", False)
+        v10.writeat("should also fail", 0)
+        v10.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

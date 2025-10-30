@@ -1,0 +1,10 @@
+# Attack Case 25: Read after close and reopening
+
+frc = openfile("readclose", True)
+frc.writeat("data", 0)
+frc.close()
+
+frc2 = openfile("readclose", False)
+assert frc2.readat(None, 0) == "data", "Should be able to read after reopening"
+frc2.close()
+

@@ -1,0 +1,17 @@
+# Attack Case 3: Explicit Version File Creation Test
+# This test verifies that manual creation of version files is properly blocked
+
+try:
+    # Attempt to manually create version file - should be blocked
+    f = openfile("testfile.v1", True)
+    f.close()
+
+    # If execution reaches here, the security layer has a vulnerability
+    log("SECURITY FLAW: Explicit version file creation was not blocked!")
+
+except RepyArgumentError:
+    # Expected behavior - security layer correctly blocked creation
+    pass
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

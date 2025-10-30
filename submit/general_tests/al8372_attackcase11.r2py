@@ -1,0 +1,15 @@
+# Attack Case 11: Read old version while latest is writable
+
+f = openfile("oldread", True)
+f.writeat("v0", 0)
+f.close()
+
+f2 = openfile("oldread", True)
+f2.writeat("v1", 0)
+
+old = openfile("oldread", False)
+assert old.readat(None, 0) == "v0", "Should read old version content"
+old.close()
+
+f2.close()
+

@@ -1,0 +1,22 @@
+"""
+Write to an older file version
+"""
+
+try:
+    f1 = openfile("hist.txt", True)
+    f1.writeat("base", 0)
+    f1.close()
+    f2 = openfile("hist.txt", True)
+    f2.writeat("next", 0)
+    f2.close()
+    v1 = openfile("hist.txt.v1", False)
+    try:
+        v1.writeat("edit", 0)
+        v1.close()
+        log("Bug: wrote to old immutable version")
+    except Exception:
+        pass
+except Exception:
+    log("Bug: error while doing legal operations")
+
+    

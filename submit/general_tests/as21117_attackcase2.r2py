@@ -1,0 +1,21 @@
+# Calling openfile with create=True when latest version of file is still open should throw FileInUseError.
+
+f1 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+#Try calling Call openfile while version 1 is open.
+try:
+    f3 = openfile("testfile", True)
+except FileInUseError:
+    log("")
+except Exception as e:
+    log("Exception " + str(type(e)) +  " thrown but expected FileInUseError")
+else:
+    log("No exception but expected FileInUseError")
+finally: 
+    f2.close()

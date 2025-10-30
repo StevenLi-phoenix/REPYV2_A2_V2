@@ -1,0 +1,11 @@
+# Test: File deletion not allowed
+
+f1 = openfile("deltest8", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    removefile("deltest8")
+    assert False, "Should not allow file deletion"
+except RepyArgumentError:
+    pass

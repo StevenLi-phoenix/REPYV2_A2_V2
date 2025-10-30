@@ -1,0 +1,36 @@
+mycontext['lock'] = createlock()
+mycontext['version_handles'] = []
+
+def thread_exploit_timing():
+    try:
+        sleep(0.01)
+        f = openfile("timing.txt", True)
+        mycontext['lock'].acquire(True)
+        mycontext['version_handles'].append(f)
+        mycontext['lock'].release()
+        f.writeat("exploit", 0)
+        sleep(0.1)
+        f.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+try:
+    base = openfile("timing.txt", True)
+    base.writeat("base", 0)
+    base.close()
+    
+    for i in range(10):
+        createthread(thread_exploit_timing)
+    
+    sleep(0.5)
+    
+    for h in mycontext['version_handles']:
+        try:
+            h.close()
+        except:
+            pass
+
+except Exception as e:
+    pass

@@ -1,0 +1,41 @@
+mycontext['lock'] = createlock()
+mycontext['completed'] = 0
+
+def thread_file_ops(file_id):
+    try:
+        fname = "global" + str(file_id) + ".txt"
+        
+        f = openfile(fname, True)
+        f.writeat("base", 0)
+        f.close()
+        
+        for i in range(5):
+            v = openfile(fname, True)
+            v.writeat("v" + str(i), 0)
+            v.close()
+        
+        for i in range(1, 6):
+            try:
+                vf = openfile(fname + ".v" + str(i), False)
+                vf.readat(None, 0)
+                vf.close()
+            except:
+                pass
+        
+        mycontext['lock'].acquire(True)
+        mycontext['completed'] += 1
+        mycontext['lock'].release()
+        
+    except Exception as e:
+        mycontext['lock'].acquire(True)
+        mycontext['completed'] += 1
+        mycontext['lock'].release()
+
+try:
+    for i in range(10):
+        createthread(thread_file_ops, [i])
+    
+    sleep(2.0)
+
+except Exception as e:
+    pass

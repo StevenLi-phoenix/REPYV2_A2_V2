@@ -1,0 +1,3 @@
+# <netid>_attackcase2.r2py
+f1 = openfile("t2_beta", True); f1.writeat("A", 0); f1.close()
+f2 = openfile("t2_beta", True); assert f2.readat(None, 0) == "A"; f2.close()

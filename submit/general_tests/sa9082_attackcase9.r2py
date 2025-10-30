@@ -1,0 +1,18 @@
+# Test 9: Can we open a non-existent version file?
+# Purpose: Test if monitor raises FileNotFoundError for non-existent versions
+# Expected: Should raise FileNotFoundError
+
+# Step 1: Try to open a version file that doesn't exist
+# Using create=False should raise FileNotFoundError if file doesn't exist
+try:
+    # Attempt to open non-existent version file
+    f = openfile("testfile9.txt.v99", False)
+
+    # If we reach here, opened non-existent file - FLAW!
+    log("FLAW FOUND: Opened non-existent version file!\n")
+
+    # Clean up
+    f.close()
+
+except Exception:
+    pass

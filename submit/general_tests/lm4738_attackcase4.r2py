@@ -1,0 +1,9 @@
+### Trying to create a manually versioned filename (explicit)
+
+f3 = openfile("testfile.v5", True)
+
+f3.writeat("explicitly named a version", 0)
+
+assert f3.readat(None, 0)=="explicitly named a version", "explicitly named a version, failed"
+
+f3.close()

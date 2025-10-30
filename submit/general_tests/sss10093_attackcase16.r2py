@@ -1,0 +1,45 @@
+try:
+    try:
+        f = openfile("test.v", True)
+        f.close()
+    except Exception as e:
+        pass
+    
+    try:
+        f = openfile("test.v.txt", True)
+        f.writeat("data", 0)
+        f.close()
+    except Exception as e:
+        pass
+    
+    try:
+        f = openfile("v1.txt", True)
+        f.writeat("data", 0)
+        f.close()
+    except Exception as e:
+        pass
+    
+    try:
+        f = openfile(".v1", True)
+        f.close()
+    except Exception as e:
+        pass
+    
+    try:
+        f = openfile("test.v1.v2", True)
+        f.close()
+    except Exception as e:
+        pass
+    
+    try:
+        f = openfile("normalfile.txt", True)
+        f.writeat("normal", 0)
+        f.close()
+        
+        v = openfile("normalfile.txt.v1.extra", True)
+        v.close()
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

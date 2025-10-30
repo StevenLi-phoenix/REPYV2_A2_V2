@@ -1,0 +1,57 @@
+"""
+Attack 6: listfiles() should hide version files.
+Expected secure behavior: listfiles() returns only base filenames (no .vN entries).
+This test logs ONLY if versions leak via listfiles().
+"""
+
+def _has_visible_versions(entries):
+    # Detect names like ".v<digits>" anywhere in the filename
+    for name in entries:
+        try:
+            idx = name.rfind('.v')
+            if idx > 0:
+                part = name[idx+2:]
+                if part:
+                    all_digits = True
+                    for c in part:
+                        if not (c >= '0' and c <= '9'):
+                            all_digits = False
+                            break
+                    if all_digits:
+                        return True
+        except Exception:
+            pass
+    return False
+
+# Ensure a base and version exist
+try:
+    f = openfile("wdn2012_t6", True)
+    try:
+        f.writeat("data", 0)
+    except Exception:
+        pass
+    try:
+        f.close()
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    v = openfile("wdn2012_t6", True)
+    try:
+        v.close()
+    except Exception:
+        pass
+except Exception:
+    pass
+
+# Check listfiles for leaked versions
+try:
+    files = listfiles()
+    if _has_visible_versions(files):
+        log("EXPLOIT: listfiles reveals version files")
+except Exception:
+    pass
+
+

@@ -1,0 +1,15 @@
+# Test: Cannot write to file once its closed (Even if its latest)
+
+f1 = openfile("a9_testfile", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("a9_testfile", False)
+try:
+    f2.writeat("modifydata", 0)
+    f2.close()
+    assert False, "Cannot not write to file opened with create=False even if its latest"
+except FileInUseError:
+    pass
+
+f2.close()

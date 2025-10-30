@@ -1,0 +1,12 @@
+f1 = openfile("testfile", True)
+f1.close()
+
+try:
+    f9 = openfile("testfile.v9", True)
+    f9.close()
+    log("Able to created Versioned files")
+except RepyArgumentError:
+    pass
+except Exception as e:
+    log("Create Versioned files raised unexpected exception: " + str(e))
+

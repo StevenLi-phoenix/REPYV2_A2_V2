@@ -1,0 +1,12 @@
+b = openfile("many", True)
+b.writeat("base", 0)
+b.close()
+
+for i in range(4):
+    f = openfile("many", True)
+    f.writeat("ver" + str(i + 1), 0)
+    f.close()
+
+vf = openfile("many.v4", False)
+assert "ver4" in vf.readat(None, 0)
+vf.close()

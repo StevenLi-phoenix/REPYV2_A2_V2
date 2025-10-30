@@ -1,0 +1,17 @@
+
+# Test 5 — Cannot create a new version while the latest version is still open.
+# Open latest (create=True) and, while it's still open, attempt another create(True) — must raise.
+
+f = openfile("tc5_inuse", True)
+f.writeat("abc", 0)
+# Do NOT close f (keep it open)
+try:
+    # Attempt to create a new version while the latest is open must raise
+    f2 = openfile("tc5_inuse", True)
+    # If allowed, fail
+    assert False
+except Exception:
+    # Expected: exception raised. Suppress.
+    pass
+# Cleanup
+f.close()

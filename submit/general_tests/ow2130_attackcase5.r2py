@@ -1,0 +1,37 @@
+B = "a5.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("x", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+try:
+  v = openfile(B, True)
+  try: v.close()
+  except: pass
+except:
+  pass
+
+targets = []
+names = listfiles()
+if B in names:
+  targets.append(B)
+pref = B + ".v"
+for n in names:
+  if n.startswith(pref):
+    try:
+      int(n.split(".v")[-1]); targets.append(n)
+    except:
+      pass
+
+for t in targets:
+  try:
+    removefile(t)
+    log("removefile succeeded on '" + t + "'")
+    break
+  except:
+    pass

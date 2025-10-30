@@ -1,0 +1,10 @@
+# TEST TO CREATE A VERSIONED FILE
+
+try:
+	f2 = openfile("boos.txt.v5", True)
+	# Close v2.
+	f2.close()
+except RepyArgumentError:
+	pass
+
+

@@ -1,0 +1,27 @@
+# Test: To check that Version files should be hidden from listfiles()
+
+# Create file with multiple versions
+f1 = openfile("hidden-file.txt", True)
+f1.writeat("V1", 0)
+f1.close()
+
+f2 = openfile("hidden-file.txt", True)
+f2.writeat("V2", 0)
+f2.close()
+
+f3 = openfile("hidden-file.txt", True)
+f3.close()
+
+# Check listfiles() output
+files = listfiles()
+
+# Base file should be visible
+if "hidden-file.txt" not in files:
+    assert False
+
+# Version files should NOT be visible
+if "hidden-file.txt.v1" in files:
+    assert False
+
+if "hidden-file.txt.v2" in files:
+    assert False

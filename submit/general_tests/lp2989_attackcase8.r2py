@@ -1,0 +1,161 @@
+# MEGA ATTACK 17: Version Metadata and Integrity Attacks
+# Tests: Version file properties, metadata consistency
+
+# Test 1: Check if version files are truly read-only
+f = openfile("readonly.txt", True)
+f.writeat("v1 content", 0)
+f.close()
+
+f = openfile("readonly.txt", True)
+f.close()
+
+try:
+    fv = openfile("readonly.txt.v1", False)
+    original = fv.readat(None, 0)
+    try:
+        fv.writeat("hacked", 0)
+        fv.close()
+        
+        # Reopen and check
+        fv2 = openfile("readonly.txt.v1", False)
+        modified = fv2.readat(None, 0)
+        fv2.close()
+        
+        if modified != original:
+            log("ATTACK SUCCESSFUL: Version file is not read-only\n")
+    except FileInUseError:
+        fv.close()
+    except Exception:
+        try:
+            fv.close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+# Test 2: Swap base file and version file names
+f = openfile("swap.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("swap.txt", True)
+f.close()
+
+try:
+    # Try to rename operations (if possible through remove/create)
+    fbase = openfile("swap.txt", False)
+    base_content = fbase.readat(None, 0)
+    fbase.close()
+    
+    fv1 = openfile("swap.txt.v1", False)
+    v1_content = fv1.readat(None, 0)
+    fv1.close()
+    
+    removefile("swap.txt")
+    removefile("swap.txt.v1")
+    
+    # Recreate with swapped content
+    fnew = openfile("swap.txt", True)
+    fnew.writeat(v1_content, 0)
+    fnew.close()
+    
+    fv1new = openfile("swap.txt.v1", True)
+    fv1new.writeat(base_content, 0)
+    fv1new.close()
+    
+    log("ATTACK SUCCESSFUL: Swapped base and version files\n")
+except Exception:
+    pass
+
+# Test 3: Check version file ordering
+f = openfile("order.txt", True)
+for i in range(10):
+    f.writeat("content" + str(i), 0)
+    f.close()
+    if i < 9:
+        f = openfile("order.txt", True)
+
+# Verify versions are in correct order
+for i in range(1, 10):
+    try:
+        fv = openfile("order.txt.v" + str(i), False)
+        content = fv.readat(None, 0)
+        fv.close()
+        
+        expected = "content" + str(i - 1)
+        if content != expected:
+            log("ATTACK SUCCESSFUL: Version ordering broken\n")
+            break
+    except Exception:
+        break
+
+# Test 4: Create version with same content as base
+f = openfile("duplicate.txt", True)
+f.writeat("same", 0)
+f.close()
+
+f = openfile("duplicate.txt", False)
+f.writeat("same", 0)
+f.close()
+
+f = openfile("duplicate.txt", True)
+f.close()
+
+try:
+    fv = openfile("duplicate.txt.v1", False)
+    content = fv.readat(None, 0)
+    fv.close()
+    
+    if content == "same":
+        # This is actually correct, but check if v1 exists at all
+        files = listfiles()
+        if "duplicate.txt.v1" in files:
+            # Version should still be created even with same content
+            pass
+except FileNotFoundError:
+    log("ATTACK SUCCESSFUL: Version not created for duplicate content\n")
+except Exception:
+    pass
+
+# Test 5: Verify base file changes after version creation
+f = openfile("basechange.txt", True)
+f.writeat("original", 0)
+f.close()
+
+f = openfile("basechange.txt", True)
+f.writeat("new", 0)
+f.close()
+
+# Base should have "new", v1 should have "original"
+fbase = openfile("basechange.txt", False)
+base_content = fbase.readat(None, 0)
+fbase.close()
+
+try:
+    fv = openfile("basechange.txt.v1", False)
+    v1_content = fv.readat(None, 0)
+    fv.close()
+    
+    if base_content != "new" or v1_content != "original":
+        log("ATTACK SUCCESSFUL: Base file not properly updated\n")
+except Exception:
+    pass
+
+# Test 6: Check if empty versions take up space
+f = openfile("emptyspace.txt", True)
+f.close()
+
+initial_files = listfiles()
+
+for i in range(20):
+    f = openfile("emptyspace.txt", True)
+    f.close()
+
+final_files = listfiles()
+version_files = []
+for fname in final_files:
+    if fname.startswith("emptyspace.txt.v"):
+        version_files.append(fname)
+
+if len(version_files) == 20:
+    log("ATTACK SUCCESSFUL: Empty versions created unnecessarily\n")

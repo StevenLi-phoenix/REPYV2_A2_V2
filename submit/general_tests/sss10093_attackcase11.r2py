@@ -1,0 +1,26 @@
+try:
+    f = openfile("closedwrite.txt", True)
+    f.writeat("content", 0)
+    f.close()
+    
+    try:
+        f.writeat("after close", 0)
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        f.readat(7, 0)
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        f.close()
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

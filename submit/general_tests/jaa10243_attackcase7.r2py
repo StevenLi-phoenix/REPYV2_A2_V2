@@ -1,0 +1,18 @@
+# Create base file
+f1 = openfile("testfile.txt", True)
+f1.writeat("helloworld", 0)
+f1.close()
+
+
+f2 = openfile("testfile.txt", True)
+f2.writeat("v1", 0)
+
+try:
+    f3 = openfile("testfile.txt", True)
+    log("created v2 while v1 is open\n")
+    f3.close()
+    f2.close()
+    exitall()
+except FileInUseError:
+    pass  
+

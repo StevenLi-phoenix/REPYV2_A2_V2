@@ -1,0 +1,17 @@
+try:
+    f = openfile("testfile7", True)
+    f.close()
+
+    try:
+        removefile("testfile7")
+        log("TEST FAILED: testcase7 -> expected RepyArgumentError not raised on base remove")
+    except RepyArgumentError:
+        pass
+
+    try:
+        removefile("testfile7.v1")
+        log("TEST FAILED: testcase7 -> expected RepyArgumentError not raised on version remove")
+    except RepyArgumentError:
+        pass
+except Exception as e:
+    log("TEST FAILED: testcase7 -> " + str(e))

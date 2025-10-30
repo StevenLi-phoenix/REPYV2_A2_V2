@@ -1,0 +1,28 @@
+# Test Case 9: Test concurrent file operations and file locking
+# Should not be able to create new version while file is already open
+
+# Create base file
+f1 = openfile("concurrent.txt", True)
+f1.writeat("first version", 0)
+f1.close()
+
+# Open file for reading and keep it open
+f2 = openfile("concurrent.txt", False)
+
+# Try to create new version while file is open
+try:
+    f3 = openfile("concurrent.txt", True)
+    f3.writeat("second version", 0)
+    log("ATTACK SUCCESSFUL: Created new version while file still open\n")
+    f3.close()
+    f2.close()
+    exitall()
+except FileInUseError:
+    # Expected - should not allow creating new version while file is open
+    f2.close()
+except Exception as e:
+    # Expected - any exception that prevents concurrent access
+    f2.close()
+
+log("Test passed - prevents creating version while file is open\n")
+

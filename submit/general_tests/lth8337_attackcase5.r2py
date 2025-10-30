@@ -1,0 +1,15 @@
+base = "BASE:12345"
+f = openfile("alpha.txt", True)
+f.writeat(base, 0)
+f.close()
+
+v = openfile("alpha.txt", True)
+
+data = v.readat(None, 0)
+if data != base:
+    log("BUG: new version not initialized with previous content (len="+str(len(data))+" vs "+str(len(base))+")\n")
+
+v.close()
+
+
+

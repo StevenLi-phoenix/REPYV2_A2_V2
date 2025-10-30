@@ -1,0 +1,17 @@
+base = "attack2_file"
+
+f = openfile(base, True)
+f.writeat("seed", 0)
+f.close()
+
+r = openfile(base, False)
+
+try:
+    g = openfile(base, True)   # SHOULD FAIL on a correct monitor
+    g.close()
+    raise Exception("VULNERABLE: created a new version while base was open (read handle)")
+except Exception:
+    pass
+finally:
+    r.close()
+

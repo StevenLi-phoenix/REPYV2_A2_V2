@@ -1,0 +1,26 @@
+# create versions
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.close()
+
+f3 = openfile("testfile", True)
+f3.close()
+
+try:
+    files = listfiles()
+except Exception as e:
+    log("ERROR: listfiles() raised: " + str(e))
+    files = []
+
+
+# check for explicit versioned names
+if "testfile.v1" in files or "testfile.v2" in files:
+    log("Versioned files are being listed by listfiles")
+
+# also check for the original filename (expected to be listed)
+if "testfile" not in files:
+    log("Original file 'testfile' is NOT listed")
+    

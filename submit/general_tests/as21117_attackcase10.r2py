@@ -1,0 +1,46 @@
+def is_file_name_with_version(file_name):
+    split_file_name = file_name.rsplit(".v", 1)
+    if len(split_file_name) == 1:
+        return False
+    version = split_file_name[1]
+    name = split_file_name[0]
+    if not version or version[0] == '0' or not version.isdigit():
+        return False
+    if not name or name.isspace() or not name.strip():
+        return False
+    return True
+
+
+#Call listfiles() should return list with no versioned file names.
+f1 = openfile("testfile", True)
+
+# Write initial content at offset 0.
+# f1.writeat("Held3456", 0)
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+#Call openfile, version 1 should be created
+f3 = openfile("testfile", True)
+
+# Close the file to finalize the first version's contents.
+f3.close()
+
+listOfFiles = listfiles()
+filesWithVersions = []
+
+for file_name in listOfFiles:
+    if is_file_name_with_version(file_name):
+        filesWithVersions.append(file_name)
+
+if(len(filesWithVersions) != 0):
+    log("Files with version in listfiles() list: " + str(filesWithVersions))
+
+
+

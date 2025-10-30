@@ -1,0 +1,15 @@
+f1 = openfile("negoffset10.txt", True)
+try:
+    f1.writeat("data", -1)
+    log("BUG FOUND\n")
+except:
+    pass
+
+try:
+    content = f1.readat(4, -1)
+    log("BUG FOUND\n")
+except:
+    pass
+
+f1.close()
+

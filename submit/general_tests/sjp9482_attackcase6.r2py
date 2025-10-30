@@ -1,0 +1,15 @@
+file_name = "test_file"
+NUM_VERSIONS = 5000
+
+f_init = openfile(file_name, True)
+f_init.writeat("Small base file", 0)
+f_init.close()
+
+try:
+    for i in range(2, NUM_VERSIONS + 2):
+        f = openfile(file_name, True)
+        f.writeat("V" + str(i), 0)
+        f.close()
+
+except Exception:
+    raise Exception("MonitorCrashed")

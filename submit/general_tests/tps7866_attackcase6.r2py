@@ -1,0 +1,11 @@
+# Cannot create new version while latest open
+
+f = openfile("t06", True); f.writeat("X",0); f.close()
+latest = openfile("t06", False)
+try:
+  openfile("t06", True)
+  raise Exception("created version while latest open")
+except FileInUseError:
+  pass
+finally:
+  latest.close()

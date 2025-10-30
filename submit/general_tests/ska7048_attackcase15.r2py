@@ -1,0 +1,23 @@
+f1 = openfile("versionbugtest15.txt", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("versionbugtest15.txt", True)
+f2.writeat("newdata", 0)
+f2.close()
+
+try:
+    f3 = openfile("versionbugtest15.txt.v1", False)
+    content = f3.readat(None, 0)
+    if content != "data":
+        log("BUG FOUND\n")
+    f3.close()
+except:
+    log("BUG FOUND\n")
+
+try:
+    f4 = openfile("versionbugtest15.txt.v2", False)
+    log("BUG FOUND\n")
+    f4.close()
+except:
+    pass

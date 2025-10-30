@@ -1,0 +1,67 @@
+"""
+Attack case for ImmutableVersionTwo policy.
+Each test focuses on a single behavior. If an expectation is not met, raise an Exception.
+Run with:
+  python repy.py restrictions.default encasementlib.r2py reference_monitor_hh2727.r2py <THIS_FILE>.r2py
+(Replace names as needed.)
+"""
+
+# Tiny assert helpers (no external imports allowed in sandbox)
+def _assert(cond, msg="assertion failed"):
+  if not cond:
+    raise Exception(msg)
+
+def _expect_exception(fn, msg="expected an exception but none was raised"):
+  try:
+    fn()
+  except Exception:
+    return
+  raise Exception(msg)
+
+# Convenience wrappers to keep Repy surface in one place. If your API names differ, tweak here.
+def _open_ro(name):
+  # read-only open: openfile(name, False) should not create
+  return openfile(name, False)
+
+def _open_create(name):
+  # writable open: openfile(name, True) should create or open for writing a fresh version
+  return openfile(name, True)
+
+def _write_all(fh, data, offset=0):
+  # For simplicity we write once at offset 0 unless otherwise needed
+  return fh.writeat(data, offset)
+
+def _read_all(fh, n=4096, offset=0):
+  return fh.readat(n, offset)
+
+def _close(fh):
+  return fh.close()
+
+# Reopen for write and try to mutate a previously closed version by direct version path
+# Assumption: the RM exposes versioned files like "base.vN". If not, this will simply no-op read attempts.
+base = "ac2.txt"
+data1 = "V1-DATA"
+data2 = "EVIL-OVERWRITE"
+
+# Create v1
+f1 = _open_create(base)
+_write_all(f1, data1, 0)
+_close(f1)
+
+# Try to discover a versioned name pattern in the directory
+versions = [x for x in listfiles() if x.startswith(base + ".v")]
+# If no visible versions, we cannot directly address them; still the attack should be considered blocked.
+if versions:
+  target = sorted(versions)[0]   # try earliest version
+  # Attack: directly open a specific version for write (should fail if immutable)
+  def _attack():
+    fh = _open_create(target)
+    _write_all(fh, data2, 0)
+    _close(fh)
+  _expect_exception(_attack, "opened a specific historical version for write; should be immutable")
+
+# Control: latest content should still be v1 data
+g = _open_ro(base)
+got = _read_all(g, 1024, 0)
+_close(g)
+_assert(got.startswith(data1), "historical version was modified")

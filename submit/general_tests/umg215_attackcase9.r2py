@@ -1,0 +1,16 @@
+# Test: writing to older version must raise FileInUseError
+b = openfile("immut", True); b.writeat("B",0); b.close()
+v = openfile("immut", True); v.close()
+try:
+  old = openfile("immut.v1", False)
+  try:
+    old.writeat("X",0); log("FAIL")
+  except FileInUseError:
+    log("PASS")
+  except Exception:
+    log("PASS")
+  finally:
+    try: old.close()
+    except: pass
+except Exception as e:
+  log("FAIL " + str(type(e)))

@@ -1,0 +1,14 @@
+
+# Test 3 — removefile must be disallowed for any file.
+
+f = openfile("tc3_remove", True)
+f.writeat("data", 0)
+f.close()
+
+try:
+    removefile("tc3_remove")
+    # If removefile succeeds, that's a failure
+    assert False
+except Exception:
+    # Expected: some RepyArgumentError or similar. Suppress.
+    pass

@@ -1,0 +1,20 @@
+# CASE 5 Removing file disallowed
+
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+write("atk5", "X")
+
+ar(RepyArgumentError, removefile, "atk5")

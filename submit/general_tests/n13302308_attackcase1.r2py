@@ -1,0 +1,72 @@
+# n13302308_attackcase1.r2py
+# Silent when RM is secure. If RM allows a forbidden action, create "exploit_success".
+
+# Helper: attempt a thing, return True if it appears to have succeeded (no expected exception)
+def try_create_explicit_version():
+    try:
+        # create base version (allowed)
+        b = openfile("confirmfile", True)
+        b.writeat("A", 0)
+        b.close()
+    except Exception:
+        # unexpected; don't raise
+        pass
+    try:
+        # Explicit version creation should be forbidden:
+        v = openfile("confirmfile.v1", True)
+        try:
+            v.writeat("EXPLOIT", 0)
+            v.close()
+            return True   # succeeded: RM allowed explicit version creation
+        except Exception:
+            try:
+                v.close()
+            except Exception:
+                pass
+            return False
+    except (RepyArgumentError, FileInUseError, ValueError, AssertionError, FileNotFoundError):
+        # expected blocking behavior
+        return False
+    except Exception:
+        # unexpected crash or other error — silent here (harness will detect)
+        return False
+
+def try_overwrite_older_version():
+    # Attempt to open an explicit old version and write. If allowed, exploit succeeded.
+    try:
+        # ensure v1 exists by trying to create normally (it should not allow it)
+        # If v1 exists, open it read-only; otherwise this may fail.
+        v = openfile("confirmfile.v1", False)
+    except Exception:
+        return False
+
+    try:
+        v.writeat("BAD", 0)
+        v.close()
+        return True
+    except (FileInUseError, ValueError, AssertionError):
+        try:
+            v.close()
+        except Exception:
+            pass
+        return False
+    except Exception:
+        try:
+            v.close()
+        except Exception:
+            pass
+        return False
+
+def make_sentinel():
+    try:
+        s = openfile("exploit_success", True)
+        s.writeat("1", 0)
+        s.close()
+    except Exception:
+        pass
+
+# Try the tests. If any returns True, create sentinel.
+if try_create_explicit_version() or try_overwrite_older_version():
+    make_sentinel()
+
+

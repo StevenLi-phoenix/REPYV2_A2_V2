@@ -1,0 +1,20 @@
+# Test: Reading starting beyond EOF should either return "" or raise an exception.
+# If it returns non-empty data, fail the test.
+
+# create file with short content
+f = openfile("ac_eof_test", True)
+f.writeat("hello", 0)
+f.close()
+
+r = openfile("ac_eof_test", False)
+
+# attempt to read starting well past EOF
+try:
+    out = r.readat(None, 1000)  # read whole file from offset 1000
+    # acceptable: empty string ""
+    if out != "" or out != None:
+        assert False, "Reading past EOF returned unexpected data: " + repr(out)
+except Exception:
+    pass
+
+r.close()

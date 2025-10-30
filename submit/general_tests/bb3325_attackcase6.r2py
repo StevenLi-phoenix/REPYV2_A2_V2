@@ -1,0 +1,15 @@
+# Removing an old version directly should be blocked.
+
+base = "remove_test.txt"
+
+try:
+  f = openfile(base, True); f.write("init"); f.close()
+  g = openfile(base, True); g.write("second"); g.close()
+except:
+  pass
+
+try:
+  removefile(base + ".v1")
+  log("VULN: remove_old_version")
+except:
+  pass

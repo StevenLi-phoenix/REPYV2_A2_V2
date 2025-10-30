@@ -1,0 +1,9 @@
+# ============ TEST: removefile() is blocked ============
+try:
+  removefile("test.txt")
+  log("TEST FAILED: removefile was allowed\n")
+except (FileError, RepyArgumentError, ResourceForbiddenError):
+  # Expected behavior — removefile should be blocked
+  pass
+except Exception, e:
+  log("TEST FAILED: Unexpected exception: " + str(e) + "\n")

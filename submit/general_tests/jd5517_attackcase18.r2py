@@ -1,0 +1,20 @@
+# jd5517_attackcase18.r2py
+# listfiles after many versions returns only base names
+
+f = openfile("case18_base", True)
+f.writeat("a", 0)
+f.close()
+
+i = 0
+while i < 3:
+    try:
+        t = openfile("case18_base", True)
+        t.close()
+    except FileInUseError:
+        pass
+    i = i + 1
+
+names = listfiles()
+assert "case18_base" in names
+for n in names:
+    assert ".v" not in n

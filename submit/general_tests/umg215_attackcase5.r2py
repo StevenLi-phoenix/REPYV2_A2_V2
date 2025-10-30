@@ -1,0 +1,24 @@
+# Test: concurrent version creation
+
+def makev():
+    try:
+        f = openfile("racefile", True)
+        f.writeat("x", 0)
+        f.close()
+    except:
+        pass
+
+try:
+    createthread(makev)
+    createthread(makev)
+    sleep(1.0)
+except:
+    makev(); makev()
+
+try:
+    c = 0
+    for n in listfiles():
+        if n.startswith("racefile"): c += 1
+    log("FAIL" if c > 2 else "PASS")
+except:
+    log("FAIL")

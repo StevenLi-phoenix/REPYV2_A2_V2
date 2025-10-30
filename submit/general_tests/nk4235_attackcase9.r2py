@@ -1,0 +1,15 @@
+# Attack: Create many versions to test version numbering
+base = "manyversions"
+f = openfile(base, True)
+f.writeat("v0", 0)
+f.close()
+
+for i in range(1, 11):
+    f = openfile(base, True)
+    f.writeat("v" + str(i), 0)
+    f.close()
+
+# Verify all versions are numbered correctly
+for i in range(1, 11):
+    vfile = openfile(base + ".v" + str(i), False)
+    vfile.close()

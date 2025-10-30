@@ -1,0 +1,15 @@
+file_name = "test_file"
+
+explicit_ver_name = file_name + ".v01"
+
+try:
+    f = openfile(explicit_ver_name, True)
+    f.close()
+    raise Exception("ExplicitVersionCreationSucceeded")
+
+except RepyArgumentError:
+    pass
+except FileNotFoundError:
+    pass
+except Exception:
+    raise Exception("UnexpectedErrorDuringVersionParsing")

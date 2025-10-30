@@ -1,0 +1,29 @@
+B = "a8.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("seed", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+try:
+  nv = openfile(B, True)
+  try: nv.close()
+  except: pass
+except:
+  pass
+
+try:
+  g = openfile(B, False)
+  try:
+    g.writeat("x", 0)
+    log("Base '" + B + "' is writable after newer version exists")
+  except:
+    pass
+  try: g.close()
+  except: pass
+except:
+  pass

@@ -1,0 +1,10 @@
+f1 = openfile("multiclose8.txt", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    f1.close()
+    log("BUG FOUND\n")
+except:
+    pass
+

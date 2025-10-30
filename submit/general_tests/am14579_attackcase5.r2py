@@ -1,0 +1,16 @@
+# Attack: Test that new versions are initialized with previous content
+
+# Create first version with specific content
+f1 = openfile("testfile_copy", True)
+f1.writeat("initial_content", 0)
+f1.close()
+
+# Create second version - should contain copy of first version
+f2 = openfile("testfile_copy", True)
+content = f2.readat(None, 0)
+
+# Check if content was copied
+if content != "initial_content":
+    log("ATTACK SUCCESSFUL: New version not initialized with previous content\n")
+
+f2.close()

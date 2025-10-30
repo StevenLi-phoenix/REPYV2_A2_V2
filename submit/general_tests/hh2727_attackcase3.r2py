@@ -1,0 +1,60 @@
+"""
+Attack case for ImmutableVersionTwo policy.
+Each test focuses on a single behavior. If an expectation is not met, raise an Exception.
+Run with:
+  python repy.py restrictions.default encasementlib.r2py reference_monitor_hh2727.r2py <THIS_FILE>.r2py
+(Replace names as needed.)
+"""
+
+# Tiny assert helpers (no external imports allowed in sandbox)
+def _assert(cond, msg="assertion failed"):
+  if not cond:
+    raise Exception(msg)
+
+def _expect_exception(fn, msg="expected an exception but none was raised"):
+  try:
+    fn()
+  except Exception:
+    return
+  raise Exception(msg)
+
+# Convenience wrappers to keep Repy surface in one place. If your API names differ, tweak here.
+def _open_ro(name):
+  # read-only open: openfile(name, False) should not create
+  return openfile(name, False)
+
+def _open_create(name):
+  # writable open: openfile(name, True) should create or open for writing a fresh version
+  return openfile(name, True)
+
+def _write_all(fh, data, offset=0):
+  # For simplicity we write once at offset 0 unless otherwise needed
+  return fh.writeat(data, offset)
+
+def _read_all(fh, n=4096, offset=0):
+  return fh.readat(n, offset)
+
+def _close(fh):
+  return fh.close()
+
+# Delete a historical version (should be disallowed)
+base = "ac3.txt"
+data = "AC3-DATA"
+
+# Create v1
+f = _open_create(base)
+_write_all(f, data, 0)
+_close(f)
+
+# Try to list any explicit versions and remove them
+victims = [x for x in listfiles() if x.startswith(base + ".v")]
+if victims:
+  def _attack():
+    for v in victims:
+      removefile(v)
+  _expect_exception(_attack, "able to delete historical version file; should be disallowed")
+else:
+  # If versions are not exposed as filenames, ensure we cannot remove the base, either
+  def _attack2():
+    removefile(base)
+  _expect_exception(_attack2, "able to delete immutable file; should be disallowed")

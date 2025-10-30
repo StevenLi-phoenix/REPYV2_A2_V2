@@ -1,0 +1,7 @@
+# explicit-version creation
+try:
+    openfile("explicitatk.v1", True)
+    # if we reach here creation was allowed -> attack succeeded
+    assert False
+except RepyArgumentError:
+    pass

@@ -1,0 +1,13 @@
+# TEST 3: Read older version independently
+base = "testfile3"
+f0 = openfile(base, True)
+f0.writeat("basecontent", 0)
+f0.close()
+
+f1 = openfile(base, True)   # auto-creates .v1
+f1.close()
+
+# Open base again (old version)
+old = openfile(base, False)
+assert old.readat(None, 0) == "basecontent"
+old.close()

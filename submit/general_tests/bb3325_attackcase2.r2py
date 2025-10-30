@@ -1,0 +1,18 @@
+# Same idea as case1, slightly different path to catch variants.
+
+name = "explicit_v_test.txt"
+
+# Ensure base exists
+try:
+  f = openfile(name, True); f.write("init"); f.close()
+except:
+  pass
+
+# Try 'create=True' on a versioned name
+try:
+  g = openfile(name + ".v2", True)
+  g.write("bad")
+  g.close()
+  log("VULN: open_version_with_create_attack2")
+except:
+  pass

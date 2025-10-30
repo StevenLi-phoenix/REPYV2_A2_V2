@@ -1,0 +1,10 @@
+# Attack: Does content copying work with empty files?
+
+f1 = openfile("empty", True)
+f1.close()  # Empty file
+
+f2 = openfile("empty", True)
+content = f2.readat(None, 0)
+if content != "":
+    log("ATTACK SUCCESSFUL: Empty content not preserved\n")
+f2.close()

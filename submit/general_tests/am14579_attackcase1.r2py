@@ -1,0 +1,14 @@
+# Attack: Test that removefile() always raises an exception (RepyArgumentError)
+
+# Create a test file
+myfile = openfile("testfile_remove", True)
+myfile.writeat("data", 0)
+myfile.close()
+
+# Try to remove the file - should raise an exception
+try:
+    removefile("testfile_remove")
+    log("ATTACK SUCCESSFUL: removefile() did not raise an error\n")
+except Exception:
+    # Expected behavior - reference monitor correctly blocked removal
+    pass

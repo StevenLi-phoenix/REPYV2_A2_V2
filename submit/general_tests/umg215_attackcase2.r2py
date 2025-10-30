@@ -1,0 +1,17 @@
+# Test: reading past EOF should raise an error
+
+# Create/overwrite a small file
+f = openfile("testfile_1.txt", True)
+try:
+    f.writeat("SOMETHING", 0)
+
+    try:
+        data = f.readat(None, 20)
+        log("FAIL: read past EOF returned data: " + str(data[:20]))
+    except Exception:
+        log("PASS")
+finally:
+    try:
+        f.close()
+    except Exception:
+        pass

@@ -1,0 +1,19 @@
+# create ver 1 and ver 2
+
+# create file
+f1 = openfile("testfile", True)
+
+# write into first ver
+f1.writeat("HelloWorld", 0)
+
+# close file to finalize content
+f1.close()
+
+# create second ver
+f2 = openfile("testfile", True)
+
+# ensure v1 and v2 that it hsa same content
+if (f2.readat(None, 0) != "HelloWorld"):
+   log("ERROR data not the same")
+
+f2.close()

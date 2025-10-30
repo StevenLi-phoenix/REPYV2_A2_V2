@@ -1,0 +1,50 @@
+# Targets: Concurrency - Creating new version while readers hold old versions
+
+if callfunc == 'initialize':
+  baseFilename = "sharedoc.txt" # Renamed to avoid underscores
+
+  try:
+    # 1. Create base file (this implicitly becomes V0)
+    baseAsset = openfile(baseFilename, True)
+    baseAsset.writeat("Base Content", 0)
+    baseAsset.close()
+
+    # 2. Create V1 (creates "sharedoc.txt.v1")
+    firstUpdate = openfile(baseFilename, True)
+    firstUpdate.writeat("Updated Content V1", 0)
+    firstUpdate.close()
+
+    # 3. Open V0 (by opening the base filename) and V1 for reading, keep them open
+    readerV0 = openfile(baseFilename, False) # Correctly opens the implicit V0
+    readerV1 = openfile(baseFilename + ".v1", False) # Opens the explicit V1
+
+    # 4. Attempt to create a new version (V2) of the base file.
+    # This operation should succeed, as only readers (not writers to the *latest* version) are active.
+    try:
+        secondUpdate = openfile(baseFilename, True) # This creates V2
+        secondUpdate.writeat("Updated Content V2", 0)
+        secondUpdate.close()
+    except FileInUseError:
+        # This is an unexpected error if readers of *old* versions block creation of new versions
+        raise Exception("Monitor failed: New version creation blocked by active readers of old versions!")
+    except Exception, e: # Python 2 syntax
+        raise Exception("Monitor failed with unexpected error during V2 creation: " + str(e))
+
+    # 5. Verify V2 content
+    # We now expect "sharedoc.txt.v2" to exist.
+    readV2 = openfile(baseFilename + ".v2", False)
+    contentV2 = readV2.readat(None, 0)
+    readV2.close()
+
+    if contentV2 != "Updated Content V2":
+        raise Exception("Monitor failed: Content mismatch for V2 after creation with active readers!")
+
+    # 6. Close the reader handles
+    readerV0.close()
+    readerV1.close()
+
+  except Exception, e: # Python 2 syntax
+    raise Exception("Edge Case 4 failed due to unexpected error: " + str(e))
+
+# This attack case might break reference_monitor_example1 (if 'open_files' tracks all versions opened, not just latest writable, thus blocking new creation)
+# It might also break reference_monitor_example2 (if its 'open_files' dictionary doesn't differentiate between read-only old versions and writable latest versions correctly)

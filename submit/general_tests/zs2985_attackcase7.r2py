@@ -1,0 +1,50 @@
+# Attack Case 7: Version File Reading Test
+# This test verifies that version file reading functionality works correctly
+
+try:
+    # Create multiple versions of testfile
+    f1 = openfile("testfile", True)
+    f1.writeat("original", 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)  # Creates testfile.v1
+    f2.writeat("version1", 0)
+    f2.close()
+
+    f3 = openfile("testfile", True)  # Creates testfile.v2
+    f3.writeat("version2", 0)
+    f3.close()
+
+    # Test reading original file - should read original content
+    forig = openfile("testfile", False)
+    contentorig = forig.readat(None, 0)
+    forig.close()
+
+    # Test reading version files
+    fv1 = openfile("testfile.v1", False)
+    contentv1 = fv1.readat(None, 0)
+    fv1.close()
+
+    fv2 = openfile("testfile.v2", False)
+    contentv2 = fv2.readat(None, 0)
+    fv2.close()
+
+    # Verify content matches expectations
+    if contentorig != "original":
+        log("SECURITY FLAW: Original file content mismatch! Expected 'original', got: " + str(contentorig))
+
+    if contentv1 != "version1":
+        log("SECURITY FLAW: Version 1 content mismatch! Expected 'version1', got: " + str(contentv1))
+
+    if contentv2 != "version2":
+        log("SECURITY FLAW: Version 2 content mismatch! Expected 'version2', got: " + str(contentv2))
+
+    # If execution reaches here, the security layer handled version file reading correctly
+    # This test should pass without any error output
+
+except FileNotFoundError as e:
+    # If file doesn't exist, there's an issue with the security layer
+    log("SECURITY FLAW: File not found when it should exist! " + str(e))
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

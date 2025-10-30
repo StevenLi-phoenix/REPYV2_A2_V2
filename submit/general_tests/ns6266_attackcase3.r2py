@@ -1,0 +1,22 @@
+"""
+Attack Case 3: Test that writing to old versions is not allowed
+"""
+# Create two versions
+f1 = openfile("nsjtestfile", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("nsjtestfile", True)
+f2.writeat("Modified", 0)
+f2.close()
+
+# Try to write to old version - should raise FileInUseError
+try:
+    old_file = openfile("nsjtestfile", False)
+    old_file.writeat("Hacked", 0)
+    raise Exception("Should not allow writing to old versions")
+except FileInUseError:
+    pass  # Expected
+except Exception as e:
+    raise Exception("Wrong exception: " + str(e))
+

@@ -1,0 +1,14 @@
+#attack 10: try open old version w create=True
+f1 = openfile("test", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("test", True)
+f2.close()
+
+try:
+    fbad = openfile("test.v1", True)
+    fbad.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Opened old version with create=True!\n")
+except RepyArgumentError:
+    pass

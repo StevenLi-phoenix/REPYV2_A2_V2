@@ -1,0 +1,31 @@
+# listfiles should hide versioned files 
+try:
+    f1 = openfile('checklist', True)
+    f1.writeat('test', 0)
+    f1.close()
+
+    f2 = openfile('checklist', True)
+    f2.close()
+
+    f3 = openfile('checklist', True)
+    f3.close()
+
+    try:
+        files = listfiles()
+    except Exception:
+        pass
+    
+    for name in files:
+        try:
+            if name.startswith(prefix):
+                suffix = name[len(prefix):]
+                if suffix != "" and suffix.isdigit():
+                    matches.append(name)
+        except Exception:
+            continue
+
+    if matches:
+        log("Issue: listfiles exposes versioned files\n")
+
+except Exception:
+    pass

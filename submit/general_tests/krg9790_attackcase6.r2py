@@ -1,0 +1,7 @@
+#attack 6: create explicit version file
+try:
+    f = openfile("hack.v5", True)
+    f.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Created explicit version file!\n")
+except RepyArgumentError:
+    pass

@@ -1,0 +1,25 @@
+# Attack Case 2: File Deletion Vulnerability
+# Tests monitors that allow file deletion
+
+
+# Create a file
+f1 = openfile("testfile2", True)
+f1.writeat("Important data", 0)
+f1.close()
+
+# Try to delete the file
+try:
+    removefile("testfile2")
+    # Try to access deleted file
+    f2 = openfile("testfile2", False)
+    f2.readat(None, 0)
+    f2.close()
+    raise Exception("VULNERABLE: File deletion succeeded")
+except RepyArgumentError:
+    pass
+except FileNotFoundError:
+    raise Exception("VULNERABLE: File deletion succeeded")
+except Exception as e:
+    if "VULNERABLE:" in str(e):
+        raise e
+    raise Exception("VULNERABLE: Unexpected error during deletion: " + str(e))

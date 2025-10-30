@@ -1,0 +1,22 @@
+# Attack Case 16: Multiple versions accessible
+
+fm = openfile("multiver", True)
+fm.writeat("v0", 0)
+fm.close()
+
+fm1 = openfile("multiver", True)
+fm1.writeat("v1", 0)
+fm1.close()
+
+fm2 = openfile("multiver", True)
+fm2.writeat("v2", 0)
+fm2.close()
+
+h0 = openfile("multiver", False)
+h1 = openfile("multiver.v1", False)
+
+assert h0.readat(None, 0) == "v0", "Should read v0 content"
+assert h1.readat(None, 0) == "v1", "Should read v1 content"
+
+h0.close()
+h1.close()

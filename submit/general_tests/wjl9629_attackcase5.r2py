@@ -1,0 +1,23 @@
+# Specification: create=True is used on a versioned file, raise RepyArgumentError("Cannot create explicit version files"), as manual version creation is not allowed.
+# How this tests: checks that version 0, works. appends a ".v1" to the file. tried to create
+
+version = 0
+basename = "testfile"
+filename = basename
+while True:
+    try:
+        f = openfile(filename, True)
+    except Exception as e:
+        try:
+            version = filename.split('.')[-1]
+            assert (version[0] == 'v')
+            assert (version[1:].isdigit())
+            break
+        except AssertionError:
+            raise ValueError(version)
+        except Exception as e:
+            raise e
+
+    f.close()
+    version += 1
+    filename = basename + ".v" + str(version)

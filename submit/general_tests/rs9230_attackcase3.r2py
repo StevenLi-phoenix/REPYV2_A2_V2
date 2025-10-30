@@ -1,0 +1,28 @@
+# Test Case 3: Try to create a file with explicit version number
+# Should not be allowed to create files like "test.v1" directly
+
+try:
+    f = openfile("myfile.v5", True)
+    f.writeat("content", 0)
+    log("ATTACK SUCCESSFUL: Created explicit version file (should be forbidden)\n")
+    f.close()
+    exitall()
+except RepyArgumentError:
+    pass
+except Exception as e:
+    pass
+
+try:
+    f = openfile("file.v1", True)
+    f.writeat("test", 0)
+    log("ATTACK SUCCESSFUL: Created .v1 file directly (should be forbidden)\n")
+    f.close()
+    exitall()
+except RepyArgumentError:
+    # Expected
+    pass
+except Exception as e:
+    # Expected - any exception that prevents explicit version creation
+    pass
+
+log("Test passed - explicit version creation blocked\n")

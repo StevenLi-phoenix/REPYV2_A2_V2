@@ -1,0 +1,17 @@
+# jd5517_attackcase13.r2py
+# malformed version names rejected (.v0 and .v01)
+
+threw_any = False
+try:
+    try:
+        openfile("case13_base.v0", False)
+    except Exception:
+        threw_any = True
+    try:
+        openfile("case13_base.v01", False)
+    except Exception:
+        threw_any = True
+except:
+    pass
+
+assert threw_any

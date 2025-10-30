@@ -1,0 +1,10 @@
+# Attack: Test that creating explicit version files raises RepyArgumentError
+
+# Try to manually create a versioned file
+try:
+    f = openfile("anyfile.v1", True)
+    log("ATTACK SUCCESSFUL: Creating explicit version file did not raise error\n")
+    f.close()
+except Exception:
+    # Expected behavior - reference monitor correctly blocked explicit version creation
+    pass

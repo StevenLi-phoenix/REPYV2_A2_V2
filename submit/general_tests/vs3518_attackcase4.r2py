@@ -1,0 +1,71 @@
+marker = "compromised_vs3518_attackcase4"
+protected = "protected_attack4.txt"
+temp1 = "temp1_attack4.txt"
+temp2 = "temp2_attack4.txt"
+
+try:
+    f = open(protected, "w")
+    try:
+        f.write("ORIGINAL\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+i = 0
+while i < 50:
+    i = i + 1
+    # write EVIL1 into temp1
+    try:
+        f = open(temp1, "w")
+        try:
+            f.write("EVIL1\n")
+        finally:
+            f.close()
+    except Exception:
+        pass
+
+    try:
+        try:
+            os.rename(temp1, protected)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    try:
+        f = open(temp2, "w")
+        try:
+            f.write("EVIL2\n")
+        finally:
+            f.close()
+    except Exception:
+        pass
+
+    try:
+        try:
+            os.rename(temp2, protected)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    try:
+        time.sleep(0.01)
+    except Exception:
+        pass
+
+    try:
+        f = open(protected, "r")
+        try:
+            c = f.read()
+        finally:
+            f.close()
+        if "EVIL1" in c or "EVIL2" in c:
+            try:
+                open(marker, "w").close()
+            except Exception:
+                pass
+            break
+    except Exception:
+        pass

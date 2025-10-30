@@ -1,0 +1,27 @@
+# jd5517_attackcase3.r2py
+# writing to older explicit version must be blocked
+
+a = openfile("case3_base", True)
+a.writeat("first", 0)
+a.close()
+
+# create new version
+try:
+    b = openfile("case3_base", True)
+    b.writeat("second", 0)
+    b.close()
+except FileInUseError:
+    # if create blocked, ensure closed and proceed
+    pass
+
+old = openfile("case3_base.v1", False)
+blocked = False
+try:
+    try:
+        old.writeat("bad-write", 0)
+    except FileInUseError:
+        blocked = True
+finally:
+    old.close()
+
+assert blocked

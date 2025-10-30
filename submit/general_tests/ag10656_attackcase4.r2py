@@ -1,0 +1,36 @@
+# Testing writing to old files
+# Expected behaviour
+# Files created: testfile.v | testfile.v1
+# Error thrown: Should throw FileInUse Error
+# Incorrect Output: newfilestuff lololololol
+
+try:
+    f1 = openfile("testfile", True)
+    f1.writeat("lololololol", 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    f3 = openfile("testfile", False)
+    f3.writeat("newfilestuff", 0)
+    f3.close()
+
+    f1 = openfile("testfile", False)
+    f2 = openfile("testfile", False)
+
+
+    f1_contents = f1.readat(12,0)
+    f2_contents = f2.readat(11,0)
+
+    f1.close()
+    f2.close()
+    
+    raise Exception('newfilestufflololololol')
+except Exception as e:
+    if str(e) == 'newfilestufflololololol':
+        log("[VIOLATION] Behaves incorrectly")
+    elif str(e) == 'lolololololnewfilestuff':
+        log("[VIOLATION] Behaves incorrectly")
+    else:
+        pass

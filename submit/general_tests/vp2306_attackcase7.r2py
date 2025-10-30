@@ -1,0 +1,6 @@
+#opening a version that doesnt exist should return an error
+try:
+    openfile("nofilefound.v1", False)
+    assert False
+except FileNotFoundError:
+    pass

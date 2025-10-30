@@ -1,0 +1,11 @@
+#tries to write to file after closing it
+myfile = openfile("testfile", True)
+myfile.writeat("Initial data", 0)
+myfile.close()
+
+#try to write after closing - should raise an exception
+try:
+    myfile.writeat("Malicious data", 0)
+    log("SECURITY FLAW: Able to write after close!\n")
+except:
+    log("Write after close properly blocked\n")

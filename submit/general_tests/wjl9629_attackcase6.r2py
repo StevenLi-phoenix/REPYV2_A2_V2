@@ -1,0 +1,22 @@
+# Specification 7: "writing to them is permanently disallowed"
+# How this tests: create versions, confirm that all are writable, up until the most recent
+
+basename = "testfile"
+files_to_make = 10
+# make 10 files
+for _ in range(files_to_make):
+    f = openfile(basename, True)
+    f.close()
+
+filename = basename
+for version in range(files_to_make - 1):
+    f = openfile(filename, False)
+
+    try:
+        f.writeat("Trying to write to file: "+filename, 0)
+        raise ValueError("Could write to "+filename)
+    except:
+        assert True
+
+    f.close()
+    filename = basename + ".v" + str(version+1)

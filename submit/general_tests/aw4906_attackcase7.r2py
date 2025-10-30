@@ -1,0 +1,5 @@
+try:
+    removefile("testfile.v12") 
+    raise Exception("Failed to raise RepyArgumentError") 
+except RepyArgumentError: 
+    pass 

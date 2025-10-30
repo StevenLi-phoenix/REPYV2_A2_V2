@@ -1,0 +1,13 @@
+# Does empty write trigger immutability tracking?
+f1 = openfile("zero", True)
+f1.writeat("", 0)  # Write empty string
+f1.close()
+
+# Try reopening and writing
+try:
+    f2 = openfile("zero", False)
+    f2.writeat("ATTACK", 0)  # Should fail
+    log("ATTACK SUCCESSFUL: Empty write didn't trigger immutability\n")
+    f2.close()
+except:
+    pass

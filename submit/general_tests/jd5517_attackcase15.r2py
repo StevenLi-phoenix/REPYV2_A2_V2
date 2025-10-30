@@ -1,0 +1,19 @@
+# jd5517_attackcase15.r2py
+# moderate large-file copy test
+
+big = "x" * 8000
+f = openfile("case15_base", True)
+f.writeat(big, 0)
+f.close()
+
+try:
+    g = openfile("case15_base", True)
+    data = g.readat(None, 0)
+    g.close()
+except FileInUseError:
+    # if create blocked, attempt to open latest read-only and read
+    g = openfile("case15_base", False)
+    data = g.readat(None, 0)
+    g.close()
+
+assert data == big

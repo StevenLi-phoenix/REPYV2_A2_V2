@@ -1,0 +1,24 @@
+# create v1
+try:
+    a = openfile("tc1file", True)
+    a.writeat("one", 0)
+    a.close()
+except Exception:
+    # unexpected failure creating v1
+    assert False
+
+# create v2 (should copy content "one")
+try:
+    b = openfile("tc1file", True)
+    try:
+        content = b.readat(None, 0)
+        # fail if copy didn't occur
+        assert content == "one"
+    except Exception:
+        # unexpected failure reading v2
+        assert False
+    finally:
+        b.close()
+except Exception:
+    # unexpected failure creating v2
+    assert False

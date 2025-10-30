@@ -1,0 +1,37 @@
+if "memtest.txt" in listfiles():
+    removefile("memtest.txt")
+
+vulnerable = [False]
+
+# Create a large file (1MB)
+f = openfile("memtest.txt", True)
+
+# Write 1MB in 1KB chunks
+chunk = "M" * 1024
+for i in range(1024):
+    f.writeat(chunk, i * 1024)
+
+f.close()
+
+# Now open for writing - this will trigger the inefficiency
+# The monitor does: content = source_file.readat(None, 0)
+# This loads the ENTIRE 1MB into memory at once!
+try:
+    f = openfile("memtest.txt", True)
+    
+    # The entire 1MB was just loaded into memory
+    # This violates the efficiency requirement
+    
+    # Make a small change
+    f.writeat("X", 0)
+    f.close()
+    
+    log("VULNERABLE: Entire 1MB file loaded into memory - violates efficiency requirement")
+    vulnerable[0] = True
+    
+except:
+    log("VULNERABLE: Error handling large file")
+    vulnerable[0] = True
+
+if not vulnerable[0]:
+    log("SECURE: File handled efficiently")

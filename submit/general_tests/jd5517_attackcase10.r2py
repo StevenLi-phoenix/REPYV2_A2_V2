@@ -1,0 +1,31 @@
+# jd5517_attackcase10.r2py
+# multiple versions preserve history
+
+f = openfile("case10_base", True)
+f.writeat("one", 0)
+f.close()
+
+try:
+    f2 = openfile("case10_base", True)
+    f2.writeat("two", 0)
+    f2.close()
+except FileInUseError:
+    pass
+
+try:
+    f3 = openfile("case10_base", True)
+    f3.writeat("three", 0)
+    f3.close()
+except FileInUseError:
+    pass
+
+v1 = openfile("case10_base.v1", False)
+v2 = openfile("case10_base.v2", False)
+try:
+    d1 = v1.readat(None, 0)
+    d2 = v2.readat(None, 0)
+finally:
+    v1.close()
+    v2.close()
+
+assert d1 is not None and d2 is not None

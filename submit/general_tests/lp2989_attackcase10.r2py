@@ -1,0 +1,169 @@
+# MEGA ATTACK 19: Advanced Version Manipulation Attacks
+# Tests: Complex version scenarios, gap creation, out-of-order versions
+
+# Test 1: Try to create version gaps (v1, v3 but no v2)
+f = openfile("gap.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("gap.txt", True)
+f.writeat("v2", 0)
+f.close()
+
+# Delete v2, then try to create v3
+try:
+    removefile("gap.txt.v1")
+    
+    f = openfile("gap.txt", True)
+    f.close()
+    
+    # Check what version was created
+    files = listfiles()
+    if "gap.txt.v2" in files:
+        log("ATTACK SUCCESSFUL: Created v2 after deleting v1\n")
+    elif "gap.txt.v3" in files:
+        log("ATTACK SUCCESSFUL: Created v3 with gap\n")
+except Exception:
+    pass
+
+# Test 2: Manually create v10 when only v1 exists
+f = openfile("jump.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("jump.txt", True)
+f.close()
+
+try:
+    f10 = openfile("jump.txt.v10", True)
+    f10.writeat("jumped", 0)
+    f10.close()
+    
+    log("ATTACK SUCCESSFUL: Manually created v10\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 3: Create versions out of order
+try:
+    fv5 = openfile("reverse.txt.v5", True)
+    fv5.writeat("v5", 0)
+    fv5.close()
+    
+    fv3 = openfile("reverse.txt.v3", True)
+    fv3.writeat("v3", 0)
+    fv3.close()
+    
+    fbase = openfile("reverse.txt", True)
+    fbase.writeat("base", 0)
+    fbase.close()
+    
+    log("ATTACK SUCCESSFUL: Created versions out of order\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 4: Version number overflow
+f = openfile("overflow.txt", True)
+f.writeat("base", 0)
+f.close()
+
+try:
+    fv = openfile("overflow.txt.v999999999999", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created huge version number\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 5: Negative version number
+try:
+    fv = openfile("neg.txt.v-1", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created negative version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 6: Version with alphabetic suffix
+try:
+    fv = openfile("alpha.txt.vabc", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created alphabetic version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 7: Check version counter reset after delete
+f = openfile("reset.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("reset.txt", True)
+f.close()
+
+# v1 exists now
+try:
+    removefile("reset.txt")
+    
+    # Recreate base
+    f = openfile("reset.txt", True)
+    f.writeat("new base", 0)
+    f.close()
+    
+    # Create version - should it be v1 or v2?
+    f = openfile("reset.txt", True)
+    f.close()
+    
+    files = listfiles()
+    if "reset.txt.v2" in files:
+        log("ATTACK SUCCESSFUL: Version counter didn't reset\n")
+except Exception:
+    pass
+
+# Test 8: Multiple base files with overlapping version names
+f1 = openfile("base1.txt", True)
+f1.writeat("base1", 0)
+f1.close()
+
+f2 = openfile("base2.txt", True)
+f2.writeat("base2", 0)
+f2.close()
+
+f1 = openfile("base1.txt", True)
+f1.close()
+
+f2 = openfile("base2.txt", True)
+f2.close()
+
+# Both should have .v1 files
+files = listfiles()
+v1_count = 0
+for fname in files:
+    if ".v1" in fname:
+        v1_count += 1
+
+if v1_count != 2:
+    log("ATTACK SUCCESSFUL: Version files conflict across bases\n")
+
+# Test 9: Create version of version (recursive versioning)
+f = openfile("recursive.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("recursive.txt", True)
+f.close()
+
+try:
+    fvv = openfile("recursive.txt.v1.v1", True)
+    fvv.close()
+    log("ATTACK SUCCESSFUL: Created version of version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass

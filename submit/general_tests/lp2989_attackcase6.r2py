@@ -1,0 +1,110 @@
+# MEGA ATTACK 13: State Machine Violations
+# Tests: Invalid state transitions, out-of-order operations
+
+# Test 1: Read before write on newly created file
+try:
+    f = openfile("nowrite.txt", True)
+    content = f.readat(None, 0)
+    f.close()
+    if content != "":
+        log("ATTACK SUCCESSFUL: Read before write returned non-empty\n")
+except Exception:
+    pass
+
+# Test 2: Close and reuse file handle
+f = openfile("reuse.txt", True)
+f.writeat("data", 0)
+f.close()
+
+try:
+    f.writeat("more", 4)
+    log("ATTACK SUCCESSFUL: Wrote to closed file handle\n")
+except Exception:
+    pass
+
+try:
+    content = f.readat(None, 0)
+    log("ATTACK SUCCESSFUL: Read from closed file handle\n")
+except Exception:
+    pass
+
+# Test 3: Double close
+f = openfile("double.txt", True)
+f.writeat("data", 0)
+f.close()
+try:
+    f.close()
+    log("ATTACK SUCCESSFUL: Double close allowed\n")
+except Exception:
+    pass
+
+# Test 4: Create version without closing current file
+f = openfile("unclosed.txt", True)
+f.writeat("v1", 0)
+# Don't close f, try to create new version
+try:
+    f2 = openfile("unclosed.txt", True)
+    f2.writeat("v2", 0)
+    f2.close()
+    f.close()
+    log("ATTACK SUCCESSFUL: Created version without closing previous\n")
+except FileInUseError:
+    f.close()
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 5: Open version file before it exists
+try:
+    fv = openfile("nonexistent.txt.v1", False)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Opened non-existent version file\n")
+except FileNotFoundError:
+    pass
+except Exception:
+    pass
+
+# Test 6: Write at negative offset
+f = openfile("negative.txt", True)
+try:
+    f.writeat("data", -10)
+    f.close()
+    log("ATTACK SUCCESSFUL: Wrote at negative offset\n")
+except RepyArgumentError:
+    f.close()
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 7: Read with negative size
+f = openfile("negread.txt", True)
+f.writeat("test data", 0)
+try:
+    content = f.readat(-5, 0)
+    f.close()
+    log("ATTACK SUCCESSFUL: Read with negative size\n")
+except Exception:
+    try:
+        f.close()
+    except Exception:
+        pass
+
+# Test 8: Open file with both create=True and False simultaneously
+f1 = openfile("conflict.txt", True)
+f1.writeat("data", 0)
+try:
+    f2 = openfile("conflict.txt", False)
+    f1.close()
+    f2.close()
+    log("ATTACK SUCCESSFUL: Opened file with conflicting modes\n")
+except FileInUseError:
+    f1.close()
+except Exception:
+    try:
+        f1.close()
+    except Exception:
+        pass

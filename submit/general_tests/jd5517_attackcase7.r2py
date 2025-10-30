@@ -1,0 +1,10 @@
+# jd5517_attackcase7.r2py
+# opening non-existent explicit version raises FileNotFoundError
+
+threw = False
+try:
+    openfile("case7_base.v1", False)
+except FileNotFoundError:
+    threw = True
+
+assert threw

@@ -1,0 +1,22 @@
+# bm3792_attackcase6.r2py
+# Test: Try to create new version while file is still open (must raise FileInUseError)
+
+f1 = openfile("testfile", True)
+f1.writeat("first", 0)
+
+# Try to open again before closing
+try:
+    f2 = openfile("testfile", True)
+    f2.close()
+    f1.close()
+    
+    # If we got here, it's a bug
+    log("SECURITY BUG: Created new version while previous version still open\n")
+except FileInUseError:
+    # Expected behavior
+    f1.close()
+except:
+    try:
+        f1.close()
+    except:
+        pass

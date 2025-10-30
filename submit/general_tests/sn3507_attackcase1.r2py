@@ -1,0 +1,25 @@
+# Checks that openfile("default", False) raises FileNotFoundError when the file does not exist. If no output then monitor behaves as it should.
+
+if "default" in listfiles():
+    try:
+        tmp = openfile("default", False)
+        try:
+            tmp.close()
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+# Should raise FileNotFoundError if "default" file doesn't exist
+try:
+    f = openfile("default", False)
+except FileNotFoundError:
+    pass
+except Exception:
+    raise Exception("Bug detected: expected FileNotFoundError when opening non-existent 'default'")
+else:
+    try:
+        f.close()
+    except Exception:
+        pass
+    raise Exception("Bug detected: opened non-existent 'default' without create being True")

@@ -1,0 +1,15 @@
+# --- 5) writing to older version (base) must be rejected ---
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.close()
+
+old = openfile("testfile", False)
+try:
+    old.writeat("bad", 0)
+    raise Exception("write_to_old_allowed")
+except FileInUseError:
+    pass
+old.close()

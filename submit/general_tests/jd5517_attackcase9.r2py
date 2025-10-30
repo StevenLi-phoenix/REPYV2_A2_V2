@@ -1,0 +1,33 @@
+# jd5517_attackcase9.r2py
+# writing to latest allowed; also try a bad seek and suppress expected SeekPastEndOfFileError
+
+a = openfile("case9_base", True)
+a.writeat("v0", 0)
+a.close()
+
+try:
+    b = openfile("case9_base", True)
+except FileInUseError:
+    # if cannot create because latest open, open latest for read
+    b = openfile("case9_base", False)
+
+try:
+    # attempt a valid write to latest (may raise depending on implementation)
+    try:
+        b.writeat("v1_here", 3)
+    except SeekPastEndOfFileError:
+        # expected from some implementations on bad seek; suppress
+        pass
+
+    try:
+        val = b.readat(None, 0)
+    except Exception:
+        val = None
+finally:
+    try:
+        b.close()
+    except:
+        pass
+
+if val is not None:
+    assert ("v1_here" in val) or (len(val) > 0)

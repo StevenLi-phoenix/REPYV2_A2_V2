@@ -1,0 +1,20 @@
+
+f1 = openfile("x.txt", True)
+f1.writeat("A", 0)
+f1.close()
+
+f2 = openfile("x.txt", True)
+f2.writeat("B", 0)
+f2.close()
+
+
+
+f3 = openfile("x.txt", False)
+data = f3.readat(None, 0)
+
+if data != "A":
+    log("base file has wrong content\n")
+    f3.close()
+    exitall()
+
+f3.close()

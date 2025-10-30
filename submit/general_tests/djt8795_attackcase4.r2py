@@ -1,0 +1,22 @@
+# Attack Case 4: listfiles() Version File Exposure
+# Tests monitors that expose version files in listfiles()
+
+
+# Create a file and versions
+f1 = openfile("testfile4", True)
+f1.writeat("Content 1", 0)
+f1.close()
+
+f2 = openfile("testfile4", True)
+f2.writeat("Content 2", 0)
+f2.close()
+
+# Check listfiles() output
+files_listed = listfiles()
+
+# Check if version files are exposed
+if "testfile4.v1" in files_listed:
+    raise Exception("VULNERABLE: Version file v1 exposed in listfiles")
+
+if "testfile4.v2" in files_listed:
+    raise Exception("VULNERABLE: Version file v2 exposed in listfiles")

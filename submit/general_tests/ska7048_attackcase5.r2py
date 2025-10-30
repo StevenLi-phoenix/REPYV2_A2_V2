@@ -1,0 +1,17 @@
+f1 = openfile("deletetest5.txt", True)
+f1.close()
+
+f2 = openfile("deletetest5.txt", True)
+f2.close()
+
+try:
+    removefile("deletetest5.txt")
+    log("BUG FOUND\n")
+except RepyArgumentError:
+    pass
+
+try:
+    removefile("deletetest5.txt.v1")
+    log("BUG FOUND\n")
+except RepyArgumentError:
+    pass

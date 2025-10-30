@@ -1,0 +1,12 @@
+f = openfile("empty", True)
+f.close()
+
+f = openfile("empty", True)
+content = f.readat(None, 0)
+f.close()
+
+try:
+    fv1 = openfile("empty.v1", False)
+    fv1.close()
+except FileNotFoundError:
+    pass

@@ -1,0 +1,7 @@
+#attack 16: try to create version 0 
+try:
+    f = openfile("hack.v0", True)
+    f.close()
+    log("Oh no -- Created .v0 file!\n")
+except RepyArgumentError:
+    pass

@@ -1,0 +1,23 @@
+start = getruntime()
+while True:
+    curr_time = getruntime()
+    time_elapsed = curr_time - start
+    if time_elapsed >= 2: 
+        lock1 = createlock()
+        lock1.acquire(True)
+        
+        try:
+            f = openfile("test1.txt", True)
+            f.close()
+            log("File created while lock acquired but not released")
+        except:
+            pass
+        
+        try:
+            f = openfile("test1.txt", False)
+            f.close()
+            log("File opened during lock") 
+        except:
+            pass
+        
+        break

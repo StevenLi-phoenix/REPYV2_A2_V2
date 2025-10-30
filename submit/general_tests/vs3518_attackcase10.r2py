@@ -1,0 +1,58 @@
+marker = "compromised_vs3518_attackcase14"
+name1 = "Protected_attack14.txt"
+name2 = "protected_ATTACK14.txt"
+temp1 = "temp1_attack14.txt"
+
+try:
+    f = open(name1, "w")
+    try:
+        f.write("ORIG14\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    f = open(temp1, "w")
+    try:
+        f.write("EVIL14\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        os.rename(temp1, name2)
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(name1, "r")
+    try:
+        c1 = f.read()
+    finally:
+        f.close()
+    if "EVIL14" in c1:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+try:
+    f = open(name2, "r")
+    try:
+        c2 = f.read()
+    finally:
+        f.close()
+    if "EVIL14" in c2:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

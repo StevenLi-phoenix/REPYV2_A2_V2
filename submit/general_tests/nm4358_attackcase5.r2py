@@ -1,0 +1,16 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase5.r2py
+Goal: Find overblocking bug (accuracy)
+'''
+
+# Some may implement listfiles incorrectly or forget remove semantics
+
+try:
+    h = openfile("delme.txt", True)
+    h.writeat("X", 0)
+    h.close()
+    removefile("delme.txt")
+except:
+    pass

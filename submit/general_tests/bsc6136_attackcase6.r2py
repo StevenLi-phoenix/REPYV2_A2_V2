@@ -1,0 +1,33 @@
+#pragma repy
+"""
+Checks that openfile('file.vN', True) raises exactly RepyArgumentError.
+Should produce NO output on success.
+"""
+
+basename = "testfile_explicit_create"
+versioned_name = basename + ".v1"
+h_base = None
+h_fail = None
+
+try:
+  h_base = openfile(basename, True)
+  h_base.close()
+  h_base = None
+
+  try:
+    h_fail = openfile(versioned_name, True)
+    # Should not be reached
+    log("[FAIL] Explicit version creation '", versioned_name, "' with create=True succeeded.\n")
+    h_fail.close()
+  except RepyArgumentError:
+    # Expected correct exception
+    pass
+  except Exception, e:
+    # Wrong exception type
+    log("[FAIL] Explicit version creation raised wrong exception type: ", str(type(e)), "\n")
+
+except Exception, e:
+  log("[FAIL] Unexpected error during Test 6 setup: ", str(e), "\n")
+finally:
+  if h_base: h_base.close()
+  if h_fail: h_fail.close()

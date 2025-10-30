@@ -1,0 +1,6 @@
+f = openfile("nowrite", True)
+f.close()
+
+f2 = openfile("nowrite", True)
+content = f2.readat(None, 0)
+f2.close()

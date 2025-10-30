@@ -1,0 +1,12 @@
+# Testing if a file starts off as v1, but base file does not exist. Here, it should create .v1.v1 and so on
+# Expected behaviour
+# Files created: testfile.v1 | testfile.v1.v1 | testfile.v1.v2
+
+try:
+    f2 = openfile("testfile", True)
+    f2.close()
+    f2 = openfile("testfile.v10.", True)
+    f2.close()
+    log("[VIOLATION] Created file incorrectly")
+except:
+    pass

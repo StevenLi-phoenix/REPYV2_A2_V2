@@ -1,0 +1,12 @@
+# Explicit latest write must be blocked
+
+f = openfile("t11", True); f.writeat("X",0); f.close()
+openfile("t11", True).close()  # v1 is latest
+h = openfile("t11.v1", False)
+try:
+  h.writeat("Y", 0)
+  raise Exception("explicit latest write allowed")
+except FileInUseError:
+  pass
+finally:
+  h.close()

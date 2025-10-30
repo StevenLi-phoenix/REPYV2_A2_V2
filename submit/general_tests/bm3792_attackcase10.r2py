@@ -1,0 +1,22 @@
+# bm3792_attackcase10.r2py
+# Test: Create empty file, then try to write to it (tests immutability)
+
+# Create empty file
+f1 = openfile("testfile", True)
+f1.close()
+
+# Try to open and write
+try:
+    f2 = openfile("testfile", False)
+    f2.writeat("data", 0)
+    f2.close()
+    
+    # Check if write succeeded
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    if content == "data":
+        log("SECURITY BUG: Wrote to closed empty file\n")
+except:
+    pass

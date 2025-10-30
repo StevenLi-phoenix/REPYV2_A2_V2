@@ -1,0 +1,35 @@
+B = "a13.txt"
+
+try:
+  f = openfile(B, True)
+  try:
+    try: f.writeat("seed", 0)
+    except: pass
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass
+
+try:
+  v = openfile(B, True)
+  try:
+    pass
+  finally:
+    try: v.close()
+    except: pass
+except:
+  pass
+
+try:
+  g = openfile(B, False)
+  try:
+    g.writeat("oops", 10)
+    log("Base '" + B + "' is writable after newer version exists")
+  except:
+    pass
+  finally:
+    try: g.close()
+    except: pass
+except:
+  pass

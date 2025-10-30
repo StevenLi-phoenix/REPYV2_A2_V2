@@ -1,0 +1,24 @@
+# listfiles() must not expose internal versioned filenames like name.v1
+
+# make first version
+a1 = openfile("namefile", True)
+a1.writeat("abc123", 0)
+a1.close()
+
+# make second version (this should internally create something like listprobe_file.v1)
+a2 = openfile("namefile", True)
+a2.writeat("def456", 0)
+a2.close()
+
+# list files visible to the caller
+entries = listfiles()
+
+# If the monitor leaks namefile or namefile.v2 etc in listfiles()
+leaked = False
+for name in entries:
+    if name.startswith("listprobe_file.v"):
+        leaked = True
+
+# leaked is False. otherwise in a broken one, leaked is True and AssertionError fires
+assert leaked == False
+

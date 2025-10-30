@@ -1,0 +1,12 @@
+# Attack: Try to open non-existent file without create flag
+try:
+    f = openfile("nonexistent", False)
+    assert False, "Should raise FileNotFoundError"
+except FileNotFoundError:
+    pass
+
+try:
+    f = openfile("nonexistent.v1", False)
+    assert False, "Should raise FileNotFoundError"
+except FileNotFoundError:
+    pass

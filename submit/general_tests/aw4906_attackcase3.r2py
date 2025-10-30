@@ -1,0 +1,7 @@
+# f1 = openfile("testfile", True) 
+
+# try: 
+#     f2 = openfile("testfile", True) 
+#     raise Exception("Failed to raise FileInUseError") 
+# except FileInUseError: 
+#     pass

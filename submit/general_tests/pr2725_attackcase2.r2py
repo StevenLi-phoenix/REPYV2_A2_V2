@@ -1,0 +1,13 @@
+# Test 2: This test case checks files can be created with .vf 
+# Basically, a number is not preceding "v"
+f1 = openfile("testfile.vf", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile.vf", True)
+f1.writeat("Adieu", 0)
+f1.close()
+
+f2 = openfile("testfile.vf.v1", False)
+assert f2.readat(None, 0) == "AdieuWorld"
+f2.close()

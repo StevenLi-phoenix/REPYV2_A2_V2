@@ -1,0 +1,45 @@
+# Test for Spec #3: New versions must copy content from the LATEST version.
+
+f_base = None
+f_v1 = None
+f_v2 = None
+
+try:
+    # Create base file with initial content
+    f_base = openfile("attack3_testfile", True)
+    f_base.writeat("content_base", 0)
+    f_base.close()
+
+    # Create version 1, it should copy "content_base"
+    f_v1 = openfile("attack3_testfile", True)
+    # OVERWRITE content in v1
+    f_v1.writeat("content_v1", 0)
+    f_v1.close() # Now, latest version (likely *.v1) contains "content_v1"
+
+    # Create version 2. It MUST copy from the latest (v1).
+    f_v2 = openfile("attack3_testfile", True)
+    content_v2 = f_v2.readat(None, 0)
+    f_v2.close()
+
+    # Check if the content is what we expect ("content_v1")
+    if content_v2 != "content_v1":
+        # Monitor either didn't copy, or copied from the wrong source (base). FLAWED.
+        assert(False) # Signal failure
+    # If content matches, monitor is correct. Pass silently.
+
+except AssertionError:
+    raise # Propagate failure signal
+except Exception:
+    # Test setup failed or unexpected monitor error
+    assert(False) # Signal failure
+finally:
+    # Best-effort cleanup
+    try:
+        if f_base and not f_base.VMfile.closed: f_base.close()
+    except Exception: pass
+    try:
+        if f_v1 and not f_v1.VMfile.closed: f_v1.close()
+    except Exception: pass
+    try:
+        if f_v2 and not f_v2.VMfile.closed: f_v2.close()
+    except Exception: pass

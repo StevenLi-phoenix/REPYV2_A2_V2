@@ -1,0 +1,17 @@
+# Attack: Test that opening same file twice raises FileInUseError
+
+# Create file and keep it open
+f1 = openfile("testfile_multiopen", True)
+f1.writeat("data", 0)
+
+# Try to open same file again while first handle is still open
+try:
+    f2 = openfile("testfile_multiopen", True)
+    log("ATTACK SUCCESSFUL: Opened same file twice\n")
+    f2.close()
+except Exception:
+    # Expected behavior - reference monitor correctly blocked duplicate open
+    pass
+
+# Clean up
+f1.close()

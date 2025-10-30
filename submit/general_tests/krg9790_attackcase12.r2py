@@ -1,0 +1,10 @@
+#attack 12:test that new version copies prev content
+f1 = openfile("test", True)
+f1.writeat("InitialContent", 0)
+f1.close()
+
+f2 = openfile("test", True)
+content = f2.readat(None, 0)
+if content != "InitialContent":
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 New version didn't copy previous content!\n")
+f2.close()

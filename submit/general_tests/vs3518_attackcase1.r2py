@@ -1,0 +1,45 @@
+marker = "compromised_vs3518_attackcase1"
+protected = "protected_attack1.txt"
+temp = "temp_attack1.txt"
+
+try:
+    f = open(protected, "w")
+    try:
+        f.write("ORIGINAL\n")
+    finally:
+        f.close()
+except Exception:
+    # If we can't create the file, continue silently
+    pass
+
+try:
+    f = open(temp, "w")
+    try:
+        f.write("EVIL\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+try:
+    try:
+        os.rename(temp, protected)
+    except Exception:
+        # if os is not available or rename fails, ignore
+        pass
+except Exception:
+    pass
+
+try:
+    f = open(protected, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    try:
+        if "EVIL" in c:
+            open(marker, "w").close()
+    except Exception:
+        pass
+except Exception:
+    pass

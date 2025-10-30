@@ -1,0 +1,60 @@
+#pragma repy
+"""
+Creates v0, v1, closes them. Opens latest (v1) via base name + create=False.
+Attempts to write to this handle.
+Expects FileInUseError (or similar) due to immutability/read-only handle.
+Should produce NO output on success.
+"""
+
+basename = "test_write_false"
+
+h0 = None
+h1 = None
+h_latest_readonly = None
+
+try:
+  # Create v0
+  h0 = openfile(basename, True)
+  h0.writeat("v0", 0)
+  h0.close()
+  h0 = None
+
+  h1 = openfile(basename, True)
+  h1.writeat("v1", 0) # Overwrite or append based on monitor
+  h1.close()
+  h1 = None 
+
+  try:
+    # Open latest version (v1) using base name and create=False
+    h_latest_readonly = openfile(basename, False)
+
+    # Attempt to write (should fail)
+    try:
+      h_latest_readonly.writeat("should_fail", 0)
+      # If write succeeded, log failure
+      log("[FAIL] Write succeeded via create=False handle to '", basename, "' (latest version).\n")
+    except (FileInUseError, ValueError): # Expect FileInUseError or potentially ValueError if handle is read-only
+      pass # Expected behavior
+    except Exception, e:
+      log("[FAIL] Unexpected error during write attempt via create=False handle: ", str(type(e)), ": ", str(e), "\n")
+
+  except FileNotFoundError:
+      log("[WARN] Could not open base file '", basename, "' with create=False to test writing.\n")
+  except Exception, e:
+      log("[FAIL] Unexpected error opening file with create=False: ", str(type(e)), ": ", str(e), "\n")
+  finally:
+      if h_latest_readonly:
+          try:
+              h_latest_readonly.close()
+          except:
+              pass # Ignore close errors during cleanup
+
+except Exception, e:
+  log("[FAIL] Unexpected error during Test setup: ", str(e), "\n")
+finally:
+  # Ensure all handles are closed in case of errors
+  if h0: h0.close()
+  if h1: h1.close()
+  if h_latest_readonly:
+    try: h_latest_readonly.close()
+    except: pass

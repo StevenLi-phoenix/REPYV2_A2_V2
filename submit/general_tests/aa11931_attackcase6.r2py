@@ -1,0 +1,24 @@
+# Test: Reading from old versions allowed, writing disallowed
+
+f1 = openfile("readonly6", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("readonly6", True)
+f2.writeat("updated", 0)
+f2.close()
+
+# Read from old version (base file)
+fold = openfile("readonly6", False)
+content = fold.readat(None, 0)
+assert content == "original", "Should read from old version"
+
+# Try to write to old version
+try:
+    fold.writeat("hack", 0)
+    fold.close()
+    assert False, "Should not write to old version"
+except FileInUseError:
+    pass
+
+fold.close()

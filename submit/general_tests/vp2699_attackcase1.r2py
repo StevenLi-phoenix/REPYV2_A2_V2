@@ -1,0 +1,119 @@
+#This code tries to create a new version of the file when the file is currently open with the help of threads where one thread holds the file open and other thread aggressively tries to create a nee version 
+
+f = openfile("victim", True)
+f.writeat("INIT", 0)
+f.close()
+
+f1 = openfile("victim", True)
+f1.close()
+
+f2 = openfile("victim", True)
+f2.close()
+
+# shared flags (simple mutable containers)
+hold = [0]      # 1 when reader holds v1
+broken = [0]    # 1 if exploit succeeded
+stop = [0]
+
+def spin(n):
+    i = 0
+    while i < n and not (broken[0] or stop[0]):
+        j = 0
+        while j < 40:
+            j = j + 1
+        i = i + 1
+
+def reader_hold():
+
+    r = openfile("victim.v1", False)
+
+    hold[0] = 1
+    k = 0
+    while k < 600 and not (broken[0] or stop[0]):
+        spin(6)
+        k = k + 1
+
+    r.close()
+    hold[0] = 0
+
+def creator_attack():
+    # wait until reader holds v1
+    w = 0
+    while w < 10000 and not (hold[0] or broken[0] or stop[0]):
+        spin(1)
+        w = w + 1
+    i = 0
+    while i < 400 and not (broken[0] or stop[0]):
+        # If create is blocked by RM, openfile will raise error 
+        try:
+            c = openfile("victim", True)
+        except Exception:
+            # expected when RM blocks creation so try again
+            i = i + 1
+            continue
+       
+        try:
+            c.close()
+        except Exception:
+            pass
+     
+        try:
+            log("Reference Monitor Broken: Creates a new version when the file is still open\n")
+        except Exception:
+            pass
+        broken[0] = 1
+        stop[0] = 1
+        return
+        i = i + 1
+
+# detect thread API
+thread_api = None
+try:
+    thread_api = create_thread
+except Exception:
+    try:
+        thread_api = createuserthread
+    except Exception:
+        try:
+            thread_api = start_new_thread
+        except Exception:
+            thread_api = None
+
+if thread_api:
+    # spawn reader and attacker threads
+    try:
+        thread_api(reader_hold, ())
+    except Exception:
+
+        try:
+            thread_api(reader_hold)
+        except Exception:
+            # if we can't spawn threads, fall back to sequential below
+            thread_api = None
+
+if thread_api:
+    try:
+        thread_api(creator_attack, ())
+    except Exception:
+        try:
+            thread_api(creator_attack)
+        except Exception:
+            thread_api = None
+
+if thread_api:
+    t = 0
+    while t < 10000 and not (broken[0] or stop[0]):
+        spin(6)
+        t = t + 1
+else:
+    # fallback sequential path that hold v1 and then attempt creates aggressively
+    try:
+        r = openfile("victim.v1", False)
+    except Exception:
+        r = None
+    creator_attack()
+    if r is not None:
+        try:
+            r.close()
+        except Exception:
+            pass

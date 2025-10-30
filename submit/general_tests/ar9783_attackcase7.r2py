@@ -1,0 +1,18 @@
+#try to write to a read only file
+#create file first
+
+myfile = openfile("testfile.txt", True)
+myfile.writeat("Original data", 0)
+myfile.close()
+
+#open in read-only mode
+myfile = openfile("testfile.txt", False)
+
+#try to write - should fail
+try:
+    myfile.writeat("Malicious", 0)
+    log("SECURITY FLAW: Write to read-only file succeeded!\n")
+except:
+    log("Write to read-only file properly blocked\n")
+
+myfile.close()

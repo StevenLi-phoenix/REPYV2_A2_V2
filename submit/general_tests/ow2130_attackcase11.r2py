@@ -1,0 +1,23 @@
+B = "a11.txt"
+M = "a11.txt.V5"
+
+try:
+  f = openfile(B, True)
+  try:
+    try: f.writeat("seed", 0)
+    except: pass
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass
+
+try:
+  g = openfile(M, True)
+  try:
+    log("Was able to create explicit mixed case version '" + M + "'")
+  finally:
+    try: g.close()
+    except: pass
+except:
+  pass

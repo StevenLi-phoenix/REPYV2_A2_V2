@@ -1,0 +1,24 @@
+
+def _safe_close(h):
+  try: h.close()
+  except Exception: pass
+
+try:
+  # Ensure a base file exists
+  f0 = openfile("vopen", True)
+  f0.writeat("X", 0)
+  _safe_close(f0)
+
+  r = openfile("vopen", False)
+
+  try:
+    f1 = openfile("vopen", True)   # SHOULD be blocked
+    try: f1.close()
+    except Exception: pass
+    log("FAIL: created a new version while latest version was open\n")
+  except Exception:
+    pass
+  finally:
+    _safe_close(r)
+except Exception:
+  pass

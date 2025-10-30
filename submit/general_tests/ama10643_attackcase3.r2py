@@ -1,0 +1,46 @@
+#5.Versioned files can be accessed using openfile
+# (originalfilename + '.v' + str(num), create),
+# where num starts from 1. If create=True is used
+# on a versioned file, raise
+# RepyArgumentError("Cannot create explicit version files"),
+# as manual version creation is not allowed
+
+
+# --- Create first version of "3li" ---
+# Calling openfile with create=True should create a new version.
+try:
+    f1 = openfile("3li", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Write initial content at offset 0.
+try:
+    f1.writeat("3li", 0)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+# Close the file to finalize the first version's contents.
+
+try:
+    f1.close()
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+    
+Isvulnerable = True
+wrongException=False
+try:
+    f2 = openfile("3li.v1", True)
+except RepyArgumentError,e:
+    Isvulnerable=False
+    pass
+except Exception,e:
+    wrongException=True
+    pass
+if Isvulnerable==True:
+    log("The exception of RepyArgumentError was not triggered --> the reference monitor is vulnerable")
+if wrongException==True:
+    log("The reference monitor is Vulnerable, because it raise unexpectable exception.")
+
+
+

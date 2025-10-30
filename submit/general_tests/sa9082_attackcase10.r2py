@@ -1,0 +1,55 @@
+"""
+Attack Case 11: Version-like Filename (False Positive Filter)
+VULNERABILITY: Monitor incorrectly identifies regular files as version files
+REASON: Buggy regex like "if '.v' in filename" matches too broadly
+"""
+
+# Test 1: Try to create file with .v in middle of name
+try:
+    f = openfile("test.v1.txt", True)
+    f.writeat("legitimate data", 0)
+    f.close()
+except Exception as e:
+    log("FLAW: Monitor blocks legitimate filename 'test.v1.txt': " + str(e) + "\n")
+    exitall()
+
+# Test 2: Verify file appears in listfiles()
+all_files = listfiles()
+if "test.v1.txt" not in all_files:
+    log("FLAW: Regular file 'test.v1.txt' hidden from listfiles()\n")
+    exitall()
+
+# Test 3: Verify we can read it back
+try:
+    f2 = openfile("test.v1.txt", False)
+    content = f2.readat(None, 0)
+    f2.close()
+    if content != "legitimate data":
+        log("FLAW: File content corrupted or intercepted\n")
+        exitall()
+except Exception as e:
+    log("FLAW: Cannot read back regular file 'test.v1.txt': " + str(e) + "\n")
+    exitall()
+
+# Test 4: Try another variant - .v in different position
+try:
+    f3 = openfile("data.v2.backup", True)
+    f3.writeat("data", 0)
+    f3.close()
+
+    all_files2 = listfiles()
+    if "data.v2.backup" not in all_files2:
+        log("FLAW: Regular file 'data.v2.backup' hidden from listfiles()\n")
+        exitall()
+except Exception as e:
+    log("FLAW: Monitor blocks legitimate filename 'data.v2.backup': " + str(e) + "\n")
+    exitall()
+
+# Cleanup
+try:
+    removefile("test.v1.txt")
+    removefile("data.v2.backup")
+except:
+    pass
+
+log("Test 11 PASSED: Monitor correctly handles version-like filenames\n")

@@ -1,0 +1,10 @@
+# jd5517_attackcase6.r2py
+# removefile is forbidden
+
+threw = False
+try:
+    removefile("case6_base")
+except RepyArgumentError:
+    threw = True
+
+assert threw

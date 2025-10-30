@@ -1,0 +1,132 @@
+# MEGA ATTACK 12: TOCTOU (Time-of-Check-Time-of-Use) Attacks
+# Tests: Exploiting timing gaps in security checks
+
+# Test 1: Modify file between listfiles check and open
+f = openfile("toctou1.txt", True)
+f.writeat("original", 0)
+f.close()
+
+def checker():
+    # Simulate a check
+    files = listfiles()
+    sleep(0.1)
+    try:
+        f = openfile("toctou1.txt", False)
+        content = f.readat(None, 0)
+        f.close()
+    except Exception:
+        pass
+
+def modifier():
+    sleep(0.05)
+    try:
+        f = openfile("toctou1.txt", True)
+        f.writeat("modified", 0)
+        f.close()
+    except Exception:
+        pass
+
+t1 = createthread(checker)
+t2 = createthread(modifier)
+sleep(0.3)
+
+# Test 2: Delete file after existence check
+f = openfile("toctou2.txt", True)
+f.writeat("data", 0)
+f.close()
+
+def existence_checker():
+    files = listfiles()
+    if "toctou2.txt" in files:
+        sleep(0.1)
+        try:
+            f = openfile("toctou2.txt", False)
+            f.close()
+            log("ATTACK SUCCESSFUL: TOCTOU file still accessible after check\n")
+        except FileNotFoundError:
+            pass
+        except Exception:
+            pass
+
+def file_deleter():
+    sleep(0.05)
+    try:
+        removefile("toctou2.txt")
+    except Exception:
+        pass
+
+t1 = createthread(existence_checker)
+t2 = createthread(file_deleter)
+sleep(0.3)
+
+# Test 3: Race between version creation check and actual creation
+f = openfile("toctou3.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+success = [False]
+
+def version_creator1():
+    try:
+        # Check if we can create version
+        files = listfiles()
+        sleep(0.05)
+        f = openfile("toctou3.txt", True)
+        f.close()
+        success[0] = True
+    except Exception:
+        pass
+
+def version_creator2():
+    sleep(0.02)
+    try:
+        f = openfile("toctou3.txt", True)
+        f.close()
+    except Exception:
+        pass
+
+t1 = createthread(version_creator1)
+t2 = createthread(version_creator2)
+sleep(0.3)
+
+if success[0]:
+    # Check version numbering
+    files = listfiles()
+    v2_exists = "toctou3.txt.v2" in files
+    v3_exists = "toctou3.txt.v3" in files
+    
+    if not v2_exists or v3_exists:
+        log("ATTACK SUCCESSFUL: TOCTOU version numbering broken\n")
+
+# Test 4: Modify version file during read
+f = openfile("toctou4.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("toctou4.txt", True)
+f.close()
+
+def version_reader():
+    sleep(0.02)
+    try:
+        fv = openfile("toctou4.txt.v1", False)
+        sleep(0.1)
+        content = fv.readat(None, 0)
+        fv.close()
+        if content != "v1":
+            log("ATTACK SUCCESSFUL: TOCTOU version modified during read\n")
+    except Exception:
+        pass
+
+def version_modifier():
+    sleep(0.05)
+    try:
+        fv = openfile("toctou4.txt.v1", False)
+        fv.writeat("hacked", 0)
+        fv.close()
+    except Exception:
+        pass
+
+t1 = createthread(version_reader)
+t2 = createthread(version_modifier)
+sleep(0.3)

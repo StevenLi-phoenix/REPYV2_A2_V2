@@ -1,0 +1,8 @@
+# Checks for no file name
+
+# Try to open file with empty string
+try:
+    openfile("", True)
+    assert False, "Cannot have empty file name"
+except Exception:
+    pass

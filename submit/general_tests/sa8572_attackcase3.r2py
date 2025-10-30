@@ -1,0 +1,40 @@
+# Test: writing to older versions must be blocked (immutable)
+
+# Create v1
+try:
+    a = openfile("tc3file", True)
+    a.writeat("orig", 0)
+    a.close()
+except Exception:
+    assert False
+
+# Create v2
+try:
+    b = openfile("tc3file", True)
+    b.close()
+except Exception:
+    assert False
+
+# Open old version v1 for reading and attempt write (must raise FileInUseError)
+try:
+    old = openfile("tc3file.v1", False)
+except Exception:
+    # could not open older version -> fail
+    assert False
+
+try:
+    try:
+        old.writeat("bad", 0)
+        # if write succeeds, that's a failure
+        assert False
+    except FileInUseError:
+        # expected behavior
+        pass
+    except Exception:
+        # wrong exception type
+        assert False
+finally:
+    try:
+        old.close()
+    except Exception:
+        pass

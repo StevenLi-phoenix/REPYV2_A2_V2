@@ -1,0 +1,17 @@
+# jd5517_attackcase1.r2py
+# basic create -> write -> create new version -> verify copy
+
+f1 = openfile("case1_base", True)
+f1.writeat("hello-case1", 0)
+f1.close()
+
+# create next version
+try:
+    f2 = openfile("case1_base", True)
+    data = f2.readat(None, 0)
+    f2.close()
+except FileInUseError:
+    # if monitor blocks create while something else open, try opening latest read-only
+    data = None
+
+assert data == "hello-case1"

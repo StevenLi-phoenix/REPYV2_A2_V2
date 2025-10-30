@@ -1,0 +1,70 @@
+'''
+Name: Nikhil Mundhra
+NetID nm4358
+File: nm4358_attackcase7.r2py
+Goal: Exploit a stale “latest” flag on an already-open handle to mutate an older (now immutable) version.
+Expected: A correct monitor must reject writes via a handle that was latest at open time but became non-latest after a new version was created.
+'''
+
+# Silent by default; keep this false for grading.
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass
+
+# Attack outline:
+# 1) Create base file "a" with data "aaaa".
+# 2) Open a writable handle A to the current latest ("a").
+# 3) Create a new version by openfile("a", True) and write "bbbb" (this makes the old "a" an older version).
+# 4) Attempt to write via handle A. If the monitor keeps a stale 'latest' flag, this mutates the now-older version.
+
+try:
+    # 1) create initial base file (lowercase filename per assignment)
+    try:
+        f0 = openfile("a", True)
+        f0.writeat("aaaa", 0)
+        f0.close()
+        debug_log("created base 'a'")
+    except:
+        # If already exists or blocked, continue silently
+        pass
+
+    # 2) keep a handle to the current latest
+    A = None
+    try:
+        A = openfile("a", False)
+        debug_log("opened handle A to 'a'")
+    except:
+        A = None
+
+    # 3) create a new version (implicitly "a.v1") so the old "a" becomes an older version
+    try:
+        B = openfile("a", True)
+        B.writeat("bbbb", 0)
+        B.close()
+        debug_log("created new version of 'a'")
+    except:
+        pass
+
+    # 4) write via the *old* handle A. Vulnerable monitors allow this to succeed, breaking immutability.
+    try:
+        if A is not None:
+            A.writeat("xxx", 0)   # should be rejected by a correct monitor
+            debug_log("write via stale handle A succeeded (monitor vulnerable)")
+    except:
+        # Correct behavior is to raise; stay silent.
+        pass
+    finally:
+        try:
+            if A is not None:
+                A.close()
+        except:
+            pass
+
+except:
+    # Remain silent
+    pass

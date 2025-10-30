@@ -1,0 +1,10 @@
+# <netid>_attackcase12.r2py
+f0 = openfile("t12_can", True); f0.writeat("C", 0); f0.close()
+f1 = openfile("t12_can", True); f1.close()          # v1 exists
+
+caught = False
+try:
+  openfile("t12_can.v6", True)   # explicit create blocked
+except RepyArgumentError:
+  caught = True
+assert caught

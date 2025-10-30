@@ -1,0 +1,28 @@
+# bm3792_attackcase9.r2py
+# Test: Ensure we can read old versions (accuracy test)
+
+# Create v0
+f1 = openfile("testfile", True)
+f1.writeat("version0", 0)
+f1.close()
+
+# Create v1
+f2 = openfile("testfile", True)
+f2.writeat("version1", 0)
+f2.close()
+
+# Create v2
+f3 = openfile("testfile", True)
+f3.writeat("version2", 0)
+f3.close()
+
+# Try to read v1 (should contain v0's content)
+try:
+    old = openfile("testfile.v1", False)
+    content = old.readat(None, 0)
+    old.close()
+    
+    if content != "version0":
+        log("ACCURACY BUG: Old version has incorrect content\n")
+except:
+    log("ACCURACY BUG: Cannot read old version\n")

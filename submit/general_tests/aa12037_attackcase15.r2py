@@ -1,0 +1,25 @@
+# Test: Negative offsets for writeat/readat must be rejected.
+
+# create file and write valid data
+f = openfile("ac_neg_offset", True)
+f.writeat("abcd", 0)
+
+# write with negative offset should raise
+try:
+    f.writeat("X", -1)
+    assert False, "Monitor allowed writeat with negative offset"
+except Exception:
+    pass
+
+# read with negative offset should raise
+try:
+    f.readat(None, -1)
+    assert False, "Monitor allowed readat with negative offset"
+except Exception:
+    pass
+
+# close handle
+try:
+    f.close()
+except Exception:
+    pass

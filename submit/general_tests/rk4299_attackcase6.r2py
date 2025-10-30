@@ -1,0 +1,20 @@
+
+# rk4299_attackcase6.r2py
+# path traversal with lots of ../ and ./ tricks
+try:
+    fname = "../../../sneaky.txt"
+    try:
+        f = open(fname, "w")
+        f.write("traversal\n")
+        f.close()
+    except Exception:
+        pass
+
+    try:
+        f2 = open("subdir/../subdir/./../sneaky2.txt", "w")
+        f2.write("p")
+        f2.close()
+    except Exception:
+        pass
+except Exception:
+    pass

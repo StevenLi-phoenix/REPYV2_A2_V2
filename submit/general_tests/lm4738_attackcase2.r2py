@@ -1,0 +1,4 @@
+### Attempting deletion
+f1 = openfile("testfile", True)
+removefile("testfile")
+log("File removed! failed")

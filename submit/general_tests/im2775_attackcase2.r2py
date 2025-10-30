@@ -1,0 +1,16 @@
+f = openfile("test", True)
+f.writeat("data", 0)
+f.close()
+
+f = openfile("test", True)
+f.close()
+
+try:
+    removefile("test.v1")
+except RepyArgumentError:
+    pass
+
+try:
+    removefile("test")
+except RepyArgumentError:
+    pass

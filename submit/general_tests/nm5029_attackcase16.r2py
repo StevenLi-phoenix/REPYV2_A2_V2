@@ -1,0 +1,6 @@
+# <netid>_attackcase06_open_missing_base.r2py
+name = "t06_missing_base"
+caught = False
+try: openfile(name, False)
+except FileNotFoundError: caught = True
+assert caught

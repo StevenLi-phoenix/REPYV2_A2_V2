@@ -1,0 +1,77 @@
+def safe_create(filename):
+    try:
+        handle = openfile(filename, True)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_open(filename):
+    try:
+        handle = openfile(filename, False)
+        return handle, True
+    except Exception:
+        return None, False
+
+
+def safe_write(handle, data, offset):
+    if handle is None:
+        return False
+    try:
+        handle.writeat(data, offset)
+        return True
+    except Exception:
+        return False
+
+
+def safe_close(handle):
+    if handle is None:
+        return
+    try:
+        handle.close()
+    except:
+        pass
+
+
+successful_creates = []
+successful_writes = []
+
+
+def creator_thread(thread_label):
+    handle, create_allowed = safe_create("racefile")
+    if create_allowed:
+        successful_creates.append(thread_label)
+        if safe_write(handle, thread_label + " says hi\n", 0):
+            successful_writes.append(thread_label)
+    safe_close(handle)
+
+
+def thread_1():
+    creator_thread("Thread 1")
+
+
+def thread_2():
+    creator_thread("Thread 2")
+
+
+def main():
+    createthread(thread_1)
+    createthread(thread_2)
+
+    sleep(0.1)
+
+    violations = []
+
+    if len(successful_creates) > 1:
+        violations.append("Policy violation: multiple threads obtained create handles for racefile (%s)" %
+                          ", ".join(successful_creates))
+
+    if len(successful_writes) > 1:
+        violations.append("Policy violation: multiple handles wrote to racefile (%s)" %
+                          ", ".join(successful_writes))
+
+    for message in violations:
+        log(message + "\n")
+
+
+main()

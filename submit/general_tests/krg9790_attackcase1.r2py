@@ -1,0 +1,10 @@
+#attack 1: delete a file (should be blocked)
+f = openfile("testfile", True)
+f.writeat("data", 0)
+f.close()
+
+try:
+    removefile("testfile")
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 File deletion was allowed!\n")
+except RepyArgumentError:
+    pass

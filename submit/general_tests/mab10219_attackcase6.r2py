@@ -1,0 +1,7 @@
+#ATTACK CASE 6: Try to create an explicit version
+
+try:
+    openfile("explicitVersionFile.v1", True)
+    raise Exception("Exception not raised!")
+except RepyArgumentError:
+    pass

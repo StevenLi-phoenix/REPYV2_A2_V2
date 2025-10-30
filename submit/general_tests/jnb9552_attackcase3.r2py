@@ -1,0 +1,30 @@
+# Tests creating versioned file
+filename = "testthree"
+try:
+    f1 = openfile(filename, True)
+    f1.writeat("version1", 0)
+    f1.close()
+except:
+    filename = "testthreer"
+    try:
+        f1 = openfile(filename, True)
+        f1.writeat("version1", 0)
+        f1.close()
+    except:
+        exitall()
+    
+try:
+    f2 = openfile(filename, True)
+    f2.writeat("version2", 0)
+    f3 = openfile((filename + ".v1"), True)
+    f3.writeat("version3", 3)
+    f2.close()
+    f3.close()
+    log("attackcase 3 success\n")
+
+except RepyArgumentError:
+    exitall()
+
+except:
+    log("Defense layer raised incorrect error\n")
+    exitall()

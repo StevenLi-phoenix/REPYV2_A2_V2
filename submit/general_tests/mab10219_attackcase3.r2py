@@ -1,0 +1,22 @@
+#ATTACK CASE 3: Write to a previous version
+
+f1 = openfile("testfile", True)
+f1.writeat("version1", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("version2", 0)
+f2.close()
+
+prevVersion = openfile("testfile.v1", False)
+try:
+    #this should raise an execption
+    #writing to an old version should be blocked
+    prevVersion.writeat("Can't write to old files",0)
+
+    raise Exception("Was able to write to old version. Expected error not raised!")
+
+except FileInUseError: #if it does raise an exception
+    pass
+finally:
+    prevVersion.close()

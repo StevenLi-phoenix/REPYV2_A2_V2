@@ -1,0 +1,41 @@
+# ac12757_attackcase1.r2py
+# Targets: Immutability - Writing to an older version
+
+try:
+    # 1. Create an initial file
+    initial_asset = openfile("myasset.txt", True)
+    initial_asset.writeat("first content", 0)
+    initial_asset.close()
+
+    # 2. Create a new version
+    # This call should trigger the monitor to save "first content" as "myasset.txt.v1"
+    # and "myasset.txt" will now contain "second content".
+    second_asset = openfile("myasset.txt", True)
+    second_asset.writeat("second content", 0)
+    second_asset.close()
+
+    # 3. Try to open the initial version (which should now be .v1) and write to it
+    # We expect myasset.txt.v1 to exist due to the monitor's versioning.
+    old_version_asset = openfile("myasset.txt.v1", False) # Changed from .v0 to .v1
+    try:
+        # This writeat should ideally raise a FileInUseError as writing to old versions is disallowed
+        old_version_asset.writeat("malicious content", 0)
+        # If we reach here, the monitor failed to prevent writing to an old version
+        raise Exception("Monitor failed: Was able to write to an old version!")
+    except FileInUseError:
+        # Expected behavior: Monitor correctly raised FileInUseError
+        pass
+    except Exception as e:
+        # Unexpected error type if it's not FileInUseError but also not FileNotFoundError
+        raise Exception("Monitor failed with unexpected error when writing to old version: " + str(e))
+    finally:
+        old_version_asset.close()
+
+except FileNotFoundError:
+    # This specifically catches if myasset.txt.v1 was not created by the monitor.
+    raise Exception("Attack case 1 failed: Monitor did not create 'myasset.txt.v1' as expected!")
+except Exception as e:
+    # Catch any other unexpected errors during setup
+    raise Exception("Attack case 1 failed due to unexpected setup error: " + str(e))
+
+# This attack case breaks reference_monitor_example1, reference_monitor_example2

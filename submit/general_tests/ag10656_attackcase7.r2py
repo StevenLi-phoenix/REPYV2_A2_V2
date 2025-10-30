@@ -1,0 +1,26 @@
+# Testing for creating versions while existing version is open 
+# Testing for filenames with '.' in them
+# Expected result: 
+# Files created: testfile.py | testfile.py.v1 | testfile.py.v2 | testfile.py.v3
+# Error Thrown: FileInUse
+
+
+try:
+    f1 = openfile("testfile.py", True)
+    f1.writeat("lololololol", 0)
+    f1.close()
+
+
+    f2 = openfile("testfile.py", True)
+    f2.close()
+    f3 = openfile("testfile.py", True)
+    f3.close()
+
+
+    f4 = openfile("testfile.py", True)
+    f5 = openfile("testfile.py", True)
+    log("[VIOLATION] f5 was allowed to open while latest version is still open!")
+except Exception as e:
+    pass
+
+    

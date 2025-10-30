@@ -1,0 +1,8 @@
+# Base open with create=False prior to creation fails
+
+try:
+  openfile("t18_never", False)
+  raise Exception("opened non-existent base with create=False")
+except FileNotFoundError:
+  pass
+

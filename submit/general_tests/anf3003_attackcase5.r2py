@@ -1,0 +1,161 @@
+"""
+Name: anf3003_attackcase06.r2py
+Attack Case: listfiles versioning leak. In this test, we create a base file with 
+             "Safe Content", then use threads to rapidly create multiple versions
+             of the file while another thread repeatedly calls listfiles() to look
+             for versioned files, attempting to trick listfiles() into revealing 
+             versions.
+"""
+
+# Configurations
+_ITERATIONS = 5
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+# Setup base
+try:
+    # Create the base file
+    file = openfile("attack5", True)
+
+    try:
+        # Write initial data
+        file.writeat("Safe Content", 0)
+
+    finally:
+        # Ensure the file is closed
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions during setup
+    pass
+
+def creator():
+    """
+        Name: creator
+        Arguments: None
+        Returns: None
+        Description: Rapidly create versions to generate metadata.
+    """
+
+    # Loop to create multiple versions
+    for i in range(1, _ITERATIONS):
+        try:
+            try:
+                # Open the file for writing
+                file = openfile("attack5", True)
+
+                try:
+                    # Write "Other Content" to create a new version
+                    file.writeat("Other Content" + str(i), 0)
+
+                finally:
+                    # Ensure the file is closed
+                    ac_close(file)
+
+            except Exception:
+                # Ignore exceptions during file operations
+                pass
+
+        except Exception:
+            # Ignore any exceptions in the outer loop
+            pass
+
+        try:
+            # Brief pause to allow other threads to run
+            sleep(0.002)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+def lister():
+    """
+        Name: lister
+        Arguments: None
+        Returns: None
+        Description: Repeatedly call listfiles() and look for '.v' tokens.
+    """
+
+    # Loop to call listfiles multiple times
+    for i in range(40):
+        try:
+            try:
+                # Call listfiles to get the list of files
+                filelist = listfiles()
+
+            except Exception:
+                # Ignore exceptions from listfiles
+                filelist = None
+
+            # Check if filelist is valid
+            if filelist:
+                try:
+                    # Iterate through the entries in the file list
+                    for file in filelist:
+                        try:
+                            # Check for versioned file indicator
+                            if ".v" in file:
+                                try:
+                                    # Log the detection of a versioned file
+                                    log("Attack Case 6: Monitor Failed")
+
+                                except Exception:
+                                    # Ignore logging exceptions
+                                    pass
+
+                                # Exit after detection
+                                return
+                            
+                        except Exception:
+                            # Ignore exceptions during file iteration
+                            pass
+
+                except Exception:
+                    # Ignore exceptions during filelist processing
+                    pass
+
+        except Exception:
+            # Ignore any exceptions in the outer loop
+            pass
+        
+        try:
+            # Brief pause to allow other threads to run
+            sleep(0.01)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+# Start the attack!
+try:
+    # Create and start threads for creator and lister
+    createthread(creator)
+    createthread(lister)
+
+    try:
+        # Allow time for threads to complete
+        sleep(0.5)
+
+    except Exception:
+        # Ignore sleep exceptions
+        pass
+
+except Exception:
+    # Ignore any exceptions during thread creation
+    pass

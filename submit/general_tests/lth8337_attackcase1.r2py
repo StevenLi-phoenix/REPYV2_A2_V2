@@ -1,0 +1,11 @@
+f = openfile("story.txt", True)
+f.writeat("hello", 0)
+f.close()
+
+try:
+  removefile("story.txt")
+  log("FAIL: removefile() did not raise RepyArgumentError \n")
+  exitall()
+except Exception as e:
+  log("FAIL: wrong exception: \n", type(e).callfunc)
+  exitall()

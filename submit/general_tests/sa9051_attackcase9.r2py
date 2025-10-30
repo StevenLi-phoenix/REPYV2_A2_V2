@@ -1,0 +1,8 @@
+big = "A" * 20000
+bb = openfile("bigfile", True)
+bb.writeat(big, 0)
+bb.close()
+
+bv = openfile("bigfile", True)
+assert bv.readat(None, 0).startswith("A")
+bv.close()

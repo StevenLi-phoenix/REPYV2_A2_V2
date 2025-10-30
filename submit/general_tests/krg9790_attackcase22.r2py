@@ -1,0 +1,12 @@
+#attack 22: test if monitors incorrectly allow gaps in version numbers
+f = openfile("test", True)
+f.writeat("base", 0)
+f.close()
+
+#try to create test.v3 without v1 and v2 here
+try:
+    f3 = openfile("test.v3", True)
+    f3.close()
+    log("Womp womp -- Created version with gap (v3 without v1,v2)!\n")
+except RepyArgumentError:
+    pass

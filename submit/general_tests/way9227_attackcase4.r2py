@@ -1,0 +1,12 @@
+"""
+Try and open an explicit version of a file
+"""
+
+try:
+    f = openfile("explicit.v1", True)
+    f.close()
+    log("Bug: explicit version of file created")
+except Exception:
+    pass
+
+

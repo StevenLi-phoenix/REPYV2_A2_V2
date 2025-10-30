@@ -1,0 +1,9 @@
+f1 = openfile("testfile2.txt", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    removefile("testfile2.txt")
+    log("File deletion allowed")
+except RepyArgumentError:
+    pass

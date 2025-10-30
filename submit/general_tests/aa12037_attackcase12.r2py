@@ -1,0 +1,19 @@
+# Test: Create a filename that contains ".vNUM" and it should also allow versions of it to be created by inheriting the content.
+
+try:
+    f = openfile("multi.name.v10.newfile.txt", True)
+    f.writeat("Doty", 0)
+    f.close()
+except Exception as e:
+    raise AssertionError("Monitor blocked creation of filename with multiple periods and vNUM in middle: " + str(e))
+
+# Try creating a version of the previous file
+try:
+    f1 = openfile("multi.name.v10.newfile.txt", True) # Should ideally create v2
+    f1.close()
+except Exception as e:
+    raise AssertionError("Monitor blocked creation of versioned filename with multiple periods and vNUM in middle: " + str(e))
+
+explicit = openfile("multi.name.v10.newfile.txt.v1", False)
+assert explicit.readat(None, 0) == "Doty", "complex.name.v1notversion.txt.v1 did not inherit base content"
+explicit.close()

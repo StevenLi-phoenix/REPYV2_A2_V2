@@ -1,0 +1,25 @@
+def main():
+    # Test unusual operation sequences
+    try:
+        # Create and immediately try to create version
+        f1 = openfile("order_test", True)
+        try:
+            f2 = openfile("order_test", True)  # Should fail - file is open
+            log("FAIL_OPERATION_ORDER: Created version while file open")
+            f2.close()
+        except:
+            pass  # Expected
+        f1.close()
+        
+        # Now create version properly
+        f3 = openfile("order_test", True)
+        f3.close()
+        
+        # Try to open original file for writing (should open latest version)
+        f4 = openfile("order_test", False)
+        f4.writeat("test", 0)  # Should work - writing to latest version
+        f4.close()
+        
+    except:
+        pass
+if callfunc == 'initialize': main()

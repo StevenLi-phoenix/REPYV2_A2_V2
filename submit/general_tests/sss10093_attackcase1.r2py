@@ -1,0 +1,35 @@
+mycontext['results'] = []
+mycontext['lock'] = createlock()
+
+def thread_open_same_file():
+    try:
+        f = openfile("racefile.txt", True)
+        mycontext['lock'].acquire(True)
+        mycontext['results'].append('opened')
+        mycontext['lock'].release()
+        f.writeat("thread data", 0)
+        f.close()
+    except FileInUseError:
+        mycontext['lock'].acquire(True)
+        mycontext['results'].append('blocked')
+        mycontext['lock'].release()
+    except Exception as e:
+        pass
+
+try:
+    base = openfile("racefile.txt", True)
+    base.writeat("base content", 0)
+    base.close()
+    
+    createthread(thread_open_same_file)
+    createthread(thread_open_same_file)
+    createthread(thread_open_same_file)
+    
+    sleep(0.5)
+    
+    mycontext['lock'].acquire(True)
+    opened_count = mycontext['results'].count('opened')
+    mycontext['lock'].release()
+    
+except Exception as e:
+    pass

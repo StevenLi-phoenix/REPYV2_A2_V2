@@ -1,0 +1,17 @@
+# ============ TEST listfiles() hides versions ============
+try:
+  files = listfiles()
+  version_visible = False
+
+  for fname in files:
+    if ".v" in fname:
+      parts = fname.split(".v")
+      if len(parts) >= 2 and parts[-1].isdigit() and len(parts[-1]) > 0:
+        version_visible = True
+        break
+
+  if version_visible:
+    log("TEST FAILED: Versioned files visible in listfiles()\n")
+
+except Exception, e:
+  log("TEST FAILED: " + str(e) + "\n")

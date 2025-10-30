@@ -1,0 +1,19 @@
+# Test if the monitor fails to validate filenames for character set and length.
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  
+  raise AssertionError("Test case failed to raise expected exception: " + str(exception_type))
+
+expect_error(RepyArgumentError, openfile, "invalid/name.txt", True)
+expect_error(RepyArgumentError, openfile, "invalid!name.txt", True)
+
+expect_error(RepyArgumentError, openfile, ".hiddenfile", True)
+
+expect_error(RepyArgumentError, openfile, "somefile.v3", True)
+

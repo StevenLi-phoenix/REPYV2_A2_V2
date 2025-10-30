@@ -1,0 +1,18 @@
+# Attack Case 17: Create new version while old (non-latest) version is open
+
+fnew = openfile("newwhile", True)
+fnew.writeat("v0", 0)
+fnew.close()
+
+fnew1 = openfile("newwhile", True)
+fnew1.writeat("v1", 0)
+fnew1.close()
+
+hold = openfile("newwhile", False)
+
+fnew2 = openfile("newwhile", True)
+assert fnew2.readat(None, 0) == "v1", "New version should copy from latest (v1)"
+fnew2.close()
+
+hold.close()
+

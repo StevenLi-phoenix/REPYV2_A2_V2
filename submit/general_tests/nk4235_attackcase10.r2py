@@ -1,0 +1,47 @@
+# Test 2: Expose duplicate version numbers (if lock is missing)
+version_results = []
+
+def rapid_version_a():
+    for i in range(10):
+        try:
+            f = openfile("counter", True)
+            f.close()
+            version_results.append("a_created")
+        except FileInUseError:
+            version_results.append("a_blocked")
+        sleep(0.01)
+
+def rapid_version_b():
+    for i in range(10):
+        try:
+            f = openfile("counter", True)
+            f.close()
+            version_results.append("b_created")
+        except FileInUseError:
+            version_results.append("b_blocked")
+        sleep(0.01)
+
+# Initial file
+f = openfile("counter", True)
+f.close()
+
+createthread(rapid_version_a)
+createthread(rapid_version_b)
+
+sleep(3)
+
+# Check that version numbers are sequential
+created_count = 0
+for r in version_results:
+    if "created" in r:
+        created_count += 1
+
+log("Versions created: " + str(created_count) + "\n")
+
+# Verify no gaps or duplicates in version numbers
+for i in range(1, created_count + 1):
+    try:
+        v = openfile("counter.v" + str(i), False)
+        v.close()
+    except FileNotFoundError:
+        log("ERROR: Missing version " + str(i) + "\n")

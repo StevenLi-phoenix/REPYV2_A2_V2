@@ -1,0 +1,7 @@
+# Creating a  versioned file
+
+try:
+    f1 = openfile("testfile.v1", True)
+    f1.close()
+except:
+    raise Exception("Failed to raise an exception")

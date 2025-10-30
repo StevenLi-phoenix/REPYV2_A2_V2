@@ -1,0 +1,26 @@
+# two files with similar names
+f1 = openfile("testfile.txt", True)
+f1.writeat("file1", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.writeat("file2", 0)
+f2.close()
+
+# Create version of file.txt only
+f3 = openfile("testfile.txt", True)
+f3.close()
+
+
+f4 = openfile("testfile", False)
+try:
+    f4.writeat("test", 0)
+    f4.close()
+except FileInUseError:
+
+    log("confused  between testfile and testfile.txt\n")
+    try:
+        f4.close()
+    except:
+        pass
+    exitall()

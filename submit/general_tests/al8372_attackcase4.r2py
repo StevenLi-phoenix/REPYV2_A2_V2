@@ -1,0 +1,24 @@
+# Attack Case 4: Read-only enforcement on reopened files
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+f = openfile("readonly", True)
+f.writeat("data", 0)
+f.close()
+
+f2 = openfile("readonly", True)
+f2.close()
+
+rl = openfile("readonly.v1", False)
+expect_error(rl.writeat, ("X", 0), FileInUseError)
+rl.close()
+
+ov = openfile("readonly", False)
+expect_error(ov.writeat, ("Y", 0), FileInUseError)
+ov.close()
+

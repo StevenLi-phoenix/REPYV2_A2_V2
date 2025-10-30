@@ -1,0 +1,32 @@
+#4.Note that a new version cannot be created while the latest version is open.
+#If openfile() is called on an already open file, it shall throw the relevant
+#error that it would have done in RepyV2 (FileInUseError).
+
+## open it to read
+
+# --- Create first version of "ali" ---
+# Calling openfile with create=True should create a new version.
+try:
+    f1 = openfile("ali", True)
+except Exception,e:
+    log("it prevent allowable functionality")
+    exitall()
+    
+IsVulnerable = True
+wrongException=False
+try:
+    f2 = openfile("ali", True)
+except FileInUseError:
+    IsVulnerable = False
+    pass
+except Exception,e:
+    wrongException=True
+    pass
+
+if IsVulnerable==True:
+    log("The exception of FileInUseError was not triggered --> the reference monitor is vulnerable")
+if wrongException==True:
+    log("The reference monitor is Vulnerable, because it raise unexpectable exception.")
+
+
+

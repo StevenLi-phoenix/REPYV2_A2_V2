@@ -1,0 +1,15 @@
+# Removefile should raise error
+try:
+    f1 = openfile('remfile', True)
+    f1.writeat('test', 0)
+    f1.close()
+    try:
+        removefile('remfile')
+    except RepyArgumentError:
+        pass
+    except Exception:
+        pass
+    else:
+        log("Issue: Removefile did not raise error\n")
+except Exception:
+    pass

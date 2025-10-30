@@ -1,0 +1,31 @@
+# Test: accessing nonexistent versions and nonexistent base file must fail
+
+# First create a valid file (v1)
+try:
+    f = openfile("tc4file", True)
+    f.writeat("x", 0)
+    f.close()
+except Exception:
+    assert False
+
+# Try opening a version that does not exist (tc4file.v5)
+try:
+    nf = openfile("tc4file.v5", False)
+    # If open succeeds → insecure
+    assert False
+except FileNotFoundError:
+    pass
+except Exception:
+    # Wrong exception type
+    assert False
+
+# Try opening a base file that does not exist at all
+try:
+    nf2 = openfile("idontexist", False)
+    # If open succeeds → insecure
+    assert False
+except FileNotFoundError:
+    pass
+except Exception:
+    # Wrong exception type
+    assert False

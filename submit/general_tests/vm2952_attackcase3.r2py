@@ -1,0 +1,19 @@
+# ============ TEST Prevent Manual Version Creation ============
+def test_manual_version_creation_blocked():
+  try:
+    # Attempt to explicitly create a versioned file (should fail)
+    handle = openfile("test1.txt.v1", True)
+    handle.close()
+    log("TEST FAILED: Manual version creation was permitted\n")
+    return
+  except FileError:
+    # Expected outcome: cannot manually create a version
+    return
+  except RepyArgumentError:
+    # Also acceptable — version naming rejected
+    return
+  except Exception, err:
+    log("TEST FAILED: Unexpected exception: " + str(err) + "\n")
+
+# Run the test
+test_manual_version_creation_blocked()

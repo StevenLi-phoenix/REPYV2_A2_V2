@@ -1,0 +1,23 @@
+import socket
+
+# Test 1: allowed read/write
+f1 = openfile("testfile_allowed", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+f2 = openfile("testfile_allowed", True)
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()
+
+# Test 2: denied write (expect failure)
+fp = openfile("testfile_protected", True)
+fp.writeat("SECRET", 0)
+fp.close()
+try:
+	f = openfile("testfile_protected", False)
+	f.writeat("BAD", 0)
+	f.close()
+	_wrote = True
+except Exception:
+	_wrote = False
+assert not _wrote
+

@@ -1,0 +1,31 @@
+# Spec 7B: Each new version copies data from latest version (silent on success)
+
+# names = ["s7b", "s7b.v1", "s7b.v2", "s7b.v3"]
+
+try:
+    # create base and successive versions
+    base = openfile("s7b", True); base.writeat("A", 0); base.close()
+
+    v1 = openfile("s7b", True)
+    c1 = v1.readat(None, 0)
+    if c1 != "A":
+        raise Exception("v1 did not copy content from base")
+    v1.writeat("B", 1)
+    v1.close()
+
+    v2 = openfile("s7b", True)
+    c2 = v2.readat(None, 0)
+    if c2 != "AB":
+        raise Exception("v2 did not copy updated content from v1")
+    v2.writeat("C", 2)
+    v2.close()
+
+    v3 = openfile("s7b", True)
+    c3 = v3.readat(None, 0)
+    if c3 != "ABC":
+        raise Exception("v3 did not copy updated content from v2")
+    v3.close()
+except Exception, e:
+    raise Exception("Copy-check failed: %s" % e)
+
+# silent on success

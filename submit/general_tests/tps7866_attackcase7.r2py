@@ -1,0 +1,7 @@
+# Opening non-existent file with create=False fails
+
+try:
+  openfile("t07_missing", False)
+  raise Exception("opened non-existent base with create=False")
+except FileNotFoundError:
+  pass

@@ -1,0 +1,19 @@
+# jd5517_attackcase17.r2py
+# rapid double create attempt in one test (simulate concurrency)
+
+h = openfile("case17_base", True)
+h.writeat("x", 0)
+
+threw = False
+try:
+    try:
+        openfile("case17_base", True)
+    except FileInUseError:
+        threw = True
+finally:
+    try:
+        h.close()
+    except:
+        pass
+
+assert threw

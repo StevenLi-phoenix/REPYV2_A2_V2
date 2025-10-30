@@ -1,0 +1,24 @@
+# Calling openfile with create=True and version file as the file name should throw RepyArgumentError
+
+f1 = openfile("testfile", True)
+
+
+# Close the file to finalize the first version's contents.
+f1.close()
+
+#Call openfile, version 1 should be created
+f2 = openfile("testfile", True)
+
+
+# Close the file to finalize the first version's contents.
+f2.close()
+
+#Call openfile with version number 
+try:
+    f3 = openfile("testfile.v1", True)
+except RepyArgumentError:
+    log("")
+except Exception as e:
+    log("Exception " + str(type(e)) +  " thrown but expected RepyArgumentError")
+else:
+    log("No exception but expected RepyArgumentError")

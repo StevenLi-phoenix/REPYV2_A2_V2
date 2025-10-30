@@ -1,0 +1,34 @@
+try:
+    try:
+        f = openfile("exptsilent", True)
+        f.writeat("OK", 0)
+        f.close()
+    except Exception: 
+        pass
+
+    try:
+        f2 = openfile("exptsilent", True)
+    except Exception:
+        f2 = None
+
+    try: 
+        removefile("exptsilent")
+    except Exception: 
+        pass
+
+    if f2:
+        try: 
+            _ = f2.readat(None, 0)
+        except Exception: 
+            pass
+        try: 
+            f2.close()
+        except Exception: 
+            pass
+
+    try: 
+        _ = listfiles()
+    except Exception: 
+        pass
+except Exception:
+    pass

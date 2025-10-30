@@ -1,0 +1,22 @@
+def main():
+    # VALID edge case filenames
+    valid_edges = [
+        "test.v01",           # Leading zeros 
+        "test.v001",          # Multiple leading zeros 
+        "test.v0000000001",   # Many leading zeros 
+        "test.v9999999999",   # Very large number 
+        "test-file.v1",       # Hyphen in base name 
+        "test_file.v1",       # Underscore in base name 
+        "a.b.c.v1",           # Multiple periods 
+        "testv1",             # No period before v 
+        "v1.test",            # Version at beginning 
+    ]
+    
+    for name in valid_edges:
+        try:
+            f = openfile(name, True)
+            log("FAIL_EDGE_NAME: " + name)
+            f.close()
+        except:
+            pass
+if callfunc == 'initialize': main()

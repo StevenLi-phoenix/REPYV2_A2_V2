@@ -1,0 +1,15 @@
+#attack 14: test reading from base after versioning
+f1 = openfile("test", True)
+f1.writeat("OriginalData", 0)
+f1.close()
+
+f2 = openfile("test", True)
+f2.writeat("UpdatedData", 0)
+f2.close()
+
+#base should still have og content
+fbase = openfile("test", False)
+base_content = fbase.readat(None, 0)
+if base_content != "OriginalData":
+    log("Oops -- Base file content changed after versioning!\n")
+fbase.close()

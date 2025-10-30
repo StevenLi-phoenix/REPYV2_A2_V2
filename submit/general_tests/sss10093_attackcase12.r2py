@@ -1,0 +1,43 @@
+mycontext['read_data'] = None
+mycontext['lock'] = createlock()
+
+def thread_read_version():
+    try:
+        sleep(0.05)
+        v = openfile("concurrentaccess.txt.v1", False)
+        data = v.readat(None, 0)
+        mycontext['lock'].acquire(True)
+        mycontext['read_data'] = data
+        mycontext['lock'].release()
+        sleep(0.1)
+        v.close()
+    except Exception as e:
+        pass
+
+def thread_write_version():
+    try:
+        sleep(0.1)
+        v = openfile("concurrentaccess.txt.v1", False)
+        v.writeat("exploit", 0)
+        v.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+try:
+    f = openfile("concurrentaccess.txt", True)
+    f.writeat("original", 0)
+    f.close()
+    
+    f2 = openfile("concurrentaccess.txt", True)
+    f2.writeat("version1", 0)
+    f2.close()
+    
+    createthread(thread_read_version)
+    createthread(thread_write_version)
+    
+    sleep(0.4)
+
+except Exception as e:
+    pass

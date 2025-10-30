@@ -1,0 +1,10 @@
+# --- 8) stale handle write after close must be rejected ---
+f = openfile("testfile", True)
+f.writeat("Version2", 0)
+f.close()
+
+try:
+    f.writeat("oops", 0)
+    raise Exception("write_after_close_allowed")
+except FileInUseError:
+    pass

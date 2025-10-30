@@ -1,0 +1,6 @@
+try:
+  f = openfile("maxxxx.txt", True)
+  f.writeat("content", 0)
+  f.close()
+except:
+  log("Reference Monitor is vulnerable\n")

@@ -1,0 +1,53 @@
+#pragma repy
+"""
+Checks if listfiles() returns only the base filenames and no '.vN' files.
+Should produce NO output on success.
+"""
+
+base1 = "testfile_list_v"
+base2 = "testfile_list_base"
+
+h0_v = None
+h1_v = None
+h2_v = None
+h_base2 = None
+
+try:
+  h0_v = openfile(base1, True); h0_v.writeat("v0",0); h0_v.close(); h0_v = None # v0
+  h1_v = openfile(base1, True); h1_v.writeat("v1",0); h1_v.close(); h1_v = None # v1
+  h2_v = openfile(base1, True); h2_v.writeat("v2",0); h2_v.close(); h2_v = None # v2
+
+  h_base2 = openfile(base2, True); h_base2.writeat("base2",0); h_base2.close(); h_base2 = None
+
+  listed_files = listfiles()
+
+  listed_set = set(listed_files)
+  correct = True
+
+  if base1 not in listed_set:
+    log("[FAIL] listfiles() missing expected base file: ", base1, "\n")
+    correct = False
+  if base2 not in listed_set:
+    log("[FAIL] listfiles() missing expected base file: ", base2, "\n")
+    correct = False
+
+  found_versioned = None
+  for f in listed_files:
+    if '.v' in f:
+      parts = f.rsplit('.v', 1)
+      if len(parts) == 2 and parts[1].isdigit():
+        # Check if the base part matches our known bases
+        if parts[0] == base1 or parts[0] == base2:
+          found_versioned = f
+          break
+  if found_versioned is not None:
+    log("[FAIL] listfiles() included versioned file: '", found_versioned, "'. Full list: ", str(listed_files), "\n")
+    correct = False
+
+except Exception, e:
+  log("[FAIL] Unexpected error during Test 4: ", str(e), "\n")
+finally:
+  if h0_v: h0_v.close()
+  if h1_v: h1_v.close()
+  if h2_v: h2_v.close()
+  if h_base2: h_base2.close()

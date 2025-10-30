@@ -1,0 +1,37 @@
+try:
+    f1 = openfile("listtest1.txt", True)
+    f1.writeat("file1", 0)
+    f1.close()
+    
+    f1v2 = openfile("listtest1.txt", True)
+    f1v2.writeat("file1v2", 0)
+    f1v2.close()
+    
+    f1v3 = openfile("listtest1.txt", True)
+    f1v3.writeat("file1v3", 0)
+    f1v3.close()
+    
+    f2 = openfile("listtest2.txt", True)
+    f2.writeat("file2", 0)
+    f2.close()
+    
+    f2v2 = openfile("listtest2.txt", True)
+    f2v2.writeat("file2v2", 0)
+    f2v2.close()
+    
+    files = listfiles()
+    
+    for filename in files:
+        if "listtest" in filename and ".v" in filename:
+            try:
+                parts = filename.split(".v")
+                if len(parts) == 2:
+                    try:
+                        int(parts[1])
+                    except ValueError:
+                        continue
+            except:
+                pass
+
+except Exception as e:
+    pass

@@ -1,0 +1,28 @@
+# ============ TEST Prevent Opening the Same File Twice ============
+def test_double_open_blocked():
+  try:
+    primary = openfile("test2.txt", True)
+  except Exception, err:
+    log("TEST FAILED: Could not open file initially: " + str(err) + "\n")
+    return
+
+  try:
+    # Attempt a second open while file is already in use
+    duplicate = openfile("test2.txt", True)
+    # If we got here, that's an error
+    log("TEST FAILED: Second open on same file was allowed\n")
+    duplicate.close()
+  except FileInUseError:
+    # Expected: second open should fail
+    pass
+  except Exception, err:
+    log("TEST FAILED: Unexpected exception: " + str(err) + "\n")
+  finally:
+    # Always close the original file handle
+    try:
+      primary.close()
+    except:
+      pass
+
+# Run the test
+test_double_open_blocked()

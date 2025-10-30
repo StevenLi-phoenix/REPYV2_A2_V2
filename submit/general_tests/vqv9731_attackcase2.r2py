@@ -1,0 +1,90 @@
+# Test for Spec #7: Writing to older versions raises FileInUseError.
+# Should PASS (produce no output) if the monitor correctly blocks the write.
+# Should FAIL (raise AssertionError) if the write succeeds or a different error occurs.
+
+f_base = None
+f_v1 = None
+f_v2 = None
+f_base_read = None
+f_v1_read = None # Added for explicit v1 test
+
+try:
+    # Create base file
+    f_base = openfile("attack2_testfile", True)
+    f_base.writeat("content_base", 0)
+    f_base.close() # Now base is version 0 (or latest = base)
+
+    # Create version 1
+    f_v1 = openfile("attack2_testfile", True)
+    f_v1.writeat("content_v1", 0)
+    f_v1.close() # Now v1 is latest
+
+    # Create version 2
+    f_v2 = openfile("attack2_testfile", True)
+    f_v2.writeat("content_v2", 0)
+    f_v2.close() # Now v2 is latest
+
+    # --- Attempt to write to an OLD version (base file - potentially ambiguous, depends on monitor) ---
+    # Monitors might open latest or base on `openfile(base, False)`.
+    # A safer test is to explicitly open "attack2_testfile.v1" below.
+    try:
+        f_base_read = openfile("attack2_testfile", False) # Open base/latest for reading
+        # Attempt to write - This MUST raise FileInUseError
+        f_base_read.writeat("overwrite_attempt", 0)
+
+        # If we reach here, the write was allowed - FLAWED monitor.
+        assert(False) # Signal failure
+
+    except FileInUseError:
+        # CORRECT behavior. Write was blocked.
+        pass
+    except AssertionError:
+        raise # Propagate failure signal
+    except Exception:
+        # Any OTHER error is a flaw.
+        assert(False) # Signal failure
+    finally:
+        if f_base_read:
+             try: f_base_read.close()
+             except Exception: pass
+
+    # --- Attempt to write to an OLD version (explicitly v1) ---
+    try:
+        f_v1_read = openfile("attack2_testfile.v1", False) # Explicitly open v1
+        # Attempt to write - This MUST raise FileInUseError
+        f_v1_read.writeat("overwrite_v1_attempt", 0)
+
+        # If we reach here, the write was allowed - FLAWED monitor.
+        assert(False) # Signal failure
+
+    except FileInUseError:
+        # CORRECT behavior. Write was blocked.
+        pass
+    except AssertionError:
+        raise # Propagate failure signal
+    except Exception:
+        # Any OTHER error is a flaw.
+        assert(False) # Signal failure
+    finally:
+        if f_v1_read:
+            try: f_v1_read.close()
+            except Exception: pass
+
+
+except AssertionError:
+    raise # Propagate failure signal
+except Exception:
+    # Test setup failed or unexpected monitor error during setup
+    assert(False) # Signal failure
+finally:
+    # Best-effort cleanup of handles from setup phase
+    try:
+        if f_base and not f_base.VMfile.closed: f_base.close()
+    except Exception: pass
+    try:
+        if f_v1 and not f_v1.VMfile.closed: f_v1.close()
+    except Exception: pass
+    try:
+        if f_v2 and not f_v2.VMfile.closed: f_v2.close()
+    except Exception: pass
+    # f_base_read and f_v1_read handles are cleaned up in their specific try blocks.

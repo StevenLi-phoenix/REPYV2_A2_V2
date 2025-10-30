@@ -1,0 +1,46 @@
+
+# rk4299_attackcase4.r2py
+# concurrent write threads
+try:
+    import threading, time
+except Exception:
+    threading = None
+    time = None
+
+fname = "concurrent.txt"
+
+def writer(idnum):
+    try:
+        for i in range(10):
+            try:
+                f = open(fname, "a")
+                f.write("w%d\n" % idnum)
+                f.flush()
+                f.close()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+try:
+    try:
+        f = open(fname, "w")
+        f.write("start\n")
+        f.close()
+    except Exception:
+        pass
+
+    threads = []
+    if threading:
+        for i in range(4):
+            t = threading.Thread(target=writer, args=(i,))
+            t.daemon = True
+            threads.append(t)
+            t.start()
+        for t in threads:
+            try:
+                t.join(1.0)
+            except Exception:
+                pass
+except Exception:
+    pass

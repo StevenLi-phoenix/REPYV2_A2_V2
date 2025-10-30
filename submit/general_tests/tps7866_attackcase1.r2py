@@ -1,0 +1,7 @@
+# Basic version creation & copy
+
+f = openfile("t01", True); f.writeat("HelloWorld", 0); f.close()
+v1 = openfile("t01", True)
+if v1.readat(None, 0) != "HelloWorld":
+  raise Exception("v1 not initialized with base contents")
+v1.close()

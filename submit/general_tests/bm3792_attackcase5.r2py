@@ -1,0 +1,28 @@
+# bm3792_attackcase5.r2py
+# Test: Try to delete a file (must raise RepyArgumentError)
+
+f = openfile("testfile", True)
+f.writeat("content", 0)
+f.close()
+
+# Try to delete
+try:
+    removefile("testfile")
+    
+    # If no exception, check if file was deleted
+    try:
+        check = openfile("testfile", False)
+        check.close()
+    except FileNotFoundError:
+        # File was deleted - BUG!
+        log("SECURITY BUG: File deletion succeeded\n")
+except RepyArgumentError:
+    # Expected behavior
+    pass
+except:
+    # Wrong exception type - check if file still exists
+    try:
+        check = openfile("testfile", False)
+        check.close()
+    except:
+        log("SECURITY BUG: File deleted with wrong error\n")

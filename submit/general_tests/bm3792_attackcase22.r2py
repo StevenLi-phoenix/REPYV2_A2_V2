@@ -1,0 +1,20 @@
+# bm3792_attackcase22.r2py
+# Test: Use filename with dots (but not version format) to test parser
+
+# Create file with dot in name (but not .v pattern)
+f1 = openfile("test.file", True)
+f1.writeat("data", 0)
+f1.close()
+
+# Create version
+f2 = openfile("test.file", True)
+f2.close()
+
+# Check if version file exists with correct name
+try:
+    vfile = openfile("test.file.v1", False)
+    vfile.close()
+except FileNotFoundError:
+    log("ACCURACY BUG: Version not created for dotted filename\n")
+except:
+    pass

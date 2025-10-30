@@ -1,0 +1,5 @@
+# Trying to open the same file twice. should raise exception
+
+f7 = openfile("testfile", True)
+f7 = openfile("testfile", False)
+f7 = openfile("testfile", False)

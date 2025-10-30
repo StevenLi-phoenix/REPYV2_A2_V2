@@ -1,0 +1,9 @@
+# Large content copy on version create
+
+big = "A" * 2000000
+b = openfile("t19", True); b.writeat(big, 0); b.close()
+v = openfile("t19", True)
+d = v.readat(None, 0)
+if d is None or len(d) < 1 or d[0] != "A":
+  raise Exception("large copy failed")
+v.close()

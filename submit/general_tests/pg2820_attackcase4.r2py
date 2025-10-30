@@ -1,0 +1,24 @@
+# pg2820_attackcase4.r2py
+# Try to remove authoritative then recreate quickly
+try:
+    # create a file first
+    g = openfile("racefile.txt", True)
+    g.writeat("starter\n", 0)
+    g.close()
+except Exception:
+    pass
+
+try:
+    # remove then immediately create again
+    try:
+        removefile("racefile.txt")
+    except Exception:
+        pass
+    try:
+        h = openfile("racefile.txt", True)
+        h.writeat("reborn\n", 0)
+        h.close()
+    except Exception:
+        pass
+except Exception:
+    pass

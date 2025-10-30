@@ -1,0 +1,17 @@
+try:
+    myfile = openfile("testfile1.txt", True)
+    myfile.writeat("AAAAAAAAAA", 0)
+    myfile.close()
+    
+    try:
+        myfile = openfile("testfile1.txt", False)
+        myfile.writeat("BBB", 3)
+        myfile.close()
+        log("VULNERABLE: Partial overwrite was allowed\n")
+        exitall()
+    except FileInUseError:
+        pass
+    except Exception, e:
+        pass
+except Exception, e:
+    pass

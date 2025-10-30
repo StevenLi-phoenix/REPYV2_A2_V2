@@ -1,0 +1,8 @@
+try:
+  f = openfile("story.v7", True)
+  exitall()
+
+except RepyArgumentError:
+  log("FAIL: Incorrectly raised RepyArgumentError, when not a versioned file \n")
+  exitall()
+  

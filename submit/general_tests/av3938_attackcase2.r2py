@@ -1,0 +1,29 @@
+try:
+  f1 = openfile("anmol.txt", True)
+  f1.close()
+  f1 = openfile("anmol.txt", True)
+  f1.close()
+  files = listfiles()
+  present_version = False
+  i = 0
+  while i < len(files):
+    if ".v" in files[i]:
+      # Check if it's actually a version pattern (.v + digits at end)
+      parts = files[i].split(".v")
+      if len(parts) >= 2:
+        last_part = parts[len(parts) - 1]
+        is_digit = True
+        j = 0
+        while j < len(last_part):
+          if last_part[j] not in "0123456789":
+            is_digit = False
+            break
+          j = j + 1
+        if is_digit and len(last_part) > 0:
+          present_version = True
+          break
+    i = i + 1
+  if present_version:
+    log("Reference Monitor is vulnerable: Versions visible in listfiles\n")
+except:
+  pass

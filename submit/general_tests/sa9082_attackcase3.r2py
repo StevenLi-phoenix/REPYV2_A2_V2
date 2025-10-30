@@ -1,0 +1,27 @@
+# Test 3: Are version files hidden in listfiles()?
+
+f1 = openfile("testfile3.txt", True)
+f1.writeat("Version0", 0)
+f1.close()
+f2 = openfile("testfile3.txt", True)
+f2.writeat("Version1", 0)
+f2.close()
+f3 = openfile("testfile3.txt", True)
+f3.writeat("Version2", 0)
+f3.close()
+all_files = listfiles()
+# Specification: "listfiles() should not show that versions of files exist"
+flaw_found = False
+
+# Check if .v1 or .v2 appear in the list
+for filename in all_files:
+    # If we see any .vN pattern, that's a flaw
+    if ".v" in filename and filename.startswith("testfile3"):
+        flaw_found = True
+        break
+
+
+if flaw_found:
+    log("FLAW FOUND: listfiles() shows version files!\n")
+
+

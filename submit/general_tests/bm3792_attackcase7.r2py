@@ -1,0 +1,29 @@
+# bm3792_attackcase7.r2py
+# Test: Check if listfiles() incorrectly reveals version files
+
+# Create base file
+f1 = openfile("testfile", True)
+f1.writeat("v0", 0)
+f1.close()
+
+# Create version 1
+f2 = openfile("testfile", True)
+f2.writeat("v1", 0)
+f2.close()
+
+# Create version 2
+f3 = openfile("testfile", True)
+f3.writeat("v2", 0)
+f3.close()
+
+# Check listfiles output
+files = listfiles()
+
+# Should only show "testfile", not version files
+version_count = 0
+for f in files:
+    if ".v" in f and "testfile" in f:
+        version_count += 1
+
+if version_count > 0:
+    log("ACCURACY BUG: listfiles() reveals version files\n")

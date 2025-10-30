@@ -1,0 +1,43 @@
+
+# rk4299_attackcase3.r2py
+# unlink-while-open
+try:
+    import os, time
+except Exception:
+    os = None
+    time = None
+
+fname = "volatile.txt"
+try:
+    theFile = open(fname, "w+")
+    theFile.write("initial\n")
+    theFile.flush()
+    try:
+        if os and hasattr(os, "remove"):
+            try:
+                os.remove(fname)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        theFile.seek(0)
+        s = theFile.read()
+        try:
+            theFile.write("appended\n")
+            theFile.flush()
+        except Exception:
+            pass
+    except Exception:
+        pass
+    # hold descriptor for a bit to increase chance of race
+    try:
+        time.sleep(0.2)
+    except Exception:
+        pass
+    try:
+        theFile.close()
+    except Exception:
+        pass
+except Exception:
+    pass

@@ -1,0 +1,19 @@
+# Test: Opening non-existent file with create=False should fail
+
+# Attack: Try to open non-existent file
+try:
+    f = openfile("nonexistent.txt", False)
+    f.close()
+    # Error: If we get here, security is broken
+    assert False
+except FileNotFoundError:
+    pass
+
+# Attack: Try to open non-existent version
+try:
+    f = openfile("fake.txt.v1", False)
+    f.close()
+    # Error: If we get here, security is broken
+    assert False
+except FileNotFoundError:
+    pass

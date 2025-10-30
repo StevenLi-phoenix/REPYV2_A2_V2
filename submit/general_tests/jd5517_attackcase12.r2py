@@ -1,0 +1,16 @@
+# jd5517_attackcase12.r2py
+# many small writes to latest, close, then verify immutability
+
+f = openfile("case12_base", True)
+f.writeat("a", 0)
+f.writeat("b", 1)
+f.writeat("c", 2)
+f.close()
+
+g = openfile("case12_base", True)
+try:
+    content = g.readat(None, 0)
+finally:
+    g.close()
+
+assert content is not None and len(content) >= 3

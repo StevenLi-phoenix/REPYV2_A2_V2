@@ -1,0 +1,21 @@
+# Attack Case 2: Block new version while latest is open for reading
+
+f = openfile("blocktest", True)
+f.writeat("alpha", 0)
+f.close()
+
+g = openfile("blocktest", False)
+
+blocked = False
+try:
+    openfile("blocktest", True)
+except FileInUseError:
+    blocked = True
+
+assert blocked, "Should not allow new version while latest is open"
+g.close()
+
+h = openfile("blocktest", True)
+assert h.readat(None, 0) == "alpha"
+h.close()
+

@@ -1,0 +1,12 @@
+# Attack Case 15: Partial reads
+
+fpart = openfile("partial", True)
+fpart.writeat("ABCDEFGHIJ", 0)
+
+chunk1 = fpart.readat(5, 0)
+assert chunk1 == "ABCDE", "Should read first 5 bytes"
+
+chunk2 = fpart.readat(3, 7)
+assert chunk2 == "HIJ", "Should read 3 bytes from offset 7"
+
+fpart.close()

@@ -1,0 +1,14 @@
+def attempt_race():
+    try:
+        f = openfile("testfile9", True)
+        f.writeat("A", 0)
+        f.close()
+    except FileInUseError:
+        pass #for the sake of triggering a race condition
+    except Exception as e:
+        log("Possible race condition: " + str(e))
+
+# Run many overlapping attempts
+for i in range(100):
+    createthread(attempt_race)
+

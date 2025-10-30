@@ -1,0 +1,76 @@
+#pragma repy
+"""
+Note: ChatGPT used
+Checks for race conditions when two threads try to create version 1
+of the same file simultaneously.
+"""
+
+# Global state to track results
+thread_results = {'thread1': None, 'thread2': None}
+# Use Repy's safe lock for safely updating results dictionary
+test_lock = createlock()
+
+# File to test
+basename = "testfile_concurrent_init"
+
+def create_version_one(thread_id):
+  """Function executed by each thread."""
+  try:
+    # Attempt to create next version
+    h1 = openfile(basename, True)
+    content = h1.readat(None, 0)
+    h1.writeat("-" + thread_id, len(content)) # Append thread ID
+    h1.close()
+    result = "success"
+
+  except FileInUseError:
+    result = "fileinuse"
+  except Exception, e:
+    result = "error: " + str(type(e)) + ": " + str(e)
+  finally:
+    test_lock.acquire(True) # Blocking acquire
+    thread_results[thread_id] = result
+    test_lock.release()
+
+def thread1_target():
+  create_version_one('thread1')
+
+def thread2_target():
+  create_version_one('thread2')
+
+h_base = None
+try:
+    # Create base file first (v0) - do this non-concurrently
+    h_base = openfile(basename, True)
+    h_base.writeat("base_content", 0)
+    h_base.close()
+    h_base = None # Clear handle
+
+    # Start two threads trying to create v1 and v2 concurrently
+    createthread(thread1_target)
+    createthread(thread2_target)
+
+    # Wait for threads to finish execution
+    sleep(2.5)
+
+    # Check results
+    test_lock.acquire(True)
+    res1 = thread_results['thread1']
+    res2 = thread_results['thread2']
+    test_lock.release()
+
+    if (res1 == "success" and res2 == "success"):
+      # Expected outcome: Both threads succeeded. Test passes silently.
+      pass
+    else:
+      # Logs a bug
+      log("[FAIL] Concurrent init test failed. Expected (success, success), got: ", str(thread_results), "\n")
+
+except Exception, e:
+    log("[FAIL] Unexpected error during Test 1 setup or execution: ", str(e), "\n")
+finally:
+    if h_base:
+        try:
+            h_base.close()
+        except:
+            pass

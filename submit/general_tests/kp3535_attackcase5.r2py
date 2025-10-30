@@ -1,0 +1,21 @@
+### Testing: non-existing files should not open ###
+
+# Create base file
+
+try:
+    f5 = openfile("tst6", True)
+    f5.writeat("abc", 0)
+    f5.close()
+except Exception:
+    assert False
+
+# Opening a non-existent file with create=False must be rejected
+
+try:
+    f5a = openfile("doesnotexist.v99", False)
+    f5a.close()
+    assert False
+except FileNotFoundError:
+    pass
+except Exception:
+    assert False

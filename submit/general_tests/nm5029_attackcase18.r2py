@@ -1,0 +1,7 @@
+# <netid>_attackcase10_remove_base_blocked.r2py
+name = "t10_rm_base"
+f = openfile(name, True); f.writeat("Q", 0); f.close()
+caught = False
+try: removefile(name)
+except RepyArgumentError: caught = True
+assert caught

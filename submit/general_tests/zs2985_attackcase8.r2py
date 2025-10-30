@@ -1,0 +1,29 @@
+# Attack Case 8: Version File Concurrent Access Conflict Test
+# This test checks if the security layer properly detects conflicts when opening the same version file multiple times
+
+try:
+    # Create testfile and version file
+    f1 = openfile("testfile", True)
+    f1.writeat("original", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)  # Creates testfile.v1
+    f2.writeat("version1", 0)
+    f2.close()
+    
+    # Attempt to open the same version file multiple times - should cause conflict
+    f3 = openfile("testfile.v1", False)
+    f4 = openfile("testfile.v1", False)
+    
+    # If execution reaches here, the security layer failed to detect conflict
+    log("SECURITY FLAW: Version file conflict not detected!")
+    
+    f3.close()
+    f4.close()
+    
+except FileInUseError:
+    # Expected behavior - security layer correctly detected conflict
+    pass
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

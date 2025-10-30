@@ -1,0 +1,12 @@
+# Checks if deleting file is blocked
+
+# Create file and close it
+file = openfile("samplefile", True)
+file.close()
+
+# Attempt to remove file; should be blocked
+try:
+    removefile("samplefile")
+    assert False, "Cannot delete file"
+except RepyArgumentError:
+    pass

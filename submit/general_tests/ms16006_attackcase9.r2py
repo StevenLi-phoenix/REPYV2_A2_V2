@@ -1,0 +1,6 @@
+# --- 9) open non-existing explicit version should raise FileNotFoundError ---
+try:
+    openfile("nope.v999", False)
+    raise Exception("opened_nonexistent_version")
+except FileNotFoundError:
+    pass

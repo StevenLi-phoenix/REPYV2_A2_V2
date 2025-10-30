@@ -1,0 +1,14 @@
+#Cannot create a new version while the last one is open.
+try:
+    f = openfile("testfile2", True)
+    f.writeat("x", 0)
+
+    try:
+        openfile("testfile2", True)
+        log("TEST FAILED: testcase2 -> expected FileInUseError not raised")
+    except FileInUseError:
+        pass
+    finally:
+        f.close()
+except Exception as e:
+    log("TEST FAILED: testcase2 -> " + str(e))

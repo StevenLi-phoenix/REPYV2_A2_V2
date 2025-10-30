@@ -1,0 +1,30 @@
+try:
+    f = openfile("immutable.txt", True)
+    f.writeat("v0", 0)
+    f.close()
+    
+    v1 = openfile("immutable.txt", True)
+    v1.writeat("v1", 0)
+    
+    try:
+        old = openfile("immutable.txt.v1", False)
+        old.writeat("hack", 0)
+        old.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    v1.close()
+    
+    try:
+        old2 = openfile("immutable.txt.v1", False)
+        old2.writeat("hack after close", 0)
+        old2.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

@@ -1,0 +1,17 @@
+# Test: Version files are immutable
+
+f1 = openfile("immutable14", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("immutable14", True)
+f2.writeat("data2", 0)
+f2.close()
+
+# Try opening v1 with create=True
+try:
+    fv1 = openfile("immutable14.v1", True)
+    fv1.close()
+    assert False, "Should not allow opening version file with create=True"
+except RepyArgumentError:
+    pass

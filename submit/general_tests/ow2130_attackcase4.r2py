@@ -1,0 +1,43 @@
+B = "a4.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("seed", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+def famcount(name):
+  c = 0
+  pref = name + ".v"
+  for n in listfiles():
+    if n == name:
+      c += 1
+    elif n.startswith(pref):
+      try:
+        int(n.split(".v")[-1]); c += 1
+      except:
+        pass
+  return c
+
+before = famcount(B)
+
+try:
+  latest = openfile(B, False)
+  try:
+    try:
+      _ = openfile(B, True)
+      try: _.close()
+      except: pass
+      after = famcount(B)
+      if after > before:
+        log("Created a new version while latest was open")
+    except:
+      pass
+  finally:
+    try: latest.close()
+    except: pass
+except:
+  pass

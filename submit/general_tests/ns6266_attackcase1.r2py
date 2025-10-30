@@ -1,0 +1,27 @@
+"""
+Attack Case 1: Basic versioning functionality test to ensure 
+that files are properly versioned when opened with create=True after being closed
+"""
+
+# Create first version
+f1 = openfile("ns6266testfile", True)
+f1.writeat("Version1", 0)
+f1.close()
+
+# Create second version
+f2 = openfile("ns6266testfile", True)
+if f2.readat(None, 0) != "Version1":
+    raise Exception("New version doesn't contain contents from older version")
+
+f2.writeat("Version2Data", 0)
+f2.close()
+
+# Verify the old version can be read but is immutable
+f1_read = openfile("ns6266testfile", False)
+if f1_read.readat(None, 0) != "Version1":
+    raise Exception("Old version's content modified")
+f1_read.close()
+
+
+
+

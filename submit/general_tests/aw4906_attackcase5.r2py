@@ -1,0 +1,5 @@
+# try: 
+#     f1 = openfile("testfile.v12", True) 
+#     raise Exception("Failed to raise RepyArgumentError") 
+# except RepyArgumentError: 
+#     pass 

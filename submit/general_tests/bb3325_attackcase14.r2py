@@ -1,0 +1,18 @@
+base = "immut_check.txt"
+try:
+  f = openfile(base, True); f.write("1"); f.close()
+  v1 = openfile(base, True); v1.write("2"); v1.close()
+except: pass
+
+try:
+  r = openfile(base + ".v1", False)   # read-only handle
+  try:
+    r.writeat("BAD", 0)
+    try: log("VULN: old_version_writable")
+    except: pass
+  except:
+    pass
+  try: r.close()
+  except: pass
+except:
+  pass

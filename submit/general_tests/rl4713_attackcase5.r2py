@@ -1,0 +1,19 @@
+try:
+    f1 = openfile("testfile", True)
+    content = "Test content"
+    f1.writeat(content, 0)
+    f1.close()
+
+    for i in range(100):
+        f2 = openfile("testfile", True)
+        assert f2.readat(None, 0) == content
+        f2.close()
+    
+    # check if testfile.v100 exists
+    versioned_file = openfile("testfile.v100", False)
+    assert versioned_file.readat(None, 0) == content
+    versioned_file.close()
+except FileNotFoundError:
+    log("File testfile.v100 not found\n")
+except Exception as e:
+    log("An error occurred: " + str(e) + "\n")

@@ -1,0 +1,30 @@
+# Spec 4: New version blocked while latest open (silent on success)
+
+# names = ["s4file", "s4file.v1"]
+
+# --- Create base and keep open ---
+try:
+    f = openfile("s4file", True)
+    f.writeat("open", 0)
+except Exception, e:
+    raise Exception("Base creation failed: %s" % e)
+
+# --- Try creating a new version while base still open (must raise FileInUseError) ---
+try:
+    v = openfile("s4file", True)
+    v.close()
+    raise Exception("Created new version while base still open")
+except FileInUseError:
+    pass
+except Exception, e:
+    raise Exception("Unexpected error while base open: %s" % e)
+
+# --- After closing base, creating a version should succeed ---
+try:
+    f.close()
+    v = openfile("s4file", True)
+    v.close()
+except Exception, e:
+    raise Exception("Failed to create version after closing base: %s" % e)
+
+# silent on success

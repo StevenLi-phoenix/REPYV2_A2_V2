@@ -1,0 +1,48 @@
+try:
+    f = openfile("race8.txt", True)
+    f.writeat("initial data", 0)
+    f.close()
+
+    vulnerable = [False]
+    corruption_detected = [False]
+
+    def writer_thread():
+        try:
+            for i in range(3):
+                f = openfile("race8.txt", True)
+                f.writeat("write" + str(i), 0)
+                sleep(0.02)
+                f.close()
+                sleep(0.01)
+        except:
+            pass
+
+    def reader_thread():
+        try:
+            sleep(0.01)
+            for i in range(5):
+                try:
+                    f = openfile("race8.txt", False)
+                    content = f.readat(None, 0)
+                    
+                    # Check for corruption or partial writes
+                    if len(content) > 0 and content not in ["initial data", "write0", "write1", "write2"]:
+                        corruption_detected[0] = True
+                        vulnerable[0] = True
+                    
+                    f.close()
+                except:
+                    pass
+                sleep(0.02)
+        except:
+            pass
+
+    t1 = createthread(writer_thread)
+    t2 = createthread(reader_thread)
+
+    sleep(0.5)
+
+    if vulnerable[0] or corruption_detected[0]:
+        log("reference monitor is vulnerable to read-write threads\n")
+except:
+    pass

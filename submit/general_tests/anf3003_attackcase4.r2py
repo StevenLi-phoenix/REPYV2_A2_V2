@@ -1,0 +1,230 @@
+"""
+Name: anf3003_attackcase04.r2py
+Attack Case: Version-check off-by-one. In this test, we create a base file with 
+             "Hello World", then use threads to simultaneously create .v0 and .v6
+             versions with "Malicious Content", attempting to trick a monitoring
+             thread into reading the malicious content.
+"""
+
+# Configurations
+_ITERATIONS = 60
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+# Setup base file
+try:
+    # Create the base file with good content
+    file = openfile("attack4", True)
+
+    try:
+        # Write "Hello World" to the base file
+        file.writeat("Hello World", 0)
+
+    finally:
+        # Ensure the file is closed after writing
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions that occur during the initial file setup
+    pass
+
+def attacker():
+    """
+        Name: attacker
+        Arguments: None
+        Returns: None
+        Description: Create .v0 and .v6 with malicious content.
+    """
+
+    # Loop for a specified number of iterations
+    for i in range(_ITERATIONS):
+        try:
+            try:
+                # Attempt to create .v0 with malicious content
+                first_file = openfile("attack4" + ".v0", True)
+
+                try:
+                    # Write malicious content to .v0
+                    first_file.writeat("Malicious Content", 0)
+
+                finally:
+                    # Ensure .v0 file is closed after writing
+                    ac_close(first_file)
+
+            except Exception:
+                # Ignore any exceptions that occur during .v0 operations
+                pass
+
+            try:
+                # Attempt to create .v6 with malicious content
+                second_file = openfile("attack4" + ".v6", True)
+
+                try:
+                    # Write "Malicious Content" content to .v6
+                    second_file.writeat("Malicious Content", 0)
+
+                finally:
+                    # Ensure .v6 file is closed after writing
+                    ac_close(second_file)
+
+            except Exception:
+                # Ignore any exceptions that occur during .v6 operations
+                pass
+        except Exception:
+            # Ignore any exceptions that occur during the overall process
+            pass
+
+        try:
+            # Short sleep to yield execution
+            sleep(0.001)
+
+        except Exception:
+            # Ignore any exceptions that occur during sleep
+            pass
+
+def victim():
+    """
+        Name: victim
+        Arguments: None
+        Returns: None
+        Description: Trigger a normal version creation.
+    """
+
+    try:
+        try:
+            # Small delay to allow attacker to create files
+            sleep(0.01)
+
+        except Exception:
+            # Ignore any exceptions that occur during sleep
+            pass
+        try:
+            # Open the base file to trigger version creation
+            file = openfile("attack4", True)
+
+            try:
+                try:
+                    # Attempt to read the content of the base file
+                    tmp = file.readat(None, 0)
+
+                except Exception:
+                    # If reading fails, do nothing
+                    pass
+            finally:
+                # Ensure the base file is closed after reading
+                ac_close(file)
+
+        except Exception:
+            # Ignore any exceptions that occur during file operations
+            pass
+
+    except Exception:
+        # Ignore any exceptions that occur during the overall victim process
+        pass
+
+# Start the attack!
+try:
+    # Create attacker and victim threads
+    createthread(attacker)
+    createthread(victim)
+
+    try:
+        # Wait for threads to complete
+        sleep(0.5)
+
+    except Exception:
+        # Ignore any exceptions that occur during sleep
+        pass
+
+    # Check if the monitor failed
+    monitor_failed = False
+
+    try:
+        # Open the base file
+        file = openfile("attack4", False)
+
+        try:
+            try:
+                # Attempt to read the content of the base file
+                content = file.readat(None, 0)
+
+            except Exception:
+                # If reading fails, set content to None
+                content = None
+
+            # Check if the content is the malicious content
+            if content == "Malicious Content":
+                # If the monitor failed, log the failure
+                monitor_failed = True
+
+        finally:
+            # Ensure the base file is closed after reading
+            ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions that occur during base file operations
+        pass
+
+    # Check specific off-by-one targets
+    for name in ("attack4" + ".v0", "attack4" + ".v6"):
+        if monitor_failed:
+            # No need to check further if already failed
+            break
+
+        try:
+            # Open the versioned file
+            file = openfile(name, False)
+
+            try:
+                try:
+                    # Attempt to read the content of the versioned file
+                    content = file.readat(None, 0)
+
+                except Exception:
+                    # If reading fails, set content to None
+                    content = None
+
+                # Check if the content is the malicious content
+                if content == "Malicious Content":
+                    # If the monitor failed, log the failure
+                    monitor_failed = True
+                    # No need to check further versions
+                    break
+
+            finally:
+                # Ensure the versioned file is closed after reading
+                ac_close(file)
+
+        except Exception:
+            # Ignore any exceptions that occur during versioned file operations
+            pass
+
+    # Log if the monitor failed
+    if monitor_failed:
+        try:
+            # Log the failure
+            log("Attack Case 4: Monitor Failed")
+
+        except Exception:
+            # Ignore any exceptions that occur during logging
+            pass
+
+except Exception:
+    # Ignore any exceptions that occur during the overall attack case
+    pass

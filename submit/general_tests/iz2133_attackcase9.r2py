@@ -1,0 +1,35 @@
+# Test if the monitor might incorrectly block read access to old versions
+
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  raise AssertionError("Monitor failed to raise expected exception")
+
+f0 = openfile("readtest.txt", True)
+f0.writeat("v0 data", 0)
+f0.close()
+
+f1 = openfile("readtest.txt", True)
+f1.writeat("v1 data", 0)
+f1.close()
+
+f2 = openfile("readtest.txt", True)
+f2.writeat("v2 data", 0)
+f2.close()
+
+old_handle = openfile("readtest.txt.v1", False)
+
+
+try:
+  content = old_handle.readat(None, 0)
+  assert content == "v0 data", "Old version should contain original data"
+except Exception, e:
+  raise AssertionError("Monitor incorrectly blocked read access to old version")
+
+old_handle.close()
+

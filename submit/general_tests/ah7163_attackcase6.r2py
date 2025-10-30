@@ -1,0 +1,5 @@
+try:
+    # Empty Attack case
+    pass
+except Exception as e:
+    log("Error: ", e)

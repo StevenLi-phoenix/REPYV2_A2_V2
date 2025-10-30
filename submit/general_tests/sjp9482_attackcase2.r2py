@@ -1,0 +1,19 @@
+file_name = "test_file"
+
+f1 = openfile(file_name, True)
+f1.writeat("v1", 0)
+f1.close()
+
+f2 = openfile(file_name, True)
+f2.writeat("v2", 0)
+f2.close()
+
+try:
+    f_old_version = openfile(file_name + '.v1', False)
+    f_old_version.writeat("Attack", 0)
+    f_old_version.close()
+
+    raise Exception("WriteToOldVersionSucceeded")
+
+except (FileInUseError, RepyArgumentError, FileNotFoundError):
+    pass

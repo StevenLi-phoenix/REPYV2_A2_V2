@@ -1,0 +1,14 @@
+#attack 7: listfiles() leaks version files???
+f1 = openfile("secret", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("secret", True)
+f2.close()
+
+f3 = openfile("secret", True)
+f3.close()
+
+files = listfiles()
+if "secret.v1" in files or "secret.v2" in files:
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 listfiles() shows version files!\n")

@@ -1,0 +1,25 @@
+# CASE 4 Write to older version when new is open
+
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+def write(name, data):
+    f = openfile(name, True)
+    f.writeat(data, 0)
+    f.close()
+
+write("atk4", "X")
+older = openfile("atk4", False)
+v1 = openfile("atk4", True)
+try:
+    ar(FileInUseError, older.writeat, "BAD", 0)
+finally:
+    older.close()
+v1.close()

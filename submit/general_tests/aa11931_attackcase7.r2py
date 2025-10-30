@@ -1,0 +1,20 @@
+# Test: Writing to versioned files is disallowed
+
+f1 = openfile("vwrite7", True)
+f1.writeat("data1", 0)
+f1.close()
+
+f2 = openfile("vwrite7", True)
+f2.writeat("data2", 0)
+f2.close()
+
+# Try to write to version file
+fv1write = openfile("vwrite7.v1", False)
+try:
+    fv1write.writeat("hack", 0)
+    fv1write.close()
+    assert False, "Should not write to version file"
+except FileInUseError:
+    pass
+
+fv1write.close()

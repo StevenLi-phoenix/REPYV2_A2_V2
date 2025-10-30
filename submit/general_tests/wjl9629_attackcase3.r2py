@@ -1,0 +1,7 @@
+# Test Specification 1 and 5:
+    # "All operations must behave identically to RepyV2 (without your security layer) except as mentioned below."
+    # "Versioned files can be accessed using openfile(originalfilename + '.v' + str(num), create), where num starts from 1."
+# How it tests: it tries to make a file that isn't versioned and sees if an error is thrown (it shouldn't)
+
+f = openfile("test.versioning.txt", True)
+f.close()

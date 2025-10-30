@@ -1,0 +1,12 @@
+f = openfile("test", True)
+f.writeat("data1", 0)
+f.close()
+
+f2 = openfile("test", True)
+
+try:
+    fv1 = openfile("test.v1", False)
+    fv1.close()
+    f2.close()
+except FileInUseError:
+    f2.close()

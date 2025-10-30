@@ -1,0 +1,6 @@
+# Opening non-existent version should raise error
+
+try:
+    f1 = openfile("never_made.v9", False)
+except Exception:
+    pass

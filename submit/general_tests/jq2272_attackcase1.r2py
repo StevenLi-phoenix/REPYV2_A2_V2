@@ -1,0 +1,7 @@
+f1 = openfile("v-1", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("v-1.v1", False)
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()

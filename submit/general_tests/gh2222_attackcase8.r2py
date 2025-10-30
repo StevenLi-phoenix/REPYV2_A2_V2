@@ -1,0 +1,17 @@
+#listfiles() should only include base filenames.
+try:
+    f = openfile("testfile8", True)
+    f.writeat("x", 0)
+    f.close()
+
+    v1 = openfile("testfile8", True)
+    v1.close()
+    v2 = openfile("testfile8", True)
+    v2.close()
+
+    ls = listfiles()
+    assert "testfile8" in ls, "Base file missing"
+    assert "testfile8.v1" not in ls, "Versioned file incorrectly listed"
+    assert "testfile8.v2" not in ls, "Versioned file incorrectly listed"
+except Exception as e:
+    log("TEST FAILED: testcase8 -> " + str(e))

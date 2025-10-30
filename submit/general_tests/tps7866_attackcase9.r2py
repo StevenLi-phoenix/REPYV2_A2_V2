@@ -1,0 +1,9 @@
+# removefile disallowed (explicit version)
+
+f = openfile("t09", True); f.close()
+openfile("t09", True).close()  # v1
+try:
+  removefile("t09.v1")
+  raise Exception("removefile(version) allowed")
+except RepyArgumentError:
+  pass

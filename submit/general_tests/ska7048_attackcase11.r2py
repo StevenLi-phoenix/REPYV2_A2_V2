@@ -1,0 +1,19 @@
+try:
+    f1 = openfile("multinametest11.data.txt", True)
+    f1.writeat("data", 0)
+    f1.close()
+    
+    f2 = openfile("multinametest11.data.txt", True)
+    f2.close()
+    
+    f3 = openfile("multinametest11.data.txt.v1", False)
+    f3.close()
+except:
+    log("BUG FOUND\n")
+
+try:
+    f4 = openfile(".hidden11", True)
+    f4.writeat("data", 0)
+    f4.close()
+except:
+    log("BUG FOUND\n")

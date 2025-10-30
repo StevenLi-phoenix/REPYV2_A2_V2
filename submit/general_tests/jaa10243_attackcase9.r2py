@@ -1,0 +1,8 @@
+# try to access etc password 
+try:
+    f1 = openfile("../etc/passwd", True)
+    log("opened /etc/passwd\n")
+    f1.close()
+    exitall()
+except (ValueError, RepyArgumentError, FileNotFoundError):
+    pass

@@ -1,0 +1,39 @@
+mycontext['handles'] = []
+mycontext['lock'] = createlock()
+
+def create_version_thread():
+    try:
+        f = openfile("multiversion.txt", True)
+        mycontext['lock'].acquire(True)
+        mycontext['handles'].append(f)
+        mycontext['lock'].release()
+        f.writeat("thread version", 0)
+        sleep(0.1)
+        f.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+
+try:
+    base = openfile("multiversion.txt", True)
+    base.writeat("base", 0)
+    base.close()
+    
+    for i in range(5):
+        createthread(create_version_thread)
+    
+    sleep(0.8)
+    
+    mycontext['lock'].acquire(True)
+    handle_count = len(mycontext['handles'])
+    mycontext['lock'].release()
+    
+    for h in mycontext['handles']:
+        try:
+            h.close()
+        except:
+            pass
+    
+except Exception as e:
+    pass

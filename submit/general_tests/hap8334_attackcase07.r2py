@@ -1,0 +1,18 @@
+# CASE 7 New Version blocked when latest is open
+
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+g = openfile("atk7", True)
+g.writeat("G", 0)
+try:
+    ar(FileInUseError, openfile, "atk7", True)
+finally:
+    g.close()

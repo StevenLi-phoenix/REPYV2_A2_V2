@@ -1,0 +1,19 @@
+# Test: To check that a person is not able to manually create .vN files
+
+# Attack: Try to create a versioned file directly
+try:
+    f = openfile("test-manual.txt.v1", True)
+    f.close()
+    # Error: If we get here, security is broken
+    assert False
+except RepyArgumentError:
+    pass
+
+# Attack: Try with different version numbers
+try:
+    f = openfile("test-manual.txt.v999", True)
+    f.close()
+    # Error: If we get here, security is broken
+    assert False
+except RepyArgumentError:
+    pass

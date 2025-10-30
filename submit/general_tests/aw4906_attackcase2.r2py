@@ -1,0 +1,5 @@
+# f1 = openfile("testfile", True)
+
+# f1.close()
+
+# f2 = openfile("testfile", True) 

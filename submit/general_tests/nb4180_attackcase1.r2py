@@ -1,0 +1,28 @@
+try:
+  f1 = openfile("test1.txt", True)
+  f1.close()
+  f1 = openfile("test1.txt", True)
+  f1.close()
+  files = listfiles()
+  found_version = False
+  i = 0
+  while i < len(files):
+    if ".v" in files[i]:
+      parts = files[i].split(".v")
+      if len(parts) >= 2:
+        last_part = parts[len(parts) - 1]
+        is_digit = True
+        j = 0
+        while j < len(last_part):
+          if last_part[j] not in "0123456789":
+            is_digit = False
+            break
+          j = j + 1
+        if is_digit and len(last_part) > 0:
+          found_version = True
+          break
+    i = i + 1
+  if found_version:
+    log("VULNERABLE: Versions visible in listfiles\n")
+except Exception, e:
+  log("TEST6 VULNERABLE: \n")

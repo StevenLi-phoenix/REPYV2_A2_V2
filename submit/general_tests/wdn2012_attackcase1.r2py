@@ -1,0 +1,47 @@
+"""
+Attack 1: Write to base file after a version exists (violates immutability).
+Expected secure behavior: writing to the base after versioning should be disallowed.
+This test logs ONLY if the write is wrongly allowed.
+"""
+
+# Create base file and then create a version
+try:
+    f = openfile("wdn2012_t1", True)
+    try:
+        f.writeat("A", 0)
+    except Exception:
+        pass
+    try:
+        f.close()
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    v = openfile("wdn2012_t1", True)  # should create a version
+    try:
+        v.close()
+    except Exception:
+        pass
+except Exception:
+    pass
+
+# Attempt to write to the base after versions exist
+try:
+    b = openfile("wdn2012_t1", False)
+    try:
+        # If this succeeds without raising, immutability is broken
+        b.writeat("X", 0)
+        log("EXPLOIT: wrote to base after versioning (immutability broken)")
+    except Exception:
+        pass
+    finally:
+        try:
+            b.close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+

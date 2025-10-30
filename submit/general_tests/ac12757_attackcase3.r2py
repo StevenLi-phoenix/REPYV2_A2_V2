@@ -1,0 +1,26 @@
+# ac12757_attackcase3.r2py
+# Targets: RepyArgumentError - File deletion
+
+try:
+    # 1. Create a dummy file to attempt to delete
+    dummy_asset = openfile("dummy.txt", True)
+    dummy_asset.writeat("some data", 0)
+    dummy_asset.close()
+
+    # 2. Attempt to remove the file
+    try:
+        removefile("dummy.txt")
+        # If we reach here, the monitor failed to prevent file deletion
+        raise Exception("Monitor failed: Was able to delete a file!")
+    except RepyArgumentError:
+        # Expected behavior: Monitor correctly raised RepyArgumentError
+        pass
+    except Exception as e:
+        # Unexpected error type
+        raise Exception("Monitor failed with unexpected error when deleting file: " + str(e))
+
+except Exception as e:
+    # Catch any unexpected errors during setup
+    raise Exception("Attack case 3 failed due to unexpected setup error: " + str(e))
+
+# This attack case breaks reference_monitor_example1, reference_monitor_example2

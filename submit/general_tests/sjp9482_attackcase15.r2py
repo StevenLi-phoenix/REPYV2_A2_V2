@@ -1,0 +1,21 @@
+file_name = "test_file"
+
+f1 = openfile(file_name, True);
+f1.close()
+f2 = openfile(file_name, True);
+f2.close()
+
+try:
+    f_ver_read = openfile(file_name + '.v1', False)
+    f_create_new = openfile(file_name, True)
+    f_create_new.close()
+
+    raise Exception("OldVersionLockBypass")
+
+except FileInUseError:
+    pass
+finally:
+    try:
+        f_ver_read.close()
+    except:
+        pass

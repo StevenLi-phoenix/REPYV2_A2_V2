@@ -1,0 +1,8 @@
+name = "sample.v0"
+try:
+  h = openfile(name, True)
+  try: h.write("ok"); h.close()
+  except: pass
+except:
+  try: log("VULN: rejected_dotv_zero_basename")
+  except: pass

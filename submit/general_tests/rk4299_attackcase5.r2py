@@ -1,0 +1,39 @@
+
+# rk4299_attackcase5.r2py
+# permission-change
+try:
+    import os, time
+except Exception:
+    os = None
+    time = None
+
+fname = "perm_race.txt"
+try:
+    try:
+        theFile = open(fname, "w")
+        theFile.write("permtest\n")
+        theFile.close()
+    except Exception:
+        pass
+
+    for i in range(30):
+        try:
+            if os and hasattr(os, "chmod"):
+                try:
+                    os.chmod(fname, 0o400)
+                except Exception:
+                    pass
+                try:
+                    os.chmod(fname, 0o600)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        try:
+            fh = open(fname, "a")
+            fh.write("x")
+            fh.close()
+        except Exception:
+            pass
+except Exception:
+    pass

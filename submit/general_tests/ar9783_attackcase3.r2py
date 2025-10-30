@@ -1,0 +1,16 @@
+#try to see if empty filenames are accepted
+
+try:
+    myfile = openfile("", True)
+    log("ACCURACY FLAW: Empty filename accepted!\n")
+    myfile.close()
+except Exception as e:
+    log("Empty filename properly rejected\n")
+
+#also test with just spaces
+try:
+    myfile = openfile("   ", True)
+    log("ACCURACY FLAW: Whitespace filename accepted!\n")
+    myfile.close()
+except Exception as e:
+    log("Whitespace filename properly rejected\n")

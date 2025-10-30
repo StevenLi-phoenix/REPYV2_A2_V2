@@ -1,0 +1,16 @@
+r1 = openfile("multiread", True)
+r1.writeat("Version1", 0)
+r1.close()
+
+r2 = openfile("multiread", True)
+r2.writeat("Version2", 1)
+r2.close()
+
+o1 = openfile("multiread.v1", False)
+o2 = openfile("multiread.v1", False)
+
+assert o1.readat(None, 0) is not None
+assert o2.readat(None, 0) is not None
+
+o1.close()
+o2.close()

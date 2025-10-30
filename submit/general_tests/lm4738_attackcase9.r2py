@@ -1,0 +1,17 @@
+#Note that a new version cannot be created while the latest version is open. 
+#If openfile() is called on an already open file, it shall throw the relevant error that it would have done in RepyV2 (FileInUseError).
+
+f1 = openfile("testfile", True)
+f1.writeat("Create v0", 0)
+
+f2 = openfile("testfile", True)
+f2.writeat("Create v1", 0)
+
+f3 = openfile("testfile", True)
+f3.writeat("Create v2", 0)
+
+raise FileInUseError("ERROR: Should not have allowed this, cannot create new version while latest is open")
+
+f1.close()
+f2.close()
+f3.close()

@@ -1,0 +1,15 @@
+# Attack: Try to write to an older version
+f1 = openfile("immutable", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("immutable", True)
+f2.close()
+
+# Now try to open and write to v1
+try:
+    old = openfile("immutable.v1", False)
+    old.writeat("hacked", 0)  # Should raise FileInUseError
+    assert False, "Should not allow writing to old versions"
+except FileInUseError:
+    pass

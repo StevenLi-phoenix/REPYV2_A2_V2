@@ -1,0 +1,27 @@
+# bm3792_attackcase15.r2py
+# Test: Try to open same file twice (even for reading - should raise FileInUseError)
+
+f1 = openfile("testfile", True)
+f1.writeat("content", 0)
+f1.close()
+
+# Open for reading
+f2 = openfile("testfile", False)
+
+# Try to open again
+try:
+    f3 = openfile("testfile", False)
+    f3.close()
+    f2.close()
+    
+    # If we got here, check if this is allowed (spec is unclear)
+    # Some implementations might allow multiple readers
+    pass
+except FileInUseError:
+    # This is the safer behavior
+    f2.close()
+except:
+    try:
+        f2.close()
+    except:
+        pass

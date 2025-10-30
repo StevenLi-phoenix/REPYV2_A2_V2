@@ -1,0 +1,17 @@
+try:
+    f1 = openfile("testfile", True)
+    content = "Test content " * 1000000
+    f1.writeat(content, 0)
+    f1.close()
+
+    f2 = openfile("testfile", True)
+
+    assert f2.readat(None, 0) == content
+
+    f2.close()
+except Exception as e:
+    log("An error occurred: " + str(e) + "\n")
+
+
+
+

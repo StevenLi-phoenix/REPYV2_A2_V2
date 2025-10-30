@@ -1,0 +1,58 @@
+marker = "compromised_vs3518_attackcase15"
+protected = "protected_attack15.txt"
+temp = "temp_attack15.txt"
+
+try:
+    f = open(protected, "w")
+    try:
+        f.write("ORIG15\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+h = None
+try:
+    try:
+        h = open(protected, "r")
+    except Exception:
+        h = None
+
+    try:
+        os.unlink(protected)
+    except Exception:
+        pass
+
+    try:
+        f2 = open(temp, "w")
+        try:
+            f2.write("EVIL15\n")
+        finally:
+            f2.close()
+    except Exception:
+        pass
+
+    try:
+        os.rename(temp, protected)
+    except Exception:
+        pass
+finally:
+    try:
+        if h:
+            h.close()
+    except Exception:
+        pass
+
+try:
+    f = open(protected, "r")
+    try:
+        c = f.read()
+    finally:
+        f.close()
+    if "EVIL15" in c:
+        try:
+            open(marker, "w").close()
+        except Exception:
+            pass
+except Exception:
+    pass

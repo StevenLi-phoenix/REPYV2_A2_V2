@@ -1,0 +1,6 @@
+# Creating the following files should work since it is not versioned
+f = openfile("foo.v1x", True)
+f.close()
+
+f = openfile("weird.vname", True)
+f.close()

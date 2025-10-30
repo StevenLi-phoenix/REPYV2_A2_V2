@@ -1,0 +1,58 @@
+"""
+Try and create a new version while the current latest version is open on another thread
+"""
+
+try:
+    base = "threaded"
+
+    try:
+        f0 = openfile(base, True)
+        f0.writeat("INITIAL", 0)
+        f0.close()
+    except Exception:
+        log("Bug: allowed operation failed")
+
+    result = {"created_when_open": False}
+
+    def slow():
+        try:
+            fslow = openfile(base, True)
+            try:
+                fslow.writeat("Slow", 0)
+            except Exception:
+                pass
+            sleep(0.5)
+            try:
+                fslow.close()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    def fast():
+        try:
+            sleep(0.05)
+            try:
+                ffast = openfile(base, True)
+                try:
+                    ffast.close()
+                except Exception:
+                    pass
+                result["created_when_open"] = True
+            except Exception:
+                result["created_when_open"] = False
+        except Exception:
+            result["created_when_open"] = False
+
+    try:
+        createthread(slow, ())
+        createthread(fast, ())
+    except Exception:
+        slow()
+        fast()
+
+
+    if result.get("created_when_open", False):
+        log("Bug: allowed creating new version while latest was open (threaded)")
+except Exception:
+    log("Bug: threaded test encountered unexpected error during setup")

@@ -1,0 +1,11 @@
+for i in range(3):
+	try:
+		if i == 0:
+			f1 = openfile("zestfile", True)
+		else:
+			f1 = openfile(("zestfile.v"+str(i)), True)
+			log("Successfully created explicit version files\n")
+		f1.writeat(str(i),0)
+		f1.close()
+	except RepyArgumentError:
+		continue

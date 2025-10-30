@@ -1,0 +1,21 @@
+# Test Case 13: Test filename starting with dot (hidden files)
+# Should reject filenames starting with '.'
+
+invalid_names = [
+    ".hidden",
+    ".config",
+    "..parent",
+]
+
+for name in invalid_names:
+    try:
+        f = openfile(name, True)
+        f.writeat("test", 0)
+        log("ATTACK SUCCESSFUL: Created file starting with dot: " + name + "\n")
+        f.close()
+        exitall()
+    except Exception as e:
+        # Expected - should reject
+        pass
+
+log("Test passed - dot-prefixed filenames rejected\n")

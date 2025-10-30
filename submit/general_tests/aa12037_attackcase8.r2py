@@ -1,0 +1,9 @@
+# Test: Empty file versioning
+
+f1 = openfile("emptyfile", True)
+f1.close()
+
+f2 = openfile("emptyfile", True)
+content = f2.readat(None, 0)
+assert content == "", "Empty versioned file should be empty"
+f2.close()

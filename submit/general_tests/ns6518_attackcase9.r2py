@@ -1,0 +1,11 @@
+
+# Test 9 — Error handling for missing explicit versions.
+# openfile("nonexistent.v3", False) should raise FileNotFoundError (or similar) and not crash system.
+
+try:
+    x = openfile("tc9_nonexist.v3", False)
+    # If it opened, that's wrong
+    assert False
+except Exception:
+    # Expected: some FileNotFoundError-like exception. Suppress.
+    pass

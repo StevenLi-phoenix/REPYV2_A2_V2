@@ -1,0 +1,18 @@
+"""
+Attack Case 8: Test versioning when the base filename contains '.v' (e.g., 'movie.voucher')
+"""
+
+# Create base file "movie.voucher"
+f1 = openfile("movie.voucher", True)
+f1.writeat("firstdata", 0)
+f1.close()
+
+# Create a new version 
+# this should create "movie.voucher.v1" and copy contents.
+f2 = openfile("movie.voucher", True)
+# The newly-created version should contain the base content
+if f2.readat(None, 0) != "firstdata":
+    raise Exception("Version did not copy contents from base")
+# write new content into latest version and close
+f2.writeat("seconddata", 0)
+f2.close()

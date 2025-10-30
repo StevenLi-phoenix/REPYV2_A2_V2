@@ -1,0 +1,9 @@
+f1 = openfile("concurrent", True)
+
+try:
+    f2 = openfile("concurrent", True)
+    f2.close()
+except FileInUseError:
+    pass
+
+f1.close()

@@ -1,0 +1,12 @@
+f1 = openfile("zestfile",True)
+f1.writeat("Hi there", 0)
+f1.close()
+f2 = openfile("zestfile",True)
+f2.writeat("Hi there1", 0)
+try:
+	f3 = openfile("zestfile",True)
+	f2.close()
+	f3.close()
+	log("Opened older version successfully\n")
+except FileInUseError:
+	pass

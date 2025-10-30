@@ -1,0 +1,29 @@
+# Test: Check that Old versions should be readable
+
+# Create file with multiple versions
+f1 = openfile("file1.txt", True)
+f1.writeat("Version1", 0)
+f1.close()
+
+f2 = openfile("file1.txt", True)
+f2.writeat("Version2", 0)
+f2.close()
+
+f3 = openfile("file1.txt", True)
+f3.writeat("Version3", 0)
+f3.close()
+
+# Read old versions
+try:
+    v1 = openfile("file1.txt.v1", False)
+    if v1.readat(None, 0) != "Version1":
+        assert False
+    v1.close()
+    
+    v2 = openfile("file1.txt.v2", False)
+    if v2.readat(None, 0) != "Version2":
+        assert False
+    v2.close()
+except:
+    # Error: Cannot read old versions, security is broken
+    assert False

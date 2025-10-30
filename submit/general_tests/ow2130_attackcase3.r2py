@@ -1,0 +1,54 @@
+B = "a3.txt"
+
+try:
+  f = openfile(B, True)
+  try:
+    f.writeat("base", 0)
+  except:
+    pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+try:
+  v = openfile(B, True)
+  try:
+    v.writeat("vcontent", 0)
+  except:
+    pass
+  try: v.close()
+  except: pass
+except:
+  pass
+
+names = listfiles()
+latest = None
+maxv = -1
+pref = B + ".v"
+for n in names:
+  if n == B:
+    vnum = 1
+  elif n.startswith(pref):
+    try:
+      vnum = int(n.split(".v")[-1])
+    except:
+      continue
+  else:
+    continue
+  if vnum > maxv:
+    maxv = vnum
+    latest = n
+
+if latest:
+  try:
+    g = openfile(latest, False)
+    try:
+      g.writeat("must_be_blocked", 0)
+      log("Latest version '" + latest + "' accepted a write after close")
+    except:
+      pass
+    try: g.close()
+    except: pass
+  except:
+    pass

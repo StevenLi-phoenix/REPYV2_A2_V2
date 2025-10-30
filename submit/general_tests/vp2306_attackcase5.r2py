@@ -1,0 +1,13 @@
+f = openfile("testfile5", True)
+f.writeat("Attack5", 0)
+f.close()
+f2 = openfile("testfile5", True)
+f2.close()
+
+
+#do not show versioned entries in listfiles
+flist = listfiles()
+
+assert "testfile5" in flist
+for entry in flist:
+    assert ".v" not in entry

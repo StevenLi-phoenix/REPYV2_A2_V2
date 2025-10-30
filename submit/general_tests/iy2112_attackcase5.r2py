@@ -1,0 +1,36 @@
+# Spec 7
+# Reading from older versions is always allowed, but writing to them is permanently disallowed. Any attempt to write to an older version should raise a FileInUseError.
+t = openfile("test", True)
+t.close()
+t = openfile("test", True)
+t.close()
+t = openfile("test", True)
+t.close()
+t = openfile("test", True)
+t.close()
+try:
+    t = openfile("test", False)
+    t.writeat("Writing to older version.", 0)
+    t.close()
+except FileInUseError:
+    pass
+else:
+    log("Failed to raise FileInUseError\n")
+    raise Exception("Failed to raise FileInUseError")
+
+
+# Spec 8
+try:
+    removefile("test")
+except RepyArgumentError:
+    pass
+else:
+    log("Failed to raise RepyArgumentError\n")
+    raise Exception("Failed to raise RepyArgumentError")
+
+
+# Spec 9
+# The listfiles() call in RepyV2 should not show that versions of files exist. It should just show the listing of all files that were created, regardless of how many versions of those file exist.
+for file in listfiles():
+    if ".v" in file:
+        log("listed versioned files\n")

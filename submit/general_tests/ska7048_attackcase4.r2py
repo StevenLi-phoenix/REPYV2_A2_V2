@@ -1,0 +1,20 @@
+f1 = openfile("immutabletest4.txt", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("immutabletest4.txt", True)
+f2.close()
+
+try:
+    f3 = openfile("immutabletest4.txt.v1", False)
+    f3.writeat("hacked", 0)
+    log("BUG FOUND\n")
+    f3.close()
+except FileInUseError:
+    pass
+
+f4 = openfile("immutabletest4.txt.v1", False)
+data = f4.readat(None, 0)
+if data != "original":
+    log("BUG FOUND\n")
+f4.close()

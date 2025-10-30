@@ -1,0 +1,18 @@
+# Test if the monitor might fail to block explicit version creation when
+# the base file already exists
+
+def expect_error(exception_type, code_to_run, *args):
+  try:
+    code_to_run(*args)
+  except exception_type:
+    return
+  except Exception, e:
+    raise
+  raise AssertionError("Monitor failed to raise expected exception")
+
+# Create a base file first
+f = openfile("versiontest.txt", True)
+f.close()
+
+# Attempting to create an explicit version should be blocked, even though base exists
+expect_error(RepyArgumentError, openfile, "versiontest.txt.v5", True)

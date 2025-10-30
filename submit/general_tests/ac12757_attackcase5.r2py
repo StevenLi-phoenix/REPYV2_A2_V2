@@ -1,0 +1,27 @@
+# ac12757_attackcase5.r2py
+# Targets: FileNotFoundError - Reading non-existent version (negative)
+
+try:
+    # 1. Create an initial file
+    base_asset = openfile("base_document.txt", True)
+    base_asset.writeat("document content", 0)
+    base_asset.close()
+
+    # 2. Attempt to open a non-existent negative version
+    try:
+        invalid_version_asset = openfile("base_document.txt.v-1", False)
+        # If we reach here, the monitor failed to prevent opening a non-existent negative version
+        invalid_version_asset.close() # Clean up if it somehow succeeded
+        raise Exception("Monitor failed: Was able to open a non-existent negative version!")
+    except FileNotFoundError:
+        # Expected behavior: Monitor correctly raised FileNotFoundError
+        pass
+    except Exception as e:
+        # Unexpected error type
+        raise Exception("Monitor failed with unexpected error when opening negative version: " + str(e))
+
+except Exception as e:
+    # Catch any unexpected errors during setup
+    raise Exception("Attack case 5 failed due to unexpected setup error: " + str(e))
+
+# This attack case breaks reference_monitor_example1, reference_monitor_example2

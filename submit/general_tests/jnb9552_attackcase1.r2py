@@ -1,0 +1,25 @@
+# Tests file removal
+filename = "testone"
+try:
+    f1 = openfile(filename, True)
+    f1.writeat("deleteme", 0)
+    f1.close()
+except:
+    filename = "testoner"
+    try: 
+        f1 = openfile(filename, True)
+        f1.writeat("deleteme", 0)
+        f1.close()
+    except:
+        exitall()
+
+try:
+   removefile(filename)
+   log("attackcase 1 success\n")
+
+except RepyArgumentError:
+    exitall()
+
+except:
+    log("Defense layer raised incorrect error\n")
+    exitall()

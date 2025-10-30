@@ -1,0 +1,26 @@
+# Attack Case 7: Filename validation
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+expect_error(openfile, ("file/with/slash", True), RepyArgumentError)
+expect_error(openfile, ("file\\with\\backslash", True), RepyArgumentError)
+
+expect_error(openfile, (".", True), RepyArgumentError)
+expect_error(openfile, ("..", True), RepyArgumentError)
+expect_error(openfile, ("", True), RepyArgumentError)
+
+expect_error(openfile, (".hiddenfile", True), RepyArgumentError)
+
+long_name = "a" * 121
+expect_error(openfile, (long_name, True), RepyArgumentError)
+
+expect_error(openfile, ("..v.v.v.v1", True), RepyArgumentError)
+
+fvalid = openfile("this-is_a.valid.name_0123", True)
+fvalid.close()
+

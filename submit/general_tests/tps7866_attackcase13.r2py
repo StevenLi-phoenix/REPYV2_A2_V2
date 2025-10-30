@@ -1,0 +1,13 @@
+# Many versions & content check on v5
+
+f = openfile("t13", True); f.writeat("base",0); f.close()
+i = 0
+while i < 5:
+  h = openfile("t13", True)
+  h.writeat("ver"+str(i+1), 0)
+  h.close()
+  i = i + 1
+v5 = openfile("t13.v5", False)
+txt = v5.readat(None, 0)
+if txt.find("ver5") == -1: raise Exception("v5 content mismatch")
+v5.close()

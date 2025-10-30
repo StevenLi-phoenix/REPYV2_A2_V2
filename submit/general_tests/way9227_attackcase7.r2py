@@ -1,0 +1,11 @@
+"""
+Open an uncreated file
+"""
+
+try:
+    f = openfile("doesntexist.v9", False)
+    f.close()
+    log("Bug: opened a file that doesn't exist")
+except Exception:
+    pass
+

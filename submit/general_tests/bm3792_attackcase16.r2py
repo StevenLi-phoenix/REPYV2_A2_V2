@@ -1,0 +1,22 @@
+# bm3792_attackcase16.r2py
+# Test: Write, close, reopen, and overwrite at offset 0
+
+f1 = openfile("testfile", True)
+f1.writeat("originaldata", 0)
+f1.close()
+
+# Reopen and try to overwrite
+try:
+    f2 = openfile("testfile", False)
+    f2.writeat("XX", 0)
+    f2.close()
+    
+    # Check if overwrite succeeded
+    check = openfile("testfile", False)
+    content = check.readat(None, 0)
+    check.close()
+    
+    if content[:2] == "XX":
+        log("SECURITY BUG: Overwrote immutable file at offset 0\n")
+except:
+    pass

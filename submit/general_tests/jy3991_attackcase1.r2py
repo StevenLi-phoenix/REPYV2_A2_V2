@@ -1,0 +1,20 @@
+base = "attack1_file"
+
+f = openfile(base, True)
+f.writeat("hello", 0)
+f.close()
+
+f = openfile(base, True)
+f.close()
+
+v = openfile(base + ".v1", False)
+
+try:
+    h = openfile(base, True)   # SHOULD FAIL on a correct monitor
+    h.close()
+    raise Exception("VULNERABLE: created new version while latest version was open")
+except Exception as e:
+    pass
+finally:
+    v.close()
+

@@ -1,0 +1,22 @@
+def main():
+    # Test various valid filename patterns
+    patterns = [
+        "a.v1",              # Minimal name 
+        "file-file.v1",      # Hyphens 
+        "file_file.v1",      # Underscores 
+        "file1.v1",          # Numbers in base name 
+        "1file.v1",          # Starts with number 
+        "a.b.c.v1",          # Multiple dots 
+        "testv1",            # No dot before v 
+        "v1.test",           # Version-like at start 
+        "file.v1.file",      # Version in middle 
+    ]
+    
+    for pattern in patterns:
+        try:
+            f = openfile(pattern, True)
+            log("FAIL_FILENAME_PATTERN: " + pattern)
+            f.close()
+        except:
+            pass
+if callfunc == 'initialize': main()

@@ -1,0 +1,15 @@
+# bm3792_attackcase8.r2py
+# Test: Ensure new version copies previous version's content
+
+f1 = openfile("testfile", True)
+f1.writeat("originalcontent", 0)
+f1.close()
+
+# Create new version
+f2 = openfile("testfile", True)
+content = f2.readat(None, 0)
+f2.close()
+
+# New version should have copied the old content
+if content != "originalcontent":
+    log("ACCURACY BUG: New version did not copy previous content\n")

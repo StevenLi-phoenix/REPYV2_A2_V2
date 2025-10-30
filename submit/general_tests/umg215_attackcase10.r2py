@@ -1,0 +1,8 @@
+# Test: removefile() must be blocked (raise RepyArgumentError)
+try:
+  removefile("toremove")
+  log("FAIL")
+except RepyArgumentError:
+  log("PASS")
+except Exception:
+  log("PASS")

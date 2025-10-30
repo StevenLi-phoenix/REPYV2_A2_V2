@@ -1,0 +1,9 @@
+# write to closed file 
+f = openfile("testfile.txt", True)
+f.close()
+
+try:
+    f.writeat("testwriting", 0)
+    log("wrote to closed file \n")
+except (FileClosedError, ValueError):
+    pass

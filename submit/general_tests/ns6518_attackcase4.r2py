@@ -1,0 +1,20 @@
+
+# Test 4 — listfiles should NOT show explicit version entries.
+# Create file and multiple versions, ensure listfiles only contains base filename.
+
+base = "tc4_list"
+f = openfile(base, True)
+f.writeat("v1", 0)
+f.close()
+
+# create v2
+f2 = openfile(base, True)
+f2.writeat("v2", 0)
+f2.close()
+
+names = listfiles()
+# The base name must be present
+assert base in names
+# Explicit version names must NOT be present
+assert base + ".v1" not in names
+assert base + ".v2" not in names

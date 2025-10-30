@@ -1,0 +1,6 @@
+#  Trying to remove a file
+
+try:
+    removefile("testfile_v1")
+except:
+    raise  Exception("Failed to raise an exception")

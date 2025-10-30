@@ -1,0 +1,19 @@
+# Test 4: Can we manually create version files?
+# Purpose: Test if monitor prevents manual creation of .v1, .v2 files
+# Expected: openfile("file.v1", True) should raise RepyArgumentError
+
+# Step 1: Try to manually create a version file directly
+# Specification: "If create=True is used on a versioned file,
+# raise RepyArgumentError('Cannot create explicit version files')"
+try:
+    # Attempt to create file.v1 manually
+    f = openfile("testfile4.txt.v1", True)
+
+    # If we reach here, manual version creation succeeded - FLAW!
+    log("FLAW FOUND: Was able to manually create version file!\n")
+
+    # Close it to clean up
+    f.close()
+
+except Exception:
+    pass

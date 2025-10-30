@@ -1,0 +1,18 @@
+#attack 20: test reading with None vs. specific byte count
+f = openfile("read", True)
+f.writeat("HelloWorld", 0)
+f.close()
+
+f2 = openfile("read", False)
+content1 = f2.readat(None, 0)
+if content1 != "HelloWorld":
+    log("Welp -- Read with None failed!\n")
+
+content2 = f2.readat(5, 0)
+if content2 != "Hello":
+    log("Welp -- Read with count failed!\n")
+
+content3 = f2.readat(5, 5)
+if content3 != "World":
+    log("Welp -- Read with offset failed!\n")
+f2.close()

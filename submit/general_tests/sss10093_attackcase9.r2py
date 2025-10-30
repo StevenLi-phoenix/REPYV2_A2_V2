@@ -1,0 +1,39 @@
+try:
+    f = openfile("removeme.txt", True)
+    f.writeat("delete me", 0)
+    f.close()
+    
+    f2 = openfile("removeme.txt", True)
+    f2.writeat("version 1", 0)
+    f2.close()
+    
+    try:
+        removefile("removeme.txt")
+    except RepyArgumentError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        removefile("removeme.txt.v1")
+    except RepyArgumentError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        removefile("removeme.txt.v2")
+    except RepyArgumentError:
+        pass
+    except Exception as e:
+        pass
+    
+    try:
+        removefile("nonexistent.txt")
+    except RepyArgumentError:
+        pass
+    except Exception as e:
+        pass
+
+except Exception as e:
+    pass

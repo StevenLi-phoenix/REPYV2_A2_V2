@@ -1,0 +1,9 @@
+try:
+    # Open non-existent version
+    dne_file = openfile("dne_file", False)
+except FileNotFoundError:
+    pass
+except Exception:
+    pass
+else:
+    log("Issue: Open non-existent version\n")

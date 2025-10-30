@@ -1,0 +1,19 @@
+# pg2820_attackcase5.r2py
+# Attempt to create a path with '../' — sandbox should forbid it.
+try:
+    try:
+        x = openfile("../escape_try.txt", True)
+        x.writeat("escape?\n", 0)
+        x.close()
+    except Exception:
+        pass
+
+    # also try nested dots
+    try:
+        y = openfile("..//../escape2.txt", True)
+        y.writeat("escape2\n", 0)
+        y.close()
+    except Exception:
+        pass
+except Exception:
+    pass

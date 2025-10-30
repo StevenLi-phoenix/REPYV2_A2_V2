@@ -1,0 +1,15 @@
+"""
+Check if creating a new version copies prior content
+"""
+
+try:
+    f1 = openfile("ver.txt", True)
+    f1.writeat("data", 0)
+    f1.close()
+    f2 = openfile("ver.txt", True)
+    copy = f2.readat(None, 0)
+    f2.close()
+    if "data" != copy:
+        log("Bug: new version doesn't copy old content")
+except Exception:
+    log("Bug: failed to do a basic allowed function")

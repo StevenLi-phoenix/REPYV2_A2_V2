@@ -1,0 +1,23 @@
+# Spec 7A: Writing to older version must raise FileInUseError (silent on success)
+
+# names = ["s7a", "s7a.v1", "s7a.v2"]
+
+
+try:
+    # create base and two versions
+    base = openfile("s7a", True); base.writeat("buse", 0); base.close()
+    v1 = openfile("s7a", True); v1.writeat("_v1", 4); v1.close()
+    v2 = openfile("s7a", True); v2.writeat("_v2", 7); v2.close()
+
+    # attempt to write to v1 (should be disallowed)
+    old = openfile("s7a.v1", False)
+    try:
+        old.writeat("ILLEGAL", 0)
+        raise Exception("Monitor allowed writing to older version (v1)")
+    except FileInUseError:
+        pass
+    old.close()
+except Exception, e:
+    raise Exception("Setup or write check failed: %s" % e)
+
+# silent on success

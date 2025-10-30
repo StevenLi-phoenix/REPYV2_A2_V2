@@ -1,0 +1,13 @@
+f1 = openfile("bignumtest13.txt", True)
+f1.writeat("data", 0)
+f1.close()
+
+for i in range(100):
+    f1 = openfile("bignumtest13.txt", True)
+    f1.close()
+
+try:
+    f2 = openfile("bignumtest13.txt.v100", False)
+    f2.close()
+except:
+    log("BUG FOUND\n")

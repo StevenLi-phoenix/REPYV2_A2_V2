@@ -1,0 +1,10 @@
+# Attack: Check if listfiles reveals version files
+f1 = openfile("hidden", True)
+f1.close()
+
+f2 = openfile("hidden", True)
+f2.close()
+
+files = listfiles()
+assert "hidden.v1" not in files, "Versions should not appear in listfiles"
+assert "hidden" in files, "Original filename should appear"

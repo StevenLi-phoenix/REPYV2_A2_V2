@@ -1,0 +1,23 @@
+def open_and_hold(delay):
+    def inner():
+        f1 = openfile("testfile", True)
+        f1.writeat("initial", 0)
+        sleep(delay)
+        f1.close()
+    return inner
+
+createthread(open_and_hold(3))
+
+sleep(1)
+
+try:
+    f2 = openfile("testfile", True)
+    f2.writeat("second", 0)
+    f2.close()
+    log("FileInUseError: Created new version while previous was still open\n")
+except FileInUseError:
+    pass
+except Exception as e:
+    log("An error occurred: " + str(e) + "\n")
+
+sleep(3)

@@ -1,0 +1,37 @@
+# Test Case 7: Verify version numbering is correct and sequential
+# Versions should be v1, v2, v3, etc. and properly tracked
+
+# Create base file
+f0 = openfile("sequence.txt", True)
+f0.writeat("base", 0)
+f0.close()
+
+# Create multiple versions
+for i in range(3):
+    f = openfile("sequence.txt", True)
+    f.writeat("version " + str(i+1), 0)
+    f.close()
+
+files = listfiles()
+version_files = []
+for f in files:
+    if "sequence.txt.v" in f:
+        version_files.append(f)
+
+# Should have v1, v2, v3
+expected = ["sequence.txt.v1", "sequence.txt.v2", "sequence.txt.v3"]
+for exp in expected:
+    if exp not in version_files:
+        log("ATTACK SUCCESSFUL: Version " + exp + " missing or incorrectly named\n")
+        exitall()
+
+try:
+    f = openfile("sequence.txt.v99", False)
+    f.close()
+    log("ATTACK SUCCESSFUL: Opened non-existent version file\n")
+    exitall()
+except Exception as e:
+    # Expected - should fail
+    pass
+
+log("Test passed - version numbering correct\n")

@@ -1,0 +1,20 @@
+# Attack Case 6: removefile should be blocked
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+f = openfile("removetest", True)
+f.writeat("data", 0)
+f.close()
+
+expect_error(removefile, ("removetest",), RepyArgumentError)
+
+f2 = openfile("removetest", True)
+f2.close()
+
+expect_error(removefile, ("removetest.v1",), RepyArgumentError)
+

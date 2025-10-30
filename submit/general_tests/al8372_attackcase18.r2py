@@ -1,0 +1,16 @@
+# Attack Case 18: Large file handling
+
+flarge = openfile("large", True)
+large_data = "X" * 10000
+flarge.writeat(large_data, 0)
+result = flarge.readat(None, 0)
+assert len(result) == 10000, "Should handle large files"
+assert result == large_data, "Large data should be correct"
+flarge.close()
+
+flarge2 = openfile("large", True)
+result2 = flarge2.readat(None, 0)
+assert len(result2) == 10000, "Version should copy large files"
+assert result2 == large_data, "Copied large data should be correct"
+flarge2.close()
+

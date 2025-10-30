@@ -1,0 +1,15 @@
+# bm3792_attackcase21.r2py
+# Test: Try to read from a closed file handle
+
+f = openfile("testfile", True)
+f.writeat("content", 0)
+f.close()
+
+# Try to read from closed handle
+try:
+    content = f.readat(None, 0)
+    # If this succeeds, it might be a bug
+    log("SECURITY BUG: Read from closed file handle\n")
+except:
+    # Expected - should raise error
+    pass

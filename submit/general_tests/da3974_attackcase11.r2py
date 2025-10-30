@@ -1,0 +1,11 @@
+try:
+    try:
+        f1 = openfile("testfile.v5", True)
+        f1.writeat("test", 0)
+        f1.close()
+        log("ATTACKED\n")
+    except (RepyArgumentError, ValueError):
+        pass
+
+except Exception:
+    pass

@@ -1,0 +1,47 @@
+# Test Case 14: Test that files opened with create=False cannot be written to
+# Reading mode should be truly read-only
+
+# Create file
+f = openfile("readonly.txt", True)
+f.writeat("original content", 0)
+f.close()
+
+# Open with create=False (read mode)
+try:
+    f2 = openfile("readonly.txt", False)
+    f2.writeat("attempting write", 0)
+    log("ATTACK SUCCESSFUL: Wrote to file opened with create=False\n")
+    f2.close()
+    exitall()
+except FileInUseError:
+    # Expected - files opened with create=False should be read-only
+    f2.close()
+except Exception as e:
+    # Expected - any exception that prevents writing
+    try:
+        f2.close()
+    except:
+        pass
+
+# Try same with version file
+f3 = openfile("readonly.txt", True)
+f3.close()
+
+try:
+    f4 = openfile("readonly.txt.v1", False)
+    f4.writeat("hacking version", 0)
+    log("ATTACK SUCCESSFUL: Wrote to version file opened with create=False\n")
+    f4.close()
+    exitall()
+except FileInUseError:
+    # Expected
+    f4.close()
+except Exception as e:
+    # Expected
+    try:
+        f4.close()
+    except:
+        pass
+
+log("Test passed - files opened with create=False are read-only\n")
+

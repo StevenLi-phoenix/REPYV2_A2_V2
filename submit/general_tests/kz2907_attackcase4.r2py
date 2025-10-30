@@ -1,0 +1,28 @@
+# Create original file
+original_content = "original content"
+f1 = openfile("testfile.txt", True)
+f1.writeat(original_content, 0)
+f1.close()
+
+# Try to modify - should create version, not modify original
+modified_content = "modified content" 
+f2 = openfile("testfile.txt", True)
+f2.writeat(modified_content, 0)
+f2.close()
+
+# Verify original is unchanged
+orig_file = openfile("testfile.txt", False)
+original_after_write = orig_file.readat(None, 0)
+orig_file.close()
+
+version_file = openfile("testfile.txt.v2", False)
+version_content = version_file.readat(None, 0)
+version_file.close()
+
+if original_after_write != original_content:
+    log("Original contains modified content. Immutability violated.")
+
+    
+if version_content != modified_content:
+   log("Version contains wrong content.")
+    

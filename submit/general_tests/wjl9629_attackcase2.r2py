@@ -1,0 +1,12 @@
+# Specification 5: Versioned files can be accessed using openfile(originalfilename + '.v' + str(num), create), where num starts from 1. 
+# How this tests: str(num) never generates leading zeroes
+
+base_test = "testfile.v"
+end_number = "1"
+for num_zeroes in range(1, 30):
+    filename = base_test + '0'*num_zeroes + end_number
+    try:
+        f = openfile(filename, True)
+        f.close()
+    except:
+        raise ValueError(filename)

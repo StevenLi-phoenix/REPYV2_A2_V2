@@ -1,0 +1,11 @@
+# create new version while latest is open
+f = openfile("racetest", True)
+f.writeat("x", 0)
+
+try:
+    g = openfile("racetest", True)
+    assert False
+except FileInUseError:
+    pass
+finally:
+    f.close()

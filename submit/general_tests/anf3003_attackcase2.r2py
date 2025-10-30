@@ -1,0 +1,213 @@
+"""
+Name: anf3003_attackcase2.r2py
+Attack Case: Use threading to read stale contents of a file. In this test, we 
+             create a base file with "Old Content", then use threads to read from 
+             a stale file object after the base file has been updated to "New 
+             Content", attempting to leak the old content.
+"""
+
+# Configurations
+_MAX_READS = 5     # Maximum number of read attempts
+
+# Global stale file object
+mycontext["_stale_file_object"] = None
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+# Create a base file
+try:
+    # Attempt to open the file with creation enabled
+    file = openfile("attack2", True)
+
+    try:
+        # Write "Old Content" to the file at the beginning
+        file.writeat("Old Content", 0)
+        
+    finally:
+        # Ensure the file is closed after writing
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions that occur during the initial file operation
+    pass
+
+def base_creator():
+    """
+        Name: base_creator
+        Arguments: None
+        Returns: None
+        Description: Creates the original file with initial content.
+    """
+
+    # Holder for the stale file object
+    mycontext["_stale_file_object"]
+
+    try:
+        try:
+            # Attempt to open the file without creating it
+            file = openfile("attack2", False)
+
+        except Exception:
+            # If opening fails, file is None
+            file = None
+        
+        # Store the file object globally for the attacker to use
+        mycontext["_stale_file_object"] = file
+
+        try:
+            # Wait to allow attacker to copy stale content
+            sleep(0.01)
+
+        except Exception:
+            # Ignore any exceptions that occur during sleep
+            pass
+
+        try:
+            # Update the file with new content
+            new_file = openfile("attack2", True)
+
+            try:
+                # Write "New Content" to the file at the beginning
+                new_file.writeat("New Content", 0)
+
+            finally:
+                # Ensure the new file is closed after writing
+                ac_close(new_file)
+
+        except Exception:
+            # Ignore any exceptions that occur during the update
+            pass
+
+        try:
+            # Wait to ensure the attacker reads after update
+            sleep(0.01)
+
+        except Exception:
+            # Ignore any exceptions that occur during sleep
+            pass
+        
+        # Finally, close the stale file object
+        ac_close(file)
+
+    except Exception:
+        # Ignore any exceptions that occur during the original creation
+        pass
+
+def reader():
+    """
+        Name: reader
+        Arguments: None
+        Returns: None
+        Description: Attempts to read stale content from the file object.
+    """
+
+    # Holder for the stale file object
+    mycontext["_stale_file_object"]
+
+    try:
+        # Wait until the stale file object is available
+        waited = 0
+
+        # Loop until we have the stale file or exceed max tries
+        while mycontext["_stale_file_object"] is None and waited < _MAX_READS:
+            try:
+                # Sleep briefly to wait for the stale file object
+                sleep(0.01)
+
+            except Exception:
+                # Ignore any exceptions that occur during sleep
+                pass
+            
+            # Bump the wait counter by one
+            waited += 1
+
+        # Once we have the stale file object, attempt to read from it
+        stale_file = mycontext["_stale_file_object"]
+
+        # Monitor reads to check for stale content
+        monitor_failed = False
+
+        # Try reading multiple times to catch stale content
+        for i in range(_MAX_READS):
+            # If the stale file is None, break out of the loop
+            if stale_file is None:
+                break
+            
+            try:
+                # Initialize content variable
+                content = None
+
+                try:
+                    # Attempt to read content from the stale file
+                    content = stale_file.readat(None, 0)
+
+                except Exception:
+                    # If reading fails, content remains None
+                    content = None
+                
+                # Check if the content is the old stale content
+                if content == "Old Content":
+                    # Monitor failed!
+                    monitor_failed = True
+                    # No need to continue reading
+                    break
+
+                try:
+                    # Sleep briefly before the next read attempt
+                    sleep(0.01)
+                    
+                except Exception:
+                    # Ignore any exceptions that occur during sleep
+                    pass
+
+            except Exception:
+                # Ignore any exceptions that occur during read attempts
+                pass
+
+        # Log if the monitor failed
+        if monitor_failed:
+            try:
+                # Log the failure
+                log("Attack Case 2: Monitor Failed")
+
+            except Exception:
+                # Ignore any exceptions that occur during logging
+                pass
+
+    except Exception:
+        # Ignore any exceptions that occur during the reader attacker
+        pass
+
+# Start the attack!
+try:
+    # Create threads for the original creator and reader attacker
+    createthread(base_creator)
+    createthread(reader)
+
+    try:
+        # Sleep to allow threads to complete
+        sleep(0.5)
+
+    except Exception:
+        # Ignore any exceptions that occur during sleep
+        pass
+
+except Exception:
+    # Ignore any exceptions that occur during thread creation
+    pass

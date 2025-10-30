@@ -1,0 +1,16 @@
+"""
+Try and delete a file
+"""
+
+try:
+    f = openfile("delete.txt", True)
+    f.writeat("x", 0)
+    f.close()
+    try:
+        removefile("delete.txt")
+        log("Bug: file was allowed to be deleted")
+    except Exception:
+        pass
+except Exception:
+    log("Bug: allowed operation failed")
+

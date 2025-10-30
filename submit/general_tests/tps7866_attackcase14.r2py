@@ -1,0 +1,8 @@
+# Open explicit non-existent version fails
+
+f = openfile("t14", True); f.close()
+try:
+  openfile("t14.v9", False)
+  raise Exception("opened missing explicit version")
+except FileNotFoundError:
+  pass

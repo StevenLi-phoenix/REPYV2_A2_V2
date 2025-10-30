@@ -1,0 +1,10 @@
+# --- 6) removefile must be rejected ---
+f = openfile("testfile", True)
+f.writeat("data", 0)
+f.close()
+
+try:
+    removefile("testfile")
+    raise Exception("removefile_allowed")
+except RepyArgumentError:
+    pass

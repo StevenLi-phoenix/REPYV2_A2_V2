@@ -1,0 +1,6 @@
+# Attack Case 20: Double close safety
+
+fdoubleclose = openfile("doubleclose", True)
+fdoubleclose.close()
+fdoubleclose.close()
+

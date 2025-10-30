@@ -1,0 +1,14 @@
+f = openfile("test", True)
+f.close()
+
+try:
+    fv = openfile("test.v1", False)
+    fv.close()
+except FileNotFoundError:
+    pass
+
+try:
+    fv99 = openfile("test.v99", False)
+    fv99.close()
+except FileNotFoundError:
+    pass

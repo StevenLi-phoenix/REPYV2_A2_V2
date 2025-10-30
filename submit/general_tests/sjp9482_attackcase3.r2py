@@ -1,0 +1,9 @@
+non_existent_file = "test_file"
+
+try:
+    f = openfile(non_existent_file, False)
+    f.close()
+    raise Exception("OpenNonExistentFileSucceeded")
+
+except FileNotFoundError:
+    pass

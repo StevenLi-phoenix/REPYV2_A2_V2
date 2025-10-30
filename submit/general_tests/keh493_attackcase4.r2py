@@ -1,0 +1,3 @@
+for i in listfiles():
+	if '.v' in i:
+		log(i, " is listed. versioned files should not be listed\n")

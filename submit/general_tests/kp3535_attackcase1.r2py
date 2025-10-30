@@ -1,0 +1,30 @@
+### Testing: Creating new version file is allowed, but Explicit version files cannot be created ###
+
+# Create base file
+
+try:
+    f1 = openfile("tst1", True)
+    f1.writeat("abc", 0)
+    f1.close()
+except Exception:
+    assert False
+
+# Create new version
+
+try:
+    f1a = openfile("tst2", True)
+    f1a.writeat("2", 5)
+    f1a.close()
+except Exception:
+    assert False
+
+# Creating explicit version name must be rejected
+
+try:
+    openfile("tst1.v1", True)
+    assert False
+except RepyArgumentError:
+    pass
+except Exception:
+    assert False
+

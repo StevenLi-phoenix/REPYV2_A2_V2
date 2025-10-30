@@ -1,0 +1,10 @@
+#attack 9: try to open non-existent version
+f = openfile("test", True)
+f.close()
+
+try:
+    fv = openfile("test.v99", False)
+    fv.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Opened non-existent version!\n")
+except FileNotFoundError:
+    pass

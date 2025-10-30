@@ -1,0 +1,11 @@
+# Double-close safety
+
+f = openfile("t17", True); f.writeat("x",0)
+try:
+  f.close()
+  try:
+    f.close()
+  except Exception:
+    pass
+except Exception:
+  raise Exception("double close failed")

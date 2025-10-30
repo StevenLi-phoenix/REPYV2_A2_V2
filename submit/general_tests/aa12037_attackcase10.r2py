@@ -1,0 +1,8 @@
+# Test: Must be able to create files like testfile.v10abcd (This is not versioned)
+
+try:
+    f1 = openfile("a10_testfile.v10abcd", True)
+    f1.writeat("CreatingFile", 0)
+    f1.close()
+except Exception as e:
+    raise AssertionError("Monitor blocked creation of filename containing '.v' but not a version: " + str(e))

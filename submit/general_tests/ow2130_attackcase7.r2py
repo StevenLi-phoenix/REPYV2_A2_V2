@@ -1,0 +1,60 @@
+B = "a7.txt"
+
+try:
+  f = openfile(B, True)
+  try: f.writeat("seed", 0)
+  except: pass
+  try: f.close()
+  except: pass
+except:
+  pass
+
+try:
+  v1 = openfile(B, True)
+  try: v1.close()
+  except: pass
+except:
+  pass
+
+try:
+  v2 = openfile(B, True)
+  try: v2.close()
+  except: pass
+except:
+  pass
+
+ns = listfiles()
+pref = B + ".v"
+newest = -1
+for n in ns:
+  if n.startswith(pref):
+    try:
+      v = int(n.split(".v")[-1])
+      if v > newest: newest = v
+    except:
+      pass
+
+older = None
+if newest > 0:
+  for n in ns:
+    if n.startswith(pref):
+      try:
+        v = int(n.split(".v")[-1])
+        if v < newest:
+          older = n
+          break
+      except:
+        pass
+
+if older:
+  try:
+    g = openfile(older, False)
+    try:
+      g.writeat("x", 0)
+      log("Explicit old version '" + older + "' is writable")
+    except:
+      pass
+    try: g.close()
+    except: pass
+  except:
+    pass

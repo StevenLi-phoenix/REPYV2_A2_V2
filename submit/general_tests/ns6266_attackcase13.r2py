@@ -1,0 +1,33 @@
+"""
+Attack Case 13: Test edge case with many versions
+"""
+# Create file
+f1 = openfile("many", True)
+f1.writeat("v0", 0)
+f1.close()
+
+# Create 10 more versions
+for i in range(1, 11):
+    f = openfile("many", True)
+    content = f.readat(None, 0)
+    if content != "v" + str(i-1):
+        raise Exception("Version should copy from previous")
+    f.writeat("v" + str(i), 0)
+    f.close()
+
+# Verify all versions can be read
+for i in range(1, 11):
+    version_file = openfile("many.v" + str(i), False)
+    content = version_file.readat(None, 0)
+    if content != "v" + str(i):
+        raise Exception("Version " + str(i) + " should have correct content")
+    version_file.close()
+
+# Verify listfiles only shows "many"
+files = listfiles()
+if "many" not in files:
+    raise Exception("Base file should be in listfiles")
+for i in range(1, 11):
+    if "many.v" + str(i) in files:
+        raise Exception("Version files should not be in listfiles")
+

@@ -1,0 +1,11 @@
+# --- 4) reading older versions allowed ---
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.close()
+
+v1reader = openfile("testfile.v1", False)
+assert v1reader.readat(None, 0) == "HelloWorld"
+v1reader.close()

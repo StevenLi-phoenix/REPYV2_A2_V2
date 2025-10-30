@@ -1,0 +1,15 @@
+# Test: Cannot write to file opened with create=False
+
+f1 = openfile("readonlytest13", True)
+f1.writeat("data", 0)
+f1.close()
+
+fread = openfile("readonlytest13", False)
+try:
+    fread.writeat("modified", 0)
+    fread.close()
+    assert False, "Should not write to file opened with create=False"
+except FileInUseError:
+    pass
+
+fread.close()

@@ -1,0 +1,36 @@
+# --- Create first version of "testfile" ---
+f1 = openfile("testfile", True)          # create v1
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# --- Create second version of "testfile"  ---
+f2 = openfile("testfile", True)          # should create v2 copied from v1
+assert f2.readat(None, 0) == "HelloWorld"
+f2.close()
+
+# Attacker loop which races the victim
+while True:
+    files = original_listfiles()   # reads the same namespace the layer uses
+    if "testfile" in files:
+        # compute next version victim is likely to pick (same logic as layer)
+        versions = []
+        if "testfile" in files:
+            versions.append(1)
+        for f in files:
+            if f.startswith("testfile.v"):
+                try:
+                    versions.append(int(f.split('.v')[-1]))
+                except ValueError:
+                    pass
+        next_v = max(versions) + 1 if versions else 2
+        vname = "testfile.v" + str(next_v)
+
+        # create the version *before* victim does and write attacker data
+        try:
+            af = original_openfile(vname, True)   # atomic create if underlying supports it
+            af.writeat("MALICIOUS_PAYLOAD", 0)
+            af.close()
+            break
+        except Exception:
+            # if create failed (someone else created it) try again
+            continue

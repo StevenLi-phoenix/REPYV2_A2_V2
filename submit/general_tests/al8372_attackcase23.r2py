@@ -1,0 +1,21 @@
+# Attack Case 23: Zero-length write and closed handle write
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+fzero = openfile("zerowrite", True)
+fzero.writeat("initial", 0)
+fzero.writeat("", 3)
+result = fzero.readat(None, 0)
+assert result == "initial", "Zero-length write should not change data"
+fzero.close()
+
+fclosed = openfile("closedwrite", True)
+fclosed.writeat("data", 0)
+fclosed.close()
+expect_error(fclosed.writeat, ("more", 0), FileInUseError)
+

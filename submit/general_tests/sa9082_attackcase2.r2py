@@ -1,0 +1,32 @@
+# Test 2: Can we delete a file?
+# Purpose: Test if reference monitor allows file deletion (should NEVER allow)
+# Expected: Monitor MUST raise RepyArgumentError specifically
+
+# Step 1: Create a new file
+myfile = openfile("testfile2.txt", True)
+
+# Step 2: Write some data to make sure file exists
+myfile.writeat("SomeData", 0)
+
+# Step 3: Close the file
+myfile.close()
+
+# Step 4: Try to delete the file
+# Specification: "File deletion (removefile) is not allowed for any file.
+# Any attempt must raise a RepyArgumentError."
+try:
+    # Attempt to delete the file
+    removefile("testfile2.txt")
+
+    # If we reach here, deletion succeeded - monitor is broken!
+    log("FLAW FOUND: Was able to delete a file!\n")
+
+except Exception as e:
+    # Check if correct error type was raised
+    error_type = str(type(e))
+
+    # Monitor MUST raise RepyArgumentError for file deletion attempts
+    if "RepyArgumentError" not in error_type:
+        # Wrong exception type - this is a flaw
+        log("FLAW FOUND: Deletion blocked but wrong error type (expected RepyArgumentError, got " + error_type + ")\n")
+    # If RepyArgumentError was raised, that's correct - no output needed

@@ -1,0 +1,9 @@
+# Test: explicit .vN creation must be disallowed.
+
+try:
+  openfile("explicit.v1", True)
+  log("FAIL")
+except RepyArgumentError:
+  log("PASS")
+except Exception:
+  log("PASS")

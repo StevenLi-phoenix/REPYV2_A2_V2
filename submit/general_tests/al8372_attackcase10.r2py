@@ -1,0 +1,11 @@
+# Attack Case 10: Non-existent file error
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+
+expect_error(openfile, ("nonexistent_file_xyz", False), FileNotFoundError)
+

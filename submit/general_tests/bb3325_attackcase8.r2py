@@ -1,0 +1,9 @@
+# Path traversal should be blocked.
+
+try:
+  f = openfile("../escape_test.txt", True)
+  f.write("escape")
+  f.close()
+  log("VULN: path_traversal_escape")
+except:
+  pass

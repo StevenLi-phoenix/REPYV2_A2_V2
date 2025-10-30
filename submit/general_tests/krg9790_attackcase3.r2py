@@ -1,0 +1,18 @@
+#attack 3: write to old version
+f1 = openfile("test", True)
+f1.writeat("original", 0)
+f1.close()
+
+f2 = openfile("test", True)
+f2.close()
+
+try:
+    fold = openfile("test.v1", False)
+    fold.writeat("HACKED", 0)
+    fold.close()
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Was able to write to old version!\n")
+except FileInUseError:
+    try:
+        fold.close()
+    except:
+        pass

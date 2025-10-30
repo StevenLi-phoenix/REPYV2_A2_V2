@@ -1,0 +1,11 @@
+"""
+Try and create a weird filename
+"""
+
+try:
+    f = openfile("weird.v.1", True)
+    f.close()
+except Exception:
+    log("Bug: allowed file name stopped")
+
+

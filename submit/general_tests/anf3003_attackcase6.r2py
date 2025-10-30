@@ -1,0 +1,188 @@
+"""
+Name: anf3003_attackcase08.r2py
+Attack Case: Mutate the base while creating a version to leak data. In this test, we 
+             create a base file with "Original Content", then use threads to 
+             repeatedly overwrite the base file with "Malicious Content" chunks
+             while another thread creates a version of the file, attempting to
+             leak the malicious content into the versioned file.
+"""
+
+# Configurations
+_ITERATIONS = 300
+
+def ac_close(file):
+    """
+        Name: ac_close
+        Arguments: file
+        Returns: None
+        Description: Closes the given file object.
+    """
+
+    try:
+        # First check if the file exists
+        if file:
+            # If it does, attempt to close it
+            file.close()
+
+    except Exception:
+        # Ignore any exceptions that occur during close
+        pass
+
+# Setup base
+try:
+    # Create the base file
+    file = openfile("attack6", True)
+
+    try:
+        # Write "Original Content"
+        file.writeat("Original Content", 0)
+
+    finally:
+        # Ensure the file is closed
+        ac_close(file)
+
+except Exception:
+    # Ignore any exceptions during setup
+    pass
+
+def attacker():
+    """
+        Name: attacker
+        Arguments: None
+        Returns: None
+        Description: Repeatedly mutate base with small "Malicious Content" chunks.
+    """
+
+    # Loop to mutate the base file
+    for i in range(_ITERATIONS):
+        try:
+            try:
+                # Open the file for writing
+                file = openfile("attack6", False)
+
+                try:
+                    # Write "Malicious Content" plus a chunk identifier to the base file
+                    file.writeat("Malicious Content" + str(i % 10), 0)
+
+                finally:
+                    # Ensure the file is closed
+                    ac_close(file)
+
+            except Exception:
+                # Ignore exceptions during file operations
+                pass
+
+        except Exception:
+            # Ignore any outer exceptions
+            pass
+
+        try:
+            # Brief pause to allow other threads to run
+            sleep(0.002)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+def victim():
+    """
+        Name: victim
+        Arguments: None
+        Returns: None
+        Description: Trigger a version creation while attacker mutates.
+    """
+
+    try:
+        try:
+            # Brief pause to allow attacker to start
+            sleep(0.02)
+
+        except Exception:
+            # Ignore sleep exceptions
+            pass
+
+        try:
+            # Open the file to trigger version creation
+            file = openfile("attack6", True)
+
+            try:
+                try:
+                    # Read the current version content
+                    tmp = file.readat(None, 0)
+
+                except Exception:
+                    # Ignore read exceptions
+                    pass
+                
+            finally:
+                # Ensure the file is closed
+                ac_close(file)
+
+        except Exception:
+            # Ignore exceptions during file operations
+            pass
+
+    except Exception:
+        # Ignore any outer exceptions
+        pass
+
+# Start the attack!
+try:
+    # Create and start threads for attacker and victim
+    createthread(attacker)
+    createthread(victim)
+
+    try:
+        # Allow some time for threads to complete
+        sleep(0.5)
+
+    except Exception:
+        # Ignore sleep exceptions
+        pass
+
+    # Monitor created versions for leaked "Malicious Content"
+    monitor_failed = False
+
+    # Loop through versioned files
+    for i in range(1, 6):
+        try:
+            # Open each version file
+            file = openfile("attack6" + ".v" + str(i), False)
+
+            try:
+                try:
+                    # Read the version content
+                    content = file.readat(None, 0)
+
+                except Exception:
+                    # Ignore read exceptions, set content to None
+                    content = None
+
+                # Check if "Malicious Content" is present
+                if content and ("Malicious Content" in content):
+                    # Log the detection of leaked content
+                    monitor_failed = True
+                    # Stop checking further versions
+                    break
+
+            finally:
+                # Ensure the file is closed
+                ac_close(file)
+
+        except Exception:
+            # Ignore exceptions during file operations
+            pass
+
+    # Log the result of monitoring
+    if monitor_failed:
+        try:
+            # Log the detection of leaked content
+            log("Attack Case 6: Monitor Failed")
+
+        except Exception:
+            # Ignore logging exceptions
+            pass
+
+except Exception:
+    # Ignore any exceptions in starting the attack
+    pass

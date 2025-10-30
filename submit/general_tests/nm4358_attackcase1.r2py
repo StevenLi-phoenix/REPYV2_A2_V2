@@ -1,0 +1,46 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase1.r2py
+Goal: Try reopening the same logical name file for writing and modifying contents.
+Expected: Re-opening with True should not raise FileInUseError; it should create a new version.
+'''
+
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass    
+
+handle1 = None
+try:
+    # Create original file
+    handle1 = openfile("test1.txt", True)
+    handle1.writeat("ORIGINAL", 0)
+except Exception as e:
+    debug_log("Accuracy:" + str(e))
+    pass # failure of accuracy
+finally:
+    try:
+        if handle1 is not None:
+            handle1.close()
+    except:
+        pass
+
+# Try to reopen same file and rewrite, should create a new version.
+handle2 = None
+try:
+    handle2 = openfile("test1.txt", True)  # Should create new version file
+    handle2.writeat("MALICIOUS", 0)      # If this overwrites original then immutability broken
+except Exception as e:
+    debug_log("Accuracy:" + str(e))
+    pass # failure of accuracy
+finally:
+    try:
+        if handle2 is not None:
+                handle2.close()
+    except:
+        pass

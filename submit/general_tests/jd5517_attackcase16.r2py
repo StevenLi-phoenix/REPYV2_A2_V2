@@ -1,0 +1,26 @@
+# jd5517_attackcase16.r2py
+# read older explicit version allowed; write blocked
+
+f = openfile("case16_base", True)
+f.writeat("snap1", 0)
+f.close()
+
+try:
+    f2 = openfile("case16_base", True)
+    f2.writeat("snap2", 0)
+    f2.close()
+except FileInUseError:
+    pass
+
+old = openfile("case16_base.v1", False)
+try:
+    data = old.readat(None, 0)
+    blocked = False
+    try:
+        old.writeat("bad", 0)
+    except FileInUseError:
+        blocked = True
+finally:
+    old.close()
+
+assert data == "snap1" and blocked

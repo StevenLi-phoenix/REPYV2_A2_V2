@@ -1,0 +1,12 @@
+i = 0
+while i < 50:
+    f = openfile("testfile", True)
+    try:
+        # do nothing heavy, just create+close
+        pass
+    finally:
+        try:
+            f.close()
+        except Exception:
+            pass
+    i = i + 1

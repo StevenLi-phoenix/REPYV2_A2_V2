@@ -1,0 +1,29 @@
+try:
+    base = openfile("inusetest.txt", True)
+    base.writeat("base content", 0)
+    
+    try:
+        newversion = openfile("inusetest.txt", True)
+        newversion.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    base.close()
+    
+    v1 = openfile("inusetest.txt", True)
+    v1.writeat("version 1", 0)
+    
+    try:
+        v2 = openfile("inusetest.txt", True)
+        v2.close()
+    except FileInUseError:
+        pass
+    except Exception as e:
+        pass
+    
+    v1.close()
+
+except Exception as e:
+    pass

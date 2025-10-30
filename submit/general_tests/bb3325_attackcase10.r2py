@@ -1,0 +1,8 @@
+name = "notes.vx"
+try:
+  h = openfile(name, True)
+  try: h.write("ok"); h.close()
+  except: pass
+except:
+  try: log("VULN: rejected_non_numeric_dotv_basename")
+  except: pass

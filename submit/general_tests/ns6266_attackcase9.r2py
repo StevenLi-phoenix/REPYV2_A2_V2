@@ -1,0 +1,15 @@
+"""
+Attack Case 9: Test that versioned files can opened for reading
+"""
+
+f1 = openfile("njtestfile", True)
+f1.writeat("ORIGINAL", 0)
+f1.close()
+
+# Create a new version "njtestfile.v1"
+f2 = openfile("njtestfile", True)
+f2.writeat("MODIFIED", 0)
+f2.close()
+
+v = openfile("njtestfile.v1", False)
+v.close()

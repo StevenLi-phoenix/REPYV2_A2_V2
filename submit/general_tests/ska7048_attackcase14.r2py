@@ -1,0 +1,19 @@
+f1 = openfile("overwritetest14.txt", True)
+f1.writeat("original", 0)
+f1.writeat("modified", 0)
+f1.close()
+
+
+f2 = openfile("overwritetest14.txt", False)
+content = f2.readat(None, 0)
+if content != "modified":
+    log("BUG FOUND\n")
+f2.close()
+
+# No version file should exist since we only closed once
+try:
+    f3 = openfile("overwritetest14.txt.v1", False)
+    log("BUG FOUND\n")
+    f3.close()
+except:
+    pass

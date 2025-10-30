@@ -1,0 +1,10 @@
+f1 = openfile("test.valid", True)
+f1.close()
+
+try:
+    f2 = openfile("test.valid", False)  # Reopen
+    f2.writeat("ATTACK", 0)
+    log("ATTACK SUCCESSFUL: Wrote to reopened file\n")
+    f2.close()
+except:
+    pass

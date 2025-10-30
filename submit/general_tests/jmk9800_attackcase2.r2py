@@ -1,0 +1,10 @@
+
+# Opening a non-existent file
+try:
+    f1 = openfile("testfile", False)
+    f1.close()
+except:
+    pass
+else:
+    raise Exception("An error failed to be raised")
+

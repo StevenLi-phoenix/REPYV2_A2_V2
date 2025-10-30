@@ -1,0 +1,48 @@
+# Targets: State Consistency - Reopening after close (and correctly accessing V0)
+
+if callfunc == 'initialize':
+  filename = "tempfiledata.txt" # Renamed to avoid underscores
+
+  try:
+    # 1. Create a file (this becomes the implicit V0) and write to it
+    tempData = openfile(filename, True)
+    tempData.writeat("first write", 0)
+    tempData.close()
+
+    # 2. Reopen the same file (still V0) for reading
+    reopenedData = openfile(filename, False)
+    content = reopenedData.readat(None, 0)
+    reopenedData.close()
+
+    if content != "first write":
+        raise Exception("Monitor failed: Content mismatch after reopening V0 for read!")
+
+    # 3. Create a new version of the file (this creates V1, and V0 is now immutable)
+    newTempData = openfile(filename, True)
+    newTempData.writeat("second write", 0)
+    newTempData.close()
+
+    # 4. Reopen the initial version (V0) for reading.
+    # According to specification, `filename` with create=False should open V0.
+    reopenedInitialVersion = openfile(filename, False)
+    initialContent = reopenedInitialVersion.readat(None, 0)
+    reopenedInitialVersion.close()
+
+    if initialContent != "first write":
+        raise Exception("Monitor failed: Initial version (V0) content mismatch after new version created!")
+        
+    # 5. Optionally, also try to open the newly created explicit version 1
+    # This checks if V1 was properly created and is readable.
+    reopenedVersion1 = openfile(filename + ".v1", False)
+    version1Content = reopenedVersion1.readat(None, 0)
+    reopenedVersion1.close()
+
+    if version1Content != "second write":
+        raise Exception("Monitor failed: Version 1 content mismatch after new version created!")
+
+
+  except Exception, e: # Python 2 syntax for catching exceptions
+    raise Exception("Edge Case 2 failed due to unexpected error: " + str(e))
+
+# This attack case might break reference_monitor_example1 (if open_files isn't cleared correctly on close, or if 'filename' always refers to latest)
+# It might also break reference_monitor_example2 (similar open_files issues, or if 'filename' always refers to latest)

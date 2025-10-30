@@ -1,0 +1,4 @@
+try:
+    pass
+except Exception as e:
+    log("An error occurred: " + str(e) + "\n")

@@ -1,0 +1,12 @@
+# Test: explicit creation of versioned files (filename.vN with create=True) must be forbidden.
+
+f = openfile("basefile", True)
+f.writeat("HelloWorld", 0)
+f.close()
+
+try:
+    v = openfile("basefile.v49", True)
+    v.close()
+    assert False, "Monitor allowed explicit creation of versioned files"
+except RepyArgumentError:
+    pass

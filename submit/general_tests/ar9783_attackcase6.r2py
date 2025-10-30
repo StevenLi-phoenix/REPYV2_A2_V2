@@ -1,0 +1,19 @@
+#try to open the same file multiple times
+
+try1 = openfile("testfile", True)
+try1.writeat("Data from file 1", 0)
+
+#open same file 
+try2 = openfile("testfile", True)
+try2.writeat("Data from file 2", 0)
+
+#try reading from both files
+try:
+    data1 = try1.readat(None, 0)
+    data2 = try2.readat(None, 0)
+    log("Multiple opens should not be allowed. Data1: " + data1 + ", Data2: " + data2 + "\n")
+except Exception as e:
+    log("Multiple open test passed: " + str(e) + "\n")
+
+try1.close()
+try2.close()

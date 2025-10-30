@@ -1,0 +1,21 @@
+# Attack Case 1: Content Loss Vulnerability
+# Tests monitors that lose content due to improper validation
+
+# Create a file with content that doesn't meet validation requirements
+f1 = openfile("testfile1", True)
+f1.writeat("INVALID_CONTENT", 0)  # Content that doesn't start with S and end with E
+f1.close()
+
+# Try to read the content back
+f2 = openfile("testfile1", False)
+data = f2.readat(None, 0)
+f2.close()
+
+# If content was completely lost (empty or None), this is a vulnerability
+# But if content was modified/validated, that's actually secure behavior
+if data is None or data == "":
+    raise Exception("VULNERABLE: Content completely lost")
+elif data != "INVALID_CONTENT" and len(data) < 5:
+    # If content was severely truncated, that might be a vulnerability
+    raise Exception("VULNERABLE: Content severely truncated")
+# If content was modified but preserved, that's secure behavior - no exception

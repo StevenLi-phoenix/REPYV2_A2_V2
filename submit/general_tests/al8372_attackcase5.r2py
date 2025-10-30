@@ -1,0 +1,15 @@
+# Attack Case 5: listfiles should hide version files
+
+x = openfile("listtest", True)
+x.writeat("z", 0)
+x.close()
+
+x2 = openfile("listtest", True)
+x2.close()
+
+names = listfiles()
+for name in names:
+    assert ".v" not in name or not name.split(".v")[-1].isdigit(), "Version files should be hidden from listfiles"
+
+assert "listtest" in names, "Base file should appear in listfiles"
+

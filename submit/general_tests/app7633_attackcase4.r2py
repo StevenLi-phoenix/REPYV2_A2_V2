@@ -1,0 +1,96 @@
+# Test extreme version numbers
+# Create files with very high version numbers to test integer handling
+
+if "vmax.txt" in listfiles():
+    removefile("vmax.txt")
+
+f = openfile("vmax.txt", True)
+f.writeat("base", 0)
+f.close()
+
+vulnerable = [False]
+overflow_detected = [False]
+
+# Try to manually create a file with very high version number
+# to see if _get_highest_version handles it
+try:
+    high_version = openfile("vmax.txt.v999999", True)
+    high_version.writeat("high", 0)
+    high_version.close()
+    
+    # If we successfully created it, that's a problem
+    vulnerable[0] = True
+    log("VULNERABLE: Created explicit version file v999999")
+    
+except RepyArgumentError:
+    # Expected - can't create version files explicitly
+    pass
+except:
+    vulnerable[0] = True
+
+# Create several normal versions
+for i in range(5):
+    try:
+        f = openfile("vmax.txt", True)
+        f.writeat("v" + str(i+1), 0)
+        f.close()
+    except:
+        vulnerable[0] = True
+
+# Now test if _get_highest_version works correctly
+try:
+    files = listfiles()
+    versions = []
+    
+    for fname in files:
+        if "vmax.txt.v" in fname:
+            ver_part = fname.split(".v")[1]
+            if ver_part.isdigit():
+                version_num = int(ver_part)
+                versions.append(version_num)
+    
+    versions.sort()
+    
+    # Check if versions are sequential
+    if len(versions) > 0:
+        expected = range(1, len(versions) + 1)
+        if versions != expected:
+            vulnerable[0] = True
+            log("VULNERABLE: Version numbers not sequential after operations")
+    
+    # Try creating one more version - should get next number
+    f = openfile("vmax.txt", True)
+    f.writeat("next", 0)
+    f.close()
+    
+    # Check what version was created
+    files = listfiles()
+    new_versions = []
+    for fname in files:
+        if "vmax.txt.v" in fname:
+            ver_part = fname.split(".v")[1]
+            if ver_part.isdigit():
+                new_versions.append(int(ver_part))
+    
+    new_versions.sort()
+    
+    # Last version should be len(versions) + 1
+    if len(new_versions) > 0:
+        expected_last = len(versions) + 1
+        actual_last = new_versions[-1]
+        
+        if actual_last != expected_last:
+            overflow_detected[0] = True
+            vulnerable[0] = True
+            log("VULNERABLE: Version numbering incorrect - expected v" + str(expected_last) + " got v" + str(actual_last))
+    
+except:
+    vulnerable[0] = True
+    log("VULNERABLE: Error in version number handling")
+
+if overflow_detected[0]:
+    log("VULNERABLE: Version number overflow or miscounting")
+elif vulnerable[0]:
+    log("VULNERABLE: Version numbering system flawed")
+else:
+    log("SECURE: Version numbers handled correctly")

@@ -1,0 +1,11 @@
+# Attack: Try to create version while file is still open
+f1 = openfile("concurrent", True)
+f1.writeat("data", 0)
+
+try:
+    f2 = openfile("concurrent", True)  # Should raise FileInUseError
+    assert False, "Should not create version while file is open"
+except FileInUseError:
+    pass
+
+f1.close()

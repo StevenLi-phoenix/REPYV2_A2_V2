@@ -1,0 +1,16 @@
+#Test: writing past EOF should raise an error
+
+
+f = openfile("testfile_1.txt", True)
+try:
+    # attempt write past EOF (offset 20)
+    try:
+        f.writeat("SOMETHING", 20)
+                log("FAIL: write past EOF succeeded")
+    except Exception:
+                log("PASS")
+finally:
+    try:
+        f.close()
+    except Exception:
+        pass

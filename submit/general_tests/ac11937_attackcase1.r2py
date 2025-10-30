@@ -1,0 +1,18 @@
+# Test: removefile is forbidden (should raise RepyArgumentError).
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+# create a file to attempt to remove
+f = openfile("case3_toberemoved", True)
+f.writeat("x", 0)
+f.close()
+
+# Attempt removefile: monitor should forbid it
+ar(RepyArgumentError, removefile, "case3_toberemoved")

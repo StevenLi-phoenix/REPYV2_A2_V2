@@ -1,0 +1,11 @@
+f = openfile("listtest", True)
+f.writeat("data", 0)
+f.close()
+
+f = openfile("listtest", True)
+f.close()
+
+files = listfiles()
+
+if "listtest.v1" in files or "listtest.v2" in files:
+    pass

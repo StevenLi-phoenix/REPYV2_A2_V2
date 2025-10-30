@@ -1,0 +1,15 @@
+# Test: Version creation copies content from latest version
+
+f1 = openfile("ac3_testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f2 = openfile("ac3_testfile", True)
+assert f2.readat(None, 0) == "HelloWorld", "New version didn't copy content from previous one"
+f2.writeat("Version2Data", 0)
+f2.close()
+
+# Create third version
+f3 = openfile("ac3_testfile", True)
+assert f3.readat(None, 0) == "Version2Data", "v2 didn't copy from v1"
+f3.close()

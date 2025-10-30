@@ -1,0 +1,24 @@
+base = "bigcopy_test"
+payload = "A" * 5000  # large content
+try:
+  b = openfile(base, True); b.write(payload); b.close()
+except: pass
+
+try:
+  v = openfile(base, True)  # make new version
+  v.close()
+except: pass
+
+# Read original and version; compare
+orig = ""
+ver = ""
+try:
+  o = openfile(base, False); orig = o.readat(None, 0); o.close()
+except: pass
+try:
+  v2 = openfile(base + ".v1", False); ver = v2.readat(None, 0); v2.close()
+except: pass
+
+if orig != ver:
+  try: log("VULN: version_copy_incorrect len_orig=%d len_ver=%d" % (len(orig), len(ver)))
+  except: pass

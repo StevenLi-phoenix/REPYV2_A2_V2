@@ -1,0 +1,16 @@
+# Test: reading with a negative offset should raise an error
+
+f = openfile("testfile_1.txt", True)
+try:
+    f.writeat("SOMETHING", 0)
+
+    try:
+        data = f.readat(None, -20)
+        log("FAIL: read with negative offset returned data: " + str(data[:20]))
+    except Exception:
+        log("PASS")
+finally:
+    try:
+        f.close()
+    except Exception:
+        pass

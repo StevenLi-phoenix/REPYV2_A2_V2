@@ -1,0 +1,36 @@
+# Goal: while the latest is open, trying to create a new version should fail.
+
+try:
+  base = "inuse_test.txt"
+
+  # ensure base exists
+  try:
+    f = openfile(base, True); f.write("init"); f.close()
+  except:
+    pass
+
+  h = None
+  try:
+    # Open latest (False = must exist); keep open
+    h = openfile(base, False)
+
+    # While open, attempt to create a new version. If this succeeds -> vuln.
+    try:
+      g = openfile(base, True)
+      g.write("new")
+      g.close()
+      log("VULN: create_while_open")
+    except:
+      # expected: FileInUseError (or similar) — swallow
+      pass
+  except:
+    # If even opening latest raises (some monitors do), treat as expected and swallow
+    pass
+  finally:
+    try:
+      if h: h.close()
+    except:
+      pass
+except:
+  # absolute safety net: never leak exceptions
+  pass

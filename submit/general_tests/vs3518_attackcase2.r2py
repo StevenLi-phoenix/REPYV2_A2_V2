@@ -1,0 +1,71 @@
+
+marker = "compromised_vs3518_attackcase2"
+protected = "protected_attack2.txt"
+temp = "temp_attack2.txt"
+
+try:
+    f = open(protected, "w")
+    try:
+        f.write("ORIGINAL\n")
+    finally:
+        f.close()
+except Exception:
+    pass
+
+fd = None
+try:
+    try:
+        fd = open(protected, "r+")
+    except Exception:
+        # fallback: open read-only (if r+ fails)
+        try:
+            fd = open(protected, "r")
+        except Exception:
+            fd = None
+    try:
+        os.unlink(protected)
+    except Exception:
+        pass
+
+    try:
+        if fd:
+            try:
+                fd.seek(0)
+                fd.write("EVIL\n")
+                try:
+                    fd.flush()
+                except Exception:
+                    pass
+            except Exception:
+                pass
+    except Exception:
+        pass
+finally:
+    try:
+        if fd:
+            fd.close()
+    except Exception:
+        pass
+
+try:
+    f = open(protected, "r")
+    try:
+        data = f.read()
+    finally:
+        f.close()
+    try:
+        if "EVIL" in data:
+            open(marker, "w").close()
+    except Exception:
+        pass
+except Exception:
+    try:
+        f = open(temp, "r")
+        try:
+            data = f.read()
+        finally:
+            f.close()
+        if "EVIL" in data:
+            open(marker, "w").close()
+    except Exception:
+        pass

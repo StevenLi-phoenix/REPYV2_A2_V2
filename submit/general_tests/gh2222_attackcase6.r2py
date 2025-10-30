@@ -1,0 +1,26 @@
+#Old versions can be read but not written to.
+try:
+    f0 = openfile("testfile6", True)
+    f0.writeat("version0", 0)
+    f0.close()
+
+    f1 = openfile("testfile6", True)
+    f1.close()
+
+    f2 = openfile("testfile6", True)
+    f2.close()
+
+
+    v1 = openfile("testfile6.v1", False)
+    assert v1.readat(None, 0) == "version0", "Old version read mismatch"
+    v1.close()
+
+    v1w = openfile("testfile6.v1", False)
+    try:
+        v1w.writeat("bad", 0)
+        log("TEST FAILED: testcase6 -> expected FileInUseError on write")
+    except FileInUseError:
+        pass
+    v1w.close()
+except Exception as e:
+    log("TEST FAILED: testcase6 -> " + str(e))

@@ -1,0 +1,24 @@
+"""
+Attack 2: Create explicit version files (e.g., name.v1) with create=True.
+Expected secure behavior: creation of explicit version files must be rejected.
+This test logs ONLY if creation is wrongly allowed.
+"""
+
+try:
+    f = openfile("wdn2012_t2.v1", True)
+    try:
+        # If we got here, creation was allowed (incorrect)
+        try:
+            f.writeat("secret", 0)
+        except Exception:
+            pass
+        log("EXPLOIT: explicit version file creation allowed")
+    finally:
+        try:
+            f.close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+

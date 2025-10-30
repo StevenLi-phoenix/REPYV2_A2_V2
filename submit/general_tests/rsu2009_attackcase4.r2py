@@ -1,0 +1,16 @@
+# test removal of a file --> should raise error
+
+# create + write a file
+f1 = openfile("testfile.txt", True)
+f1.writeat("HelloWorld", 0)
+
+# close file
+f1.close()
+
+try:
+  removefile("testfile.txt")
+except RepyArgumentError:
+  # log("PASS")
+  pass
+else:
+  log ("ERROR removes file")

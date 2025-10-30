@@ -1,0 +1,11 @@
+lfbase = "lfcheck"
+lf = openfile(lfbase, True)
+lf.writeat("1", 0)
+lf.close()
+
+openfile(lfbase, True).close()
+openfile(lfbase, True).close()
+
+ls = listfiles()
+assert lfbase in ls
+assert not any(".v" in p for p in ls)

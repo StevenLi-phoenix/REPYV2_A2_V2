@@ -1,0 +1,8 @@
+# TEST 2: Auto-create new version from existing file
+f0 = openfile("testfile2", True)
+f0.writeat("VersionZero", 0)
+f0.close()
+
+f1 = openfile("testfile2", True)  # should create testfile2.v1
+assert f1.readat(None, 0) == "VersionZero"
+f1.close()

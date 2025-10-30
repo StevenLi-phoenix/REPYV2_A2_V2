@@ -1,0 +1,33 @@
+# Attack Case 6: Complex Version File Usage Test
+# This test checks if the security layer handles complex version file scenarios correctly
+
+try:
+    # Create multiple versions of testfile
+    f1 = openfile("testfile", True)
+    f1.writeat("content1", 0)
+    f1.close()
+    
+    f2 = openfile("testfile", True)  # Creates testfile.v1
+    f2.writeat("content2", 0)
+    f2.close()
+    
+    f3 = openfile("testfile", True)  # Creates testfile.v2
+    f3.writeat("content3", 0)
+    f3.close()
+    
+    # Attempt simultaneous operations - create new version and read old version
+    f4 = openfile("testfile", True)  # Creates testfile.v3
+    f5 = openfile("testfile.v1", False)  # Read testfile.v1
+
+    f4.close()
+    f5.close()
+    
+    # If execution reaches here, the security layer handled the complex scenario correctly
+    # This test should pass without any error output
+    
+except FileInUseError:
+    # If exception is thrown here, the security layer is too restrictive
+    log("SECURITY FLAW: File usage conflict detected when it should be allowed!")
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

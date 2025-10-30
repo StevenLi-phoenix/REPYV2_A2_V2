@@ -1,0 +1,27 @@
+# Attack Case 2: Version File Write Protection Test
+# This test checks if the security layer prevents writing to version files
+
+try:
+    # Create initial file and write content
+    f1 = openfile("testfile", True)
+    f1.writeat("Hello", 0)
+    f1.close()
+
+    # Create version file
+    f2 = openfile("testfile", True)
+    f2.close()
+
+    # Attempt to write to version file - should be blocked
+    f3 = openfile("testfile.v1", False)
+    f3.writeat("Modified", 0)
+    f3.close()
+
+    # If execution reaches here, the security layer has a vulnerability
+    log("SECURITY FLAW: Version file write was not blocked!")
+
+except FileInUseError:
+    # Expected behavior - security layer correctly blocked write operation
+    pass
+except Exception as e:
+    # Other exceptions indicate implementation issues in security layer
+    log("SECURITY FLAW: Unexpected exception:", str(type(e)), str(e))

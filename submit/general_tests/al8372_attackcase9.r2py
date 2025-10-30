@@ -1,0 +1,17 @@
+# Attack Case 9: Multiple simultaneous read handles blocked
+
+# Create file
+f1 = openfile("multiread", True)
+f1.writeat("shared data", 0)
+f1.close()
+
+h1 = openfile("multiread", False)
+
+try:
+    h2 = openfile("multiread", False)
+    assert False, "Should not allow multiple read handles"
+except FileInUseError:
+    pass
+
+h1.close()
+

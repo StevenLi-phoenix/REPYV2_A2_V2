@@ -1,0 +1,30 @@
+B = "a14.txt"
+
+try:
+  f = openfile(B, True)
+  try:
+    try: f.writeat("abc", 0)
+    except: pass
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass
+
+g = None
+try:
+  g = openfile(B, False)
+  try:
+    pass
+  finally:
+    try: g.close()
+    except: pass
+except:
+  g = None
+
+if g is not None:
+  try:
+    g.writeat("Z", 1000000)
+    log("Sparse write beyond EOF after close succeeded on '" + B + "'")
+  except:
+    pass

@@ -1,0 +1,19 @@
+#When a user calls openfile(filename, True), if filename already exists, your security layer must create a new “version” — a new file initialized with the contents of the latest version and given a new version number.
+#create a file with same name make sure the new version file exsits with same content
+
+
+try:
+    f = openfile("testfile", True)
+    f.writeat("HelloWorld1", 0)
+    ftxt = f.readat(None, 0 )
+    f.close()
+    
+    f1 = openfile("testfile", True)
+    f1txt = f1.readat(None, 0)
+    f1.close()
+    
+    if ftxt != f1txt:
+        log('failed')
+        
+except Exception as e:
+    log("failed")

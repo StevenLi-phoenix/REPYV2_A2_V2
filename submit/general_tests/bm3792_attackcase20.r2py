@@ -1,0 +1,24 @@
+# bm3792_attackcase20.r2py
+# Test: Create many versions quickly and verify numbering
+
+# Create base
+f0 = openfile("testfile", True)
+f0.writeat("v0", 0)
+f0.close()
+
+# Create 5 versions rapidly
+for i in range(1, 6):
+    f = openfile("testfile", True)
+    f.close()
+
+# Verify all versions exist with correct numbering
+errors = 0
+for i in range(1, 6):
+    try:
+        vfile = openfile("testfile.v" + str(i), False)
+        vfile.close()
+    except:
+        errors += 1
+
+if errors > 0:
+    log("ACCURACY BUG: Rapid version creation failed\n")

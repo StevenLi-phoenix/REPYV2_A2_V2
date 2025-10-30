@@ -1,0 +1,30 @@
+# write and reopen file
+
+filename = "reopen.txt"
+data_written = "helloworld"
+
+# create a new file and write data
+try:
+    f = openfile(filename, True)
+    bytes_written = f.writeat(data_written, 0)
+    f.close()
+except Exception as e:
+    log("ERROR failed to create or write to initial file")
+    raise  # stop test early if file creation fails
+
+# try reopening file
+try:
+    myfile = openfile(filename, False)
+    data = myfile.readat(len(data_written), 0)
+    myfile.close()
+
+    # Verify contents
+    if data == data_written:
+        #log("TEST PASSED\n")
+        pass
+    else:
+        log("ERROR data not the same")
+
+# if reopening failed
+except Exception as e:
+    log("ERROR did not reopen")

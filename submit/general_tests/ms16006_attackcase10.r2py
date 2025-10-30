@@ -1,0 +1,21 @@
+# --- 10) Race condition test: concurrent version creation ---
+
+def create_version():
+    try:
+        f = openfile("racefile", True)
+        f.writeat("data", 0)
+        f.close()
+    except Exception:
+        pass
+
+try:
+    th1 = createthread(create_version)
+    th2 = createthread(create_version)
+    sleep(1.0)
+except Exception:
+    pass
+
+try:
+    _ = listfiles()
+except Exception:
+    pass

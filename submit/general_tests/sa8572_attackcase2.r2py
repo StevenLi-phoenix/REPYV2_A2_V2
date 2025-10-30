@@ -1,0 +1,22 @@
+# Test: explicit version creation must be blocked
+
+# prepare base file
+try:
+    a = openfile("tc2file", True)
+    a.writeat("x", 0)
+    a.close()
+except Exception:
+    assert False
+
+# attempting explicit version creation should raise RepyArgumentError
+try:
+    v = openfile("tc2file.v1", True)
+    v.close()
+    # if we reach here, creation succeeded -> fail
+    assert False
+except RepyArgumentError:
+    # expected
+    pass
+except Exception:
+    # any other exception -> fail the test
+    assert False

@@ -1,0 +1,15 @@
+# CASE 08 Version name invalid
+
+
+def ar(exc_type, fn, *args):
+    try:
+        fn(*args)
+    except Exception as e:
+        if isinstance(e, exc_type):
+            return
+        raise
+    raise AssertionError
+
+ar(RepyArgumentError, openfile, "atk08.v0", True)
+ar(RepyArgumentError, openfile, "atk08.vx", True)
+ar(RepyArgumentError, openfile, "atk08.v99999999999999z", True)

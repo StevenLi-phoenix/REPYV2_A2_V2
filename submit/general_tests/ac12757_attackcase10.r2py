@@ -1,0 +1,140 @@
+# ac12757_multithread_attack.r2py
+# Targets: Multi-threading Race Condition - Version Creation Collision
+
+# Use standard RepyV2 threading
+# (Note: RepyV2 threading might not be true OS threads but cooperative greenlets,
+# but shared global state still requires synchronization to be robust.)
+
+content_t1 = "content_from_thread_1"
+content_t2 = "content_from_thread_2"
+test_filename = "multithread_asset.txt"
+
+# A list to store exceptions from threads
+thread_exceptions = []
+# Use a counter to track thread completion, as jointhread is not available.
+# This assumes threads will eventually finish.
+threads_finished_count = [0] # Use a list to make it mutable in nested scope
+
+# Define a lock for thread_exceptions and threads_finished_count if true concurrency
+# is an issue. For RepyV2's cooperative threading, direct modification might be okay
+# but for robustness, a lock (like a condition variable or mutex) would be better if available.
+# Since we're trying to break it, let's keep it simple for now.
+
+# Wrapper functions to allow createthread to be called with no arguments
+def wrapper_thread_func_1():
+    try:
+        f = openfile(test_filename, True)
+        f.writeat(content_t1, 0)
+        f.close()
+    except Exception as e:
+        thread_exceptions.append("Thread 1 failed: {0}".format(str(e)))
+    finally:
+        threads_finished_count[0] += 1
+
+def wrapper_thread_func_2():
+    try:
+        f = openfile(test_filename, True)
+        f.writeat(content_t2, 0)
+        f.close()
+    except Exception as e:
+        thread_exceptions.append("Thread 2 failed: {0}".format(str(e)))
+    finally:
+        threads_finished_count[0] += 1
+
+
+try:
+    # 1. Initialize the base file
+    initial_file = openfile(test_filename, True)
+    initial_file.writeat("initial content", 0)
+    initial_file.close()
+
+    # 2. Spawn two threads, both trying to 'create' a new version of the same file
+    # This will trigger the race condition in the monitor's LPopenfile
+
+    t1_handle = createthread(wrapper_thread_func_1) # No second argument needed
+    t2_handle = createthread(wrapper_thread_func_2) # No second argument needed
+
+    # Wait for both threads to finish - RepyV2 doesn't have jointhread.
+    # We'll poll the counter and sleep.
+    # Adjust sleep duration as necessary based on RepyV2 execution speed.
+    timeout_seconds = 10 # Give threads up to 10 seconds to finish
+    start_time = getruntime()
+    
+    while threads_finished_count[0] < 2 and getruntime() - start_time < timeout_seconds:
+        sleep(0.1) # Sleep for 100 milliseconds
+
+    if threads_finished_count[0] < 2:
+        raise Exception("Attack case failed: Threads did not complete within timeout!")
+
+    # Check for exceptions from threads
+    if thread_exceptions:
+        raise Exception("One or more threads failed during operation: " + "; ".join(thread_exceptions))
+
+    # 3. Verify the state of versions
+    # We expect myasset.txt.v1 to contain one of the thread's content,
+    # and myasset.txt.v2 (the current file) to contain the other's, or similar.
+    # The bug will be if we don't have two distinct versions, or one is lost.
+
+    # Check the latest version
+    latest_file = openfile(test_filename, False)
+    latest_content = latest_file.readat(None, 0)
+    latest_file.close()
+
+    # We expect the latest file to contain EITHER content_t1 or content_t2
+    if latest_content not in [content_t1, content_t2]:
+        raise Exception("Monitor failed: Latest file content is unexpected! Got: '{0}'".format(latest_content))
+
+    # Check the first explicit version (v1)
+    v1_file = openfile(test_filename + ".v1", False)
+    v1_content = v1_file.readat(None, 0)
+    v1_file.close()
+
+    # Check the second explicit version (v2)
+    # This is the crucial part for detecting if versions were lost due to race.
+    # If only one version was effectively created from the two threads due to race,
+    # this might fail with FileNotFoundError.
+    v2_file_exists = False
+    try:
+        v2_file = openfile(test_filename + ".v2", False)
+        v2_content = v2_file.readat(None, 0)
+        v2_file.close()
+        v2_file_exists = True
+    except FileNotFoundError:
+        # This is a strong indication of a race condition and lost version!
+        pass # We'll check the unique contents later.
+    except Exception as e:
+        raise Exception("Unexpected error opening v2 file: {0}".format(str(e)))
+
+
+    all_contents = [latest_content, v1_content]
+    if v2_file_exists:
+        all_contents.append(v2_content)
+
+    unique_contents = list(set(all_contents))
+
+    # After 1 initial write and 2 'create' calls, there should be 3 unique contents.
+    # The base file will have the *last* of the two thread contents.
+    # myasset.txt.v1 should have "initial content".
+    # myasset.txt.v2 should have the *other* thread's content.
+    # So we must have 3 unique contents in total.
+
+    if len(unique_contents) < 3:
+        # This implies a version was overwritten or not created correctly.
+        raise Exception("Monitor failed: Less than 3 unique file contents found after multi-threaded version creation. Possible lost versions! Contents: {0}".format(unique_contents))
+
+    if "initial content" not in unique_contents:
+        raise Exception("Monitor failed: Initial content was lost during versioning! Contents: {0}".format(unique_contents))
+
+    if content_t1 not in unique_contents or content_t2 not in unique_contents:
+        raise Exception("Monitor failed: One or both thread contents were lost or not versioned correctly! Contents: {0}".format(unique_contents))
+
+
+except FileNotFoundError as e:
+    # This might indicate the versioning didn't happen correctly at all (e.g., .v1 or .v2 missing)
+    raise Exception("Attack case failed due to FileNotFoundError during verification: {0}. This likely means versioning didn't produce expected files.".format(str(e)))
+except Exception as e:
+    raise Exception("Attack case failed due to unexpected error: " + str(e))
+
+# This attack case targets the race condition in LPopenfile's version creation logic.
+# It exploits concurrent updates to current_file_versions and potential content overwrites
+# if not properly synchronized.

@@ -1,0 +1,20 @@
+def main():
+    # Precision attacks for the remaining 5-10%
+    precision_targets = [
+        # Hybrid patterns that might slip through
+        "file.v1v2",           # Multiple versions in name
+        "v1.v2",               # Version only names  
+        "file.v1.backup",      # Version with extension
+        "backup.v1.file",      # Version in middle with text after
+        "file.v1_old",         # Version with suffix
+        "old.v1_file",         # Version with prefix
+    ]
+    
+    for target in precision_targets:
+        try:
+            f = openfile(target, True)
+            log("FAIL_PRECISION: " + target)
+            f.close()
+        except:
+            pass
+if callfunc == 'initialize': main()

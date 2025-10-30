@@ -1,0 +1,9 @@
+tname = "weird.vfile"
+wf = openfile(tname, True)
+wf.writeat("ok", 0)
+wf.close()
+
+wf2 = openfile(tname, True)
+wf2.close()
+
+assert tname in listfiles()

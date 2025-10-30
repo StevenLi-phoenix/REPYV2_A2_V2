@@ -1,0 +1,18 @@
+# just create a file
+
+# name as var
+filename = "createfile.txt"
+
+# try creating a file
+try:
+   f = openfile(filename, True)
+   f.writeat("Hello World", 0)
+   f.close()
+
+# if creating file fails
+except Exception:
+   log("ERROR failed creating a file\n")
+   raise # stop test
+
+# if reaches here then it passed
+# log("passed creating a file\n")

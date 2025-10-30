@@ -1,0 +1,24 @@
+# Test 4: Attempts to remove a file and checks if it is actioned upon
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodMorning", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodAfternoon", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodEvening", 0)
+f1.close()
+
+try:
+    removefile("testfile")
+    assert False, "File removal should have raised an exception"
+except RepyArgumentError:
+    pass
+else:
+    assert False, "File removal did not raise the expected exception"

@@ -1,0 +1,20 @@
+basename = 'testfile.txt'
+
+f0 = openfile(basename, True)
+f0.writeat('a'*30,0)
+f0.close()
+
+f1 = openfile(basename, True)
+f1.writeat('b'*30,0)
+f1.close()
+
+f2 = openfile(basename, True)
+try:
+    f1 = openfile(basename + ".v1", False)
+    f1.writeat('a'*20,10)
+    f1.close()
+    raise ValueError("this shouldn't have worked")
+except:
+    assert True
+f2.writeat('c'*30,0)
+f2.close()

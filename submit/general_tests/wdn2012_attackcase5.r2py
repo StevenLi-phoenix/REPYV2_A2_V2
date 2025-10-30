@@ -1,0 +1,31 @@
+"""
+Attack 5: Open a file for reading while it is already open (any mode).
+Expected secure behavior: any second open should be rejected while the first is open.
+This test logs ONLY if the second open is wrongly allowed.
+"""
+
+second_opened = False
+
+try:
+    f1 = openfile("wdn2012_t5", True)
+    try:
+        try:
+            r = openfile("wdn2012_t5", False)
+            second_opened = True
+        except Exception:
+            pass
+        if second_opened:
+            try:
+                r.close()
+            except Exception:
+                pass
+            log("EXPLOIT: allowed second open while first open")
+    finally:
+        try:
+            f1.close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+

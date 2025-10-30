@@ -1,0 +1,22 @@
+try:
+    # Try to write to old version
+    f1 = openfile("oldfile", True)
+    f1.writeat("HelloWorld", 0)
+    f1.close()
+
+    f2 = openfile("oldfile", True)
+    f2.close()
+
+    f3 = openfile("oldfile", True)
+    f3.close()
+
+    try:
+        f2.writeat("Changing contents", 0)
+    except FileInUseError:
+        pass
+    else:
+        log("Issue: Writing to old version file\n")
+except Exception:
+    pass
+
+

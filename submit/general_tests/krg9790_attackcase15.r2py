@@ -1,0 +1,24 @@
+#attack 15: test creating many versions
+f = openfile("test", True)
+f.writeat("v0", 0)
+f.close()
+
+#create 20 versions
+for i in range(20):
+    f = openfile("test", True)
+    f.writeat("v" + str(i+1), 0)
+    f.close()
+
+#check version 20 exists
+try:
+    fv20 = openfile("test.v20", False)
+    fv20.close()
+except FileNotFoundError:
+    log("Oops -- Version 20 doesn't exist!\n")
+
+#check version 1 still exists
+try:
+    fv1 = openfile("test.v1", False)
+    fv1.close()
+except FileNotFoundError:
+    log("Oops -- Version 1 doesn't exist after creating more!\n")

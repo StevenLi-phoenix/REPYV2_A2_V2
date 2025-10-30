@@ -1,0 +1,17 @@
+# TEST 4: Prevent writing to older version
+base = "testfile4"
+f0 = openfile(base, True)
+f0.writeat("immutable", 0)
+f0.close()
+
+f1 = openfile(base, True)  # new version created
+f1.close()
+
+try:
+    old = openfile(base + ".v1", False)  # open old version read-only
+    old.writeat("malicious", 0)
+    assert False, "Expected exception for writing to old version"
+except Exception:
+    pass
+finally:
+    old.close()

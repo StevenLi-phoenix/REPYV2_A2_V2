@@ -1,0 +1,15 @@
+# Attack Case 3: Explicit version file creation forbidden
+
+def expect_error(call, args, err):
+    try:
+        call(*args)
+        assert False, "Should have raised exception"
+    except err:
+        pass
+    except Exception, e:
+        assert False, "Wrong exception type"
+
+expect_error(openfile, ("explicitver.v999", True), RepyArgumentError)
+expect_error(openfile, ("another.v1", True), RepyArgumentError)
+expect_error(openfile, ("test.v0", True), RepyArgumentError)
+

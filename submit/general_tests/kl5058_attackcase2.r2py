@@ -1,0 +1,209 @@
+#Attack case 2: Intermediate tests
+#Test immutability, version creation, and state management
+
+#Test 1: Base file immutable after close
+try:
+    f=openfile("test2_immut1.txt",True)
+    f.writeat("original",0)
+    f.close()
+    f2=openfile("test2_immut1.txt",False)
+    try:
+        f2.writeat("modified",0)
+    except:
+        pass
+    f2.close()
+except:
+    pass
+
+#Test 2: File opened with create=False is read-only
+try:
+    f=openfile("test2_readonly.txt",True)
+    f.writeat("data",0)
+    f.close()
+    f2=openfile("test2_readonly.txt",False)
+    try:
+        f2.writeat("exploit",0)
+    except:
+        pass
+    f2.close()
+except:
+    pass
+
+#Test 3: Base file immutable after version exists
+try:
+    f=openfile("test2_immut2.txt",True)
+    f.writeat("base",0)
+    f.close()
+    f1=openfile("test2_immut2.txt",True)
+    f1.writeat("v1",0)
+    f1.close()
+    fb=openfile("test2_immut2.txt",False)
+    try:
+        fb.writeat("hack",0)
+    except:
+        pass
+    fb.close()
+except:
+    pass
+
+#Test 4: Version files are immutable
+try:
+    f=openfile("test2_vimmut.txt",True)
+    f.writeat("v0",0)
+    f.close()
+    f1=openfile("test2_vimmut.txt",True)
+    f1.close()
+    fv=openfile("test2_vimmut.txt.v1",False)
+    try:
+        fv.writeat("exploit",0)
+    except:
+        pass
+    fv.close()
+except:
+    pass
+
+#Test 5: Version content inheritance
+try:
+    f=openfile("test2_inherit.txt",True)
+    f.writeat("original content",0)
+    f.close()
+    f1=openfile("test2_inherit.txt",True)
+    content1=f1.readat(None,0)
+    f1.writeat("modified content",0)
+    f1.close()
+    f2=openfile("test2_inherit.txt",True)
+    content2=f2.readat(None,0)
+    f2.close()
+except:
+    pass
+
+#Test 6: Cannot create version while base is open
+try:
+    f=openfile("test2_openblock.txt",True)
+    f.writeat("data",0)
+    try:
+        f2=openfile("test2_openblock.txt",True)
+        f2.close()
+    except:
+        pass
+    f.close()
+except:
+    pass
+
+#Test 7: Cannot open for writing while reading
+try:
+    f=openfile("test2_readblock.txt",True)
+    f.writeat("initial",0)
+    f.close()
+    reader=openfile("test2_readblock.txt",False)
+    try:
+        writer=openfile("test2_readblock.txt",True)
+        writer.close()
+    except:
+        pass
+    reader.close()
+except:
+    pass
+
+#Test 8: Reading old version while creating new
+try:
+    f=openfile("test2_oldread.txt",True)
+    f.writeat("v0",0)
+    f.close()
+    f1=openfile("test2_oldread.txt",True)
+    f1.writeat("v1",0)
+    f1.close()
+    reader=openfile("test2_oldread.txt.v1",False)
+    f2=openfile("test2_oldread.txt",True)
+    f2.writeat("v2",0)
+    f2.close()
+    reader.close()
+except:
+    pass
+
+#Test 9: Many versions
+try:
+    f=openfile("test2_many.txt",True)
+    f.writeat("v0",0)
+    f.close()
+    for i in range(20):
+        fn=openfile("test2_many.txt",True)
+        fn.writeat("v"+str(i+1),0)
+        fn.close()
+    fv=openfile("test2_many.txt.v10",False)
+    fv.readat(None,0)
+    fv.close()
+except:
+    pass
+
+#Test 10: Sequential version creation
+try:
+    for i in range(10):
+        f=openfile("test2_seq.txt",True)
+        f.writeat(str(i),0)
+        f.close()
+    fb=openfile("test2_seq.txt",False)
+    fb.readat(None,0)
+    fb.close()
+    f5=openfile("test2_seq.txt.v5",False)
+    f5.readat(None,0)
+    f5.close()
+except:
+    pass
+
+#Test 11: Double close
+try:
+    f=openfile("test2_doubleclose.txt",True)
+    f.writeat("data",0)
+    f.close()
+    try:
+        f.close()
+    except:
+        pass
+except:
+    pass
+
+#Test 12: Use after close
+try:
+    f=openfile("test2_useafter.txt",True)
+    f.writeat("data",0)
+    f.close()
+    try:
+        f.readat(None,0)
+    except:
+        pass
+except:
+    pass
+
+#Test 13: Filename with .v but not version number
+try:
+    f=openfile("test2.version.txt",True)
+    f.writeat("notversionfile",0)
+    f.close()
+    f2=openfile("test2.version.txt",False)
+    f2.readat(None,0)
+    f2.close()
+except:
+    pass
+
+#Test 14: Multiple .v in filename
+try:
+    f=openfile("test2.v1.data.txt",True)
+    f.writeat("hasvinnmiddle",0)
+    f.close()
+    f1=openfile("test2.v1.data.txt",True)
+    f1.close()
+    fv=openfile("test2.v1.data.txt.v1",False)
+    fv.readat(None,0)
+    fv.close()
+except:
+    pass
+
+#Test 15: Large offset write
+try:
+    f=openfile("test2_largeoff.txt",True)
+    f.writeat("start",0)
+    f.writeat("end",10000)
+    f.close()
+except:
+    pass

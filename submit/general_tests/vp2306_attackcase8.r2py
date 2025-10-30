@@ -1,0 +1,19 @@
+f = openfile("testfile8", True)
+f.writeat("Attack8", 0)
+f.close()
+fv1 = openfile("testfile8", True) 
+fv1.close()
+
+# do not allow write to older version number
+
+try:
+    oldfile = openfile("testfile8", False)  
+    try:
+        oldfile.writeat("Attack8Success", 0)
+        assert False
+    except FileInUseError:
+        pass
+    finally:
+        oldfile.close()
+except Exception:
+    raise

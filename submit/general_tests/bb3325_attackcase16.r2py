@@ -1,0 +1,17 @@
+# create base and versions
+base = "dedupe_bug"
+try:
+  openfile(base, True).close()
+  openfile(base, True).close()  # version v1
+  openfile(base, True).close()  # version v2
+except: pass
+
+# call listfiles() and check that base appears exactly once in returned list from the wrapper
+res = listfiles()
+count_base = 0
+for r in res:
+  if r == base:
+    count_base += 1
+if count_base != 1:
+  try: log("VULN: listfiles_dedupe_mistake count=" + str(count_base))
+  except: pass

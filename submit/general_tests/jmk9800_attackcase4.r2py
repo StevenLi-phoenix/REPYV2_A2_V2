@@ -1,0 +1,8 @@
+# Opening a non-existent file
+
+try:
+    f1 = openfile("testfile", False)
+    f1.writeat("HelloWorld", 0)
+    f1.close()
+except:
+    raise Exception("Failed to raise en exception")

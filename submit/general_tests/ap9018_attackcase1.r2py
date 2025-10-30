@@ -1,0 +1,28 @@
+
+try:
+    # attempt direct physical access
+    f = openfile("probe.a", True)
+    try:
+        f.writeat("BREACH1", 0)
+    except:
+        pass
+    try:
+        f.close()
+    except:
+        pass
+except:
+    pass
+
+try:
+    # check logical name (silent)
+    g = openfile("probe", False)
+    try:
+        _ = g.readat(None, 0)
+    except:
+        pass
+    try:
+        g.close()
+    except:
+        pass
+except:
+    pass

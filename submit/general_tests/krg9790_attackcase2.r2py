@@ -1,0 +1,13 @@
+#attack 2: delete a versioned file
+f1 = openfile("test", True)
+f1.writeat("data", 0)
+f1.close()
+
+f2 = openfile("test", True)
+f2.close()
+
+try:
+    removefile("test.v1")
+    log("MUAHAHAHA ATTACK SUCCEEDED <3 Versioned file deletion was allowed!\n")
+except RepyArgumentError:
+    pass

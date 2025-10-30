@@ -1,0 +1,15 @@
+# Test 8: Attempt to open a versioned file for writing directly
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+f1 = openfile("testfile", True)
+f1.writeat("GoodMorning", 0)
+f1.close()
+
+try:
+    f1 = openfile("testfile.v1", True)
+except RepyArgumentError:
+    pass
+else:
+    raise Exception("Expected RepyArgumentError when trying to open versioned file for writing directly.")

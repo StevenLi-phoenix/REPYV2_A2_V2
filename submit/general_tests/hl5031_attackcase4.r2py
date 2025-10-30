@@ -1,0 +1,38 @@
+try:
+    try:
+        base = openfile("racetodel", True)
+        base.writeat("KEEPME", 0)
+        base.close()
+    except Exception:
+        pass
+
+    try:
+        f = openfile("racetodel", True)
+    except Exception:
+        f = None
+
+    try:
+        try:
+            sleep(0.02)
+        except Exception:
+            pass
+        removefile("racetodel")
+    except Exception:
+        pass
+
+    if f:
+        try:
+            _ = f.readat(None, 0)
+        except Exception:
+            pass
+        try:
+            f.close()
+        except Exception:
+            pass
+
+    try:
+        _ = listfiles()
+    except Exception:
+        pass
+except Exception:
+    pass

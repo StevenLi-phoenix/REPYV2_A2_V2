@@ -1,0 +1,9 @@
+# TEST 1: Create base version (v0)
+f1 = openfile("testfile", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# Verify that file exists and is readable
+fcheck = openfile("testfile", False)
+assert fcheck.readat(None, 0) == "HelloWorld"
+fcheck.close()

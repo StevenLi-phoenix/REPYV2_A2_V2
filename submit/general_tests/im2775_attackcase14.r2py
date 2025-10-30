@@ -1,0 +1,15 @@
+f = openfile("offset", True)
+f.writeat("Hello", 0)
+f.writeat("World", 5)
+f.close()
+
+f2 = openfile("offset", True)
+content = f2.readat(None, 0)
+f2.close()
+
+try:
+    fv1 = openfile("offset.v1", False)
+    fv1.writeat("X", 0)
+    fv1.close()
+except FileInUseError:
+    pass

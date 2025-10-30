@@ -1,0 +1,28 @@
+# Attack Case 3: Direct Version File Access
+# Tests monitors that allow direct access to version files
+
+
+# Create a file and version it
+f1 = openfile("testfile3", True)
+f1.writeat("Version 1", 0)
+f1.close()
+
+f2 = openfile("testfile3", True)
+f2.writeat("Version 2", 0)
+f2.close()
+
+# Try to access version file directly
+try:
+    f3 = openfile("testfile3.v1", False)
+    data = f3.readat(None, 0)
+    f3.close()
+    
+    # Try to write to version file
+    f4 = openfile("testfile3.v1", False)
+    f4.writeat("HACKED", 0)
+    f4.close()
+    raise Exception("VULNERABLE: Direct version file access succeeded")
+except Exception as e:
+    if "VULNERABLE:" in str(e):
+        raise e
+    pass

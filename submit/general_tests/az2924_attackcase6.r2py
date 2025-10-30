@@ -1,0 +1,23 @@
+# Checks for explicit version creation
+
+# Try to create manual version
+try:
+    openfile("samplefile.v2", True)
+    assert False, "Cannot create explicit version"
+except RepyArgumentError:
+    pass
+
+# Checks creating version while previous is open
+
+# Open and write to file
+file = openfile("samplefile", True)
+file.writeat("hello", 0)
+
+# Try to create another version
+try:
+    openfile("samplefile", True)
+    assert False, "Cannot create another version creation while previous is open"
+except FileInUseError:
+    pass
+
+file.close()

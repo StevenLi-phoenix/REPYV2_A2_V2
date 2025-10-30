@@ -1,0 +1,10 @@
+name = "multi.v.v.v2"
+f = openfile(name, True)
+f.writeat("payload", 0)
+f.close()
+
+v = openfile("multi.v.v", True)
+v.writeat("chain", 7)
+v.close()
+
+assert "multi.v.v" in listfiles()

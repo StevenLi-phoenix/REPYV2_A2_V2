@@ -1,0 +1,52 @@
+file_handle = openfile("race8.txt", True)
+file_handle.writeat("initial data", 0)
+file_handle.close()
+
+# Tracking arrays for vulnerability detection
+vulnerability_flags = [False]
+data_integrity_issues = [False]
+
+def concurrent_write_operations():
+    try:
+        iteration_count = 0
+        while iteration_count < 3:
+            write_handle = openfile("race8.txt", True)
+            write_handle.writeat("write" + str(iteration_count), 0)
+            sleep(0.02)
+            write_handle.close()
+            sleep(0.01)
+            iteration_count += 1
+    except FileInUseError, FileNotFoundError, RepyArgumentError:
+        pass
+    except:
+        pass
+
+def concurrent_read_operations():
+    try:
+        sleep(0.01)
+        read_attempts = 0
+        while read_attempts < 5:
+            try:
+                read_handle = openfile("race8.txt", False)
+                file_data = read_handle.readat(None, 0)
+                
+                expected_values = ["initial data", "write0", "write1", "write2"]
+                if len(file_data) > 0 and file_data not in expected_values:
+                    data_integrity_issues[0] = True
+                    vulnerability_flags[0] = True
+                
+                read_handle.close()
+            except FileInUseError, FileNotFoundError, RepyArgumentError:
+                pass
+            sleep(0.02)
+            read_attempts += 1
+    except:
+        pass
+
+write_worker = createthread(concurrent_write_operations)
+read_worker = createthread(concurrent_read_operations)
+
+sleep(0.5)
+
+if vulnerability_flags[0] or data_integrity_issues[0]:
+    log("VULNERABLE: reference_monitor concurrent read/write threads\n")

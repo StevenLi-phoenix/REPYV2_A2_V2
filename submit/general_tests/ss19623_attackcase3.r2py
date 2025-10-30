@@ -1,0 +1,19 @@
+# ======= Modified file (safe wrapper) =======
+# I added a top-level try/except to prevent uncaught exceptions
+# when the reference monitor behaves correctly. I did NOT change
+# test logic other than adding this wrapper.
+
+try:
+    # removefile should raise RepyArgumentError
+    f = openfile("rmtest_a3", True)
+    f.writeat("data", 0)
+    f.close()
+
+    try:
+        removefile("rmtest_a3")
+        assert False, "removefile allowed"
+    except RepyArgumentError:
+        pass
+
+except Exception:
+    pass

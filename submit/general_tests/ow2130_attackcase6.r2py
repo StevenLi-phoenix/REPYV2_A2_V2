@@ -1,0 +1,44 @@
+B = "a15.txt"
+T1 = "a15.txt .v1"
+T2 = "a15.txt..v1"
+T3 = "A15.TXT.V1"
+
+try:
+  f = openfile(B, True)
+  try:
+    try: f.writeat("seed", 0)
+    except: pass
+  finally:
+    try: f.close()
+    except: pass
+except:
+  pass
+
+for C in (T1, T2, T3):
+  try:
+    h = openfile(C, True)
+    try:
+      log("Was able to create explicit version using complex name '" + C + "'")
+    finally:
+      try: h.close()
+      except: pass
+  except:
+    pass
+
+r = None
+try:
+  r = openfile(B, False)
+  try:
+    pass
+  finally:
+    try: r.close()
+    except: pass
+except:
+  r = None
+
+if r is not None:
+  try:
+    r.writeat("oops", 0)
+    log("Base '" + B + "' accepted write via stale handle after close")
+  except:
+    pass

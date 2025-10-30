@@ -1,0 +1,260 @@
+f = openfile("race_test1.txt", True)
+f.writeat("initial", 0)
+f.close()
+
+simultaneous_write_detected = [False]
+write_count = [0]
+
+def write_attempt_1():
+    try:
+        handle = openfile("race_test1.txt", True)
+        write_count[0] += 1
+        sleep(0.1)
+        handle.writeat("thread1", 0)
+        handle.close()
+    except FileInUseError:
+        pass
+    except:
+        pass
+
+def write_attempt_2():
+    try:
+        sleep(0.02)
+        handle = openfile("race_test1.txt", True)
+        write_count[0] += 1
+        simultaneous_write_detected[0] = True
+        handle.writeat("thread2", 0)
+        handle.close()
+    except FileInUseError:
+        pass
+    except:
+        pass
+
+t1 = createthread(write_attempt_1)
+t2 = createthread(write_attempt_2)
+sleep(0.3)
+
+if simultaneous_write_detected[0]:
+    log("VULNERABLE: Multiple write handles allowed simultaneously\n")
+
+toctou_vulnerable = [False]
+
+def create_file_thread():
+    try:
+        sleep(0.01)
+        handle = openfile("race_test2.txt", True)
+        handle.writeat("created", 0)
+        handle.close()
+    except:
+        pass
+
+def check_then_open_thread():
+    try:
+        exists = "race_test2.txt" in listfiles()
+        sleep(0.02)
+        
+        if not exists:
+            try:
+                handle = openfile("race_test2.txt", True)
+                handle.writeat("raced", 0)
+                handle.close()
+            except FileInUseError:
+                toctou_vulnerable[0] = True
+            except:
+                pass
+    except:
+        pass
+
+t1 = createthread(create_file_thread)
+t2 = createthread(check_then_open_thread)
+sleep(0.2)
+
+if toctou_vulnerable[0]:
+    log("VULNERABLE: TOCTOU race condition between file check and open\n")
+
+
+f = openfile("race_test3.txt", True)
+f.writeat("data", 0)
+f.close()
+
+lock_bypass_detected = [False]
+
+def reader_holds_lock():
+    try:
+        handle = openfile("race_test3.txt", False)
+        sleep(0.1)
+        handle.close()
+    except:
+        pass
+
+def writer_attempts_access():
+    try:
+        sleep(0.02)
+        handle = openfile("race_test3.txt", True)
+        lock_bypass_detected[0] = True
+        handle.writeat("bypass", 0)
+        handle.close()
+    except FileInUseError:
+        pass
+    except:
+        pass
+
+t1 = createthread(reader_holds_lock)
+t2 = createthread(writer_attempts_access)
+sleep(0.3)
+
+if lock_bypass_detected[0]:
+    log("VULNERABLE: Write allowed while file open for reading\n")
+
+
+f = openfile("race_test4.txt", True)
+f.writeat("start", 0)
+f.close()
+
+inconsistent_reads = [False]
+read_values = []
+
+def continuous_writer():
+    try:
+        for i in range(5):
+            handle = openfile("race_test4.txt", True)
+            handle.writeat("val" + str(i), 0)
+            handle.close()
+            sleep(0.02)
+    except:
+        pass
+
+def reader_1():
+    try:
+        sleep(0.01)
+        for i in range(3):
+            try:
+                handle = openfile("race_test4.txt", False)
+                data = handle.readat(None, 0)
+                read_values.append(data)
+                handle.close()
+                sleep(0.03)
+            except FileInUseError:
+                pass
+    except:
+        pass
+
+def reader_2():
+    try:
+        sleep(0.015)
+        for i in range(3):
+            try:
+                handle = openfile("race_test4.txt", False)
+                data = handle.readat(None, 0)
+                read_values.append(data)
+                handle.close()
+                sleep(0.03)
+            except FileInUseError:
+                pass
+    except:
+        pass
+
+t1 = createthread(continuous_writer)
+t2 = createthread(reader_1)
+t3 = createthread(reader_2)
+sleep(0.4)
+
+# Check if readers got corrupted/partial data
+valid_values = ["start", "val0", "val1", "val2", "val3", "val4"]
+for val in read_values:
+    if val not in valid_values and len(val) > 0:
+        inconsistent_reads[0] = True
+        break
+
+if inconsistent_reads[0]:
+    log("VULNERABLE: Data corruption detected with concurrent readers/writer\n")
+
+
+# Test 5: Close-then-reopen race (file handle state)
+f = openfile("race_test5.txt", True)
+f.writeat("initial", 0)
+f.close()
+
+handle_reuse_vuln = [False]
+
+def closer_thread():
+    try:
+        handle = openfile("race_test5.txt", True)
+        sleep(0.02)
+        handle.close()
+        sleep(0.01)
+        # Try to use after close
+        try:
+            handle.writeat("afterclose", 0)
+            handle_reuse_vuln[0] = True
+        except:
+            pass
+    except:
+        pass
+
+def opener_thread():
+    try:
+        sleep(0.03)
+        handle = openfile("race_test5.txt", True)
+        handle.writeat("newopen", 0)
+        handle.close()
+    except:
+        pass
+
+t1 = createthread(closer_thread)
+t2 = createthread(opener_thread)
+sleep(0.2)
+
+if handle_reuse_vuln[0]:
+    log("VULNERABLE: File handle reuse after close\n")
+
+
+# Test 6: Rapid open/close cycles (resource exhaustion/race)
+rapid_access_vuln = [False]
+open_count = [0]
+
+def rapid_accessor_1():
+    try:
+        for i in range(10):
+            try:
+                handle = openfile("race_test6.txt", True)
+                open_count[0] += 1
+                if open_count[0] > 1:
+                    rapid_access_vuln[0] = True
+                handle.writeat("x", 0)
+                open_count[0] -= 1
+                handle.close()
+            except FileInUseError:
+                pass
+            sleep(0.005)
+    except:
+        pass
+
+def rapid_accessor_2():
+    try:
+        sleep(0.002)
+        for i in range(10):
+            try:
+                handle = openfile("race_test6.txt", True)
+                open_count[0] += 1
+                if open_count[0] > 1:
+                    rapid_access_vuln[0] = True
+                handle.writeat("y", 0)
+                open_count[0] -= 1
+                handle.close()
+            except FileInUseError:
+                pass
+            sleep(0.005)
+    except:
+        pass
+
+f = openfile("race_test6.txt", True)
+f.writeat("test", 0)
+f.close()
+
+t1 = createthread(rapid_accessor_1)
+t2 = createthread(rapid_accessor_2)
+sleep(0.3)
+
+if rapid_access_vuln[0]:
+    log("VULNERABLE: Lock released before file fully closed\n")

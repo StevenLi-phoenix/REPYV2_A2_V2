@@ -1,0 +1,22 @@
+# bm3792_attackcase24.r2py
+# Test: Try to delete base file, then access versions
+
+f1 = openfile("testfile", True)
+f1.writeat("base", 0)
+f1.close()
+
+f2 = openfile("testfile", True)
+f2.close()
+
+# Try to delete base
+try:
+    removefile("testfile")
+except:
+    pass
+
+# Check if versions still accessible
+try:
+    vfile = openfile("testfile.v1", False)
+    vfile.close()
+except:
+    log("ACCURACY BUG: Version inaccessible after base delete attempt\n")

@@ -1,0 +1,56 @@
+'''
+Name: Nikhil Mundhra
+NetID: nm4358
+File: nm4358_attackcase3.r2py
+Goal: copying attacks,
+    mutate a container after passing its element to openfile (argument-copy check)
+Expected: wrapper should *copy* arguments; failure means TOCTTOU exists.
+'''
+
+# Passing a list to a file API and then mutating it after call
+
+# The attack must be silent and independent.
+
+DEBUG = False
+
+def debug_log(msg):
+    if DEBUG:
+        try:
+            log(msg)
+        except:
+            pass
+
+def _len_or_neg1(name):
+    try:
+        h = openfile(name, False)
+        data = h.readat(10000, 0)
+        h.close()
+        return len(data)
+    except:
+        return -1
+
+# Pass element, then mutate container: if args are not copied (or use is deferred),
+# the write may land in the mutated name instead of the original.
+try:
+    name_box = ["t3_a.txt"]
+    h = openfile(name_box[0], True)
+    name_box[0] = "t3_evil.txt"  # mutate after call
+    try:
+        h.writeat("HELLO", 0)    # 5 bytes; lets us detect redirection
+    finally:
+        try:
+            h.close()
+        except:
+            pass
+except:
+    # Correct monitors may raise on any step; stay silent
+    pass
+
+# Detect unexpected redirection (debug only)
+try:
+    la = _len_or_neg1("t3_a.txt")     # expect 5 if correct
+    le = _len_or_neg1("t3_evil.txt")  # expect -1 if correct
+    if (le == 5) and (la != 5):
+        debug_log("UNEXPECTED: Arg-TOCTTOU redirection (HELLO in t3_evil.txt; t3_a.txt missing/incorrect)")
+except:
+    pass

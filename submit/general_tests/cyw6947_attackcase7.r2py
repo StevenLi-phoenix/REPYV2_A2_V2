@@ -1,0 +1,62 @@
+thread_counter = {"count": 0, "success": 0, "failed": 0}
+
+def thread_attack():
+    thread_counter["count"] += 1
+    thread_id = thread_counter["count"]
+
+    try:
+        myfile = openfile("testfile.txt", True)
+        data = "Thread " + str(thread_id) + " was here!\n"
+        myfile.writeat(data, 0)
+        myfile.close()
+        thread_counter["success"] += 1
+    except Exception as e:
+        thread_counter["failed"] += 1
+
+
+def check_invariant_violation():
+    version_count = 0
+    version_files = []
+    for i in range(1, 20):
+        try:
+            version_name = "testfile.txt.v" + str(i)
+            f = openfile(version_name, False)
+            f.close()
+            version_count += 1
+            version_files.append(version_name)
+        except Exception as e:
+            if version_count > 0:
+                break
+
+    base_exists = False
+    try:
+        f = openfile("testfile.txt", False)
+        f.close()
+        base_exists = True
+    except Exception as e:
+        pass
+
+    total_files = version_count
+    if base_exists:
+        total_files = total_files + 1
+
+    NUM_THREADS = 25
+
+    if total_files < NUM_THREADS:
+        log("launched 25 threads to create files but only " + str(total_files) + " files were created\n")
+
+        base_msg = "Yes"
+        if not base_exists:
+            base_msg = "No"
+        log("Base file exists: " + base_msg + "\n")
+        log("Version files found: " + str(version_files) + "\n\n")
+
+
+if callfunc == "initialize":
+    NUM_THREADS = 5
+
+    for i in range(NUM_THREADS):
+        createthread(thread_attack)
+
+    sleep(2)
+    check_invariant_violation()

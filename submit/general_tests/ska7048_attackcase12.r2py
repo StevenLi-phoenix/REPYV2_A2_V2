@@ -1,0 +1,20 @@
+f1 = openfile("readwritetest12.txt", True)
+f1.writeat("test", 0)
+
+try:
+    content = f1.readat(4, 0)
+    if content != "test":
+        log("BUG FOUND\n")
+except:
+    log("BUG FOUND\n")
+
+f1.writeat("new", 0)
+
+try:
+    content2 = f1.readat(3, 0)
+    if content2 != "new":
+        log("BUG FOUND\n")
+except:
+    log("BUG FOUND\n")
+
+f1.close()

@@ -1,0 +1,36 @@
+# Test 8: Can we create new version while latest version is still open?
+# Purpose: Test if monitor prevents version creation while file is open
+# Expected: Should raise FileInUseError
+
+# Step 1: Create a base file
+f1 = openfile("testfile8.txt", True)
+
+# Step 2: Write some data
+f1.writeat("Data1", 0)
+
+# Step 3: Close base file
+f1.close()
+
+# Step 4: Open the file with create=True to create version 1
+f2 = openfile("testfile8.txt", True)
+
+# Step 5: Write to version 1
+f2.writeat("Data2", 0)
+
+# Step 6: Try to create ANOTHER version while f2 (version 1) is still open
+# Specification: "a new version cannot be created while the latest version is open"
+try:
+    # Attempt to create version 2 while version 1 is still open
+    f3 = openfile("testfile8.txt", True)
+
+    # If we reach here, created new version while previous was open - FLAW!
+    log("FLAW FOUND: Created new version while previous version still open!\n")
+
+    # Clean up
+    f3.close()
+
+except Exception:
+    pass
+
+# Clean up
+f2.close()

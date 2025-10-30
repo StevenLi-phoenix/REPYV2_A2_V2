@@ -1,0 +1,22 @@
+"""
+Attack Case 4: Test that file deletion is not allowed
+"""
+# Create a file
+f1 = openfile("testfile", True)
+f1.writeat("Data", 0)
+f1.close()
+
+# Try to delete it - should raise RepyArgumentError
+try:
+    removefile("testfile")
+    raise Exception("Should not allow file deletion")
+except RepyArgumentError:
+    pass  # Expected
+except Exception as e:
+    raise Exception("Wrong exception: " + str(e))
+
+# Verify file still exists
+files = listfiles()
+if "testfile" not in files:
+    raise Exception("File should still exist")
+

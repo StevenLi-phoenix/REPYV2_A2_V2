@@ -1,0 +1,10 @@
+f1 = openfile("testfile", True)
+
+try:
+    f2 = openfile("testfile", True)
+    log("Able to create new file while previous version is open")
+
+except FileInUseError:
+    pass
+except Exception as e:
+    log("unexpected error occured while file was open")

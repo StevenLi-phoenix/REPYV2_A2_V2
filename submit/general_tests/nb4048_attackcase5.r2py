@@ -1,0 +1,36 @@
+# Seed base content first
+seed = openfile("filename", True)
+seed.writeat("seed", 0)
+seed.close()
+
+state = {"success": 0, "inuse": 0, "other": 0, "done": 0}
+
+def worker():
+  try:
+    f = openfile("filename", True)
+    f.readat(None, 0)
+    sleep(0.2)
+    f.close()
+    state["success"] = state["success"] + 1
+  except FileInUseError:
+    state["inuse"] = state["inuse"] + 1
+  except:
+    state["other"] = state["other"] + 1
+  state["done"] = state["done"] + 1
+
+# Start three threads
+createthread(worker)
+createthread(worker)
+createthread(worker)
+
+# Wait for all three to finish with a timeout
+spins = 0
+while state["done"] < 3 and spins < 400:
+  sleep(0.01)
+  spins = spins + 1
+
+# one should succeed, two should see FileInUseError
+assert state["done"] == 3
+assert state["success"] == 1
+assert state["inuse"] == 2
+assert state["other"] == 0

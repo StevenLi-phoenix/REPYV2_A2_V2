@@ -1,0 +1,14 @@
+file_name = "test_file"
+
+try:
+    f = openfile(file_name, True)
+    f.writeat("v1 content", 0)
+    closed_handle = f
+    closed_handle.close()
+
+    closed_handle.writeat("Overwritten after close", 0)
+
+    raise Exception("WriteAfterCloseSucceeded")
+
+except (FileInUseError, RepyArgumentError, Exception):
+    pass

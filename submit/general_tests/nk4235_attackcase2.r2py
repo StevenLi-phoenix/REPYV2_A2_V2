@@ -1,0 +1,25 @@
+# Attack: Verify content is correctly copied to new versions
+f1 = openfile("preserve", True)
+f1.writeat("ABCDEFGHIJ", 0)
+f1.close()
+
+f2 = openfile("preserve", True)
+content = f2.readat(None, 0)
+assert content == "ABCDEFGHIJ", "Content should be preserved"
+f2.writeat("XYZ", 3)  # Modify in new version
+f2.close()
+
+f2 = openfile("preserve", True)
+content = f2.readat(None, 0)
+f2.writeat("PQR", 3)  # Modify in new version
+f2.close()
+
+# Old version should still have original content
+old = openfile("preserve.v2", False)
+assert old.readat(None, 0) == "ABCPQRGHIJ"
+old.close()
+
+# New version should have modified content
+new = openfile("preserve.v1", False)
+assert new.readat(None, 0) == "ABCXYZGHIJ"
+new.close()

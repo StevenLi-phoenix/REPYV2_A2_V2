@@ -1,0 +1,19 @@
+# Test 1: Can we write to a closed file?
+
+
+# Step 1: Create a new file with create=True
+myfile = openfile("testfile1.txt", True)
+
+# Step 2: Write some initial data at offset 0
+myfile.writeat("HelloWorld", 0)
+
+myfile.close()
+
+try:
+    # Attempt to write to closed file
+    myfile.writeat("TryingToModify", 0)
+
+    log("FLAW FOUND: Was able to write to closed file!\n")
+
+except Exception:
+    pass

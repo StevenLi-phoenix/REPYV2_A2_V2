@@ -1,0 +1,18 @@
+# Testing: remove file not allowed
+
+# Create first version
+try:
+    f4 = openfile("tst4", True)
+    f4.writeat("hello", 0)
+    f4.close()
+except Exception:
+    assert False
+
+# Try to remove file
+try:
+    removefile("tst4")
+    assert False
+except RepyArgumentError:
+    pass
+except Exception:
+    assert False

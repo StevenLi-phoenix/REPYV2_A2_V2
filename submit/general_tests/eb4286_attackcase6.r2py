@@ -1,0 +1,8 @@
+# Filename has v1 but is not a version file
+try:
+    f1 = openfile('thisfile.v1.txt', True)
+except RepyArgumentError:
+    log("Issue: Cannot create file with .v in the middle\n")
+except Exception:
+    pass
+

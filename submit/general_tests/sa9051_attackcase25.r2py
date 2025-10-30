@@ -1,0 +1,4 @@
+try:
+    openfile(99999, True)
+except Exception:
+    pass

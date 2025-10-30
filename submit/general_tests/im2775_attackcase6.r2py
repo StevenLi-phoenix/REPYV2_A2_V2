@@ -1,0 +1,14 @@
+f = openfile("immutable", True)
+f.writeat("version1", 0)
+f.close()
+
+f = openfile("immutable", True)
+f.writeat("version2", 0)
+f.close()
+
+try:
+    old = openfile("immutable.v1", False)
+    old.writeat("hacked", 0)
+    old.close()
+except FileInUseError:
+    pass

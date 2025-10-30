@@ -1,0 +1,32 @@
+"""
+Attack 4: Create a new version while the latest version is still open.
+Expected secure behavior: should raise FileInUseError (or equivalent) and not allow.
+This test logs ONLY if the second create succeeds.
+"""
+
+second_opened = False
+
+try:
+    f1 = openfile("wdn2012_t4", True)
+    try:
+        # Attempt to create another version while f1 is still open
+        try:
+            f2 = openfile("wdn2012_t4", True)
+            second_opened = True
+        except Exception:
+            pass
+        if second_opened:
+            try:
+                f2.close()
+            except Exception:
+                pass
+            log("EXPLOIT: allowed creating new version while latest open")
+    finally:
+        try:
+            f1.close()
+        except Exception:
+            pass
+except Exception:
+    pass
+
+

@@ -1,0 +1,7 @@
+# Reading older versions allowed
+
+f = openfile("t03", True); f.writeat("OLD",0); f.close()
+openfile("t03", True).close()  # v1
+v1 = openfile("t03.v1", False)
+if v1.readat(None, 0) != "OLD": raise Exception("older version read mismatch")
+v1.close()

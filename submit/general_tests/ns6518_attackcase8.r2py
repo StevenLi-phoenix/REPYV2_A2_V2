@@ -1,0 +1,37 @@
+
+# Test 8 — Filename ambiguity edge-cases.
+# Ensure only trailing '.v<integer>' is treated as version suffix and explicit creation is only rejected when pattern matches.
+
+# Case A: name contains ".v" but not trailing .v<number> — should allow normal creation
+fA = openfile("tc8.vtext", True)
+fA.writeat("A", 0)
+fA.close()
+
+# Case B: double suffix like name.v1.v2 — the trailing .v2 is a version and explicit creation of such a version must be disallowed
+try:
+    # Trying to explicitly create a versioned file should raise
+    g = openfile("tc8_double.v2", True)
+    # If we get here, it's a failure
+    assert False
+except Exception:
+    pass
+
+# Case C: create base and then open explicit v1 for read (should exist) and ensure reads allowed
+fbase = openfile("tc8_base", True)
+fbase.writeat("B", 0)
+fbase.close()
+
+# create v2 by creating a new version
+fbase2 = openfile("tc8_base", True)
+fbase2.writeat("C", 0)
+fbase2.close()
+
+# open older explicit v1 (should exist for read)
+try:
+    older = openfile("tc8_base.v1", False)
+    # reading allowed
+    _ = older.readat(None, 0)
+    older.close()
+except Exception:
+    # If this fails, something's wrong with version lookup
+    assert False

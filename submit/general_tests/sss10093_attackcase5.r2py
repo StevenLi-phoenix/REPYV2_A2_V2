@@ -1,0 +1,43 @@
+mycontext['base_handle'] = None
+mycontext['version_handle'] = None
+mycontext['lock'] = createlock()
+
+def thread_open_version():
+    try:
+        sleep(0.05)
+        v = openfile("baseversionrace.txt.v1", False)
+        mycontext['lock'].acquire(True)
+        mycontext['version_handle'] = v
+        mycontext['lock'].release()
+        sleep(0.2)
+        v.close()
+    except Exception as e:
+        pass
+
+try:
+    f = openfile("baseversionrace.txt", True)
+    f.writeat("original", 0)
+    f.close()
+    
+    f2 = openfile("baseversionrace.txt", True)
+    f2.writeat("second", 0)
+    f2.close()
+    
+    createthread(thread_open_version)
+    
+    sleep(0.1)
+    base = openfile("baseversionrace.txt", False)
+    mycontext['base_handle'] = base
+    
+    sleep(0.3)
+    
+    base.close()
+    
+    if mycontext['version_handle']:
+        try:
+            mycontext['version_handle'].close()
+        except:
+            pass
+    
+except Exception as e:
+    pass

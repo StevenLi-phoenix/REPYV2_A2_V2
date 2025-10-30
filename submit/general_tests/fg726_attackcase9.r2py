@@ -1,0 +1,6 @@
+# Spec 2: Environment should start empty (silent on success)
+
+files = listfiles()
+if len(files) != 0:
+    raise Exception("Environment not empty at start; first existing file: %s" % str(files[0]))
+# silent on success

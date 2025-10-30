@@ -1,0 +1,29 @@
+# Test: listfiles() must **not** reveal versioned filenames
+
+# Create a base file and a couple versions
+try:
+    f1 = openfile("tc6file", True)
+    f1.writeat("data", 0)
+    f1.close()
+
+    f2 = openfile("tc6file", True)
+    f2.close()
+
+    f3 = openfile("tc6file", True)
+    f3.close()
+except Exception:
+    # Unexpected failure in setup
+    assert False
+
+# Now check listfiles()
+try:
+    files = listfiles()
+except Exception:
+    assert False
+
+# Base name MUST be present
+assert "tc6file" in files
+
+# No explicit version should be visible
+for fname in files:
+    assert ".v" not in fname

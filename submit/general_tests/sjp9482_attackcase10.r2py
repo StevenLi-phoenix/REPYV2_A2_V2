@@ -1,0 +1,20 @@
+file_name = "test_file"
+
+try:
+    f1 = openfile(file_name, True)
+    f1.writeat("", 0)
+    f1.close()
+
+    f2 = openfile(file_name, True)
+    f2.writeat("New content in v2", 0)
+    f2.close()
+
+    f_read = openfile(file_name, False)
+    content = f_read.readat(None, 0)
+    f_read.close()
+
+    if content != "New content in v2":
+        raise Exception("ZeroByteCopyLogicFailed")
+
+except Exception:
+    raise Exception("UnexpectedCrashOnZeroByteFile")

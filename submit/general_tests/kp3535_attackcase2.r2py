@@ -1,0 +1,31 @@
+### Testing: cannot create new version while latest is open ###
+
+# create first version
+try:
+    f2 = openfile("tst2", True)
+    f2.writeat("first", 0)
+    f2.close()
+except Exception:
+    assert False
+
+# create second (latest) version, and leave it open
+try:
+    f2a = openfile("tst2", True)
+    f2a.writeat("2", 5)
+except Exception:
+    assert False
+
+# attempt to create another version while latest (f2) is open is not allowed
+
+try:
+    f2b = openfile("tst2", True)
+    f2b.close()
+    assert False
+except FileInUseError:
+    pass
+except Exception:
+    assert False
+
+f2a.close()
+
+

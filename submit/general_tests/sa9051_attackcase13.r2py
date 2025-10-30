@@ -1,0 +1,6 @@
+for i in range(1, 4):
+    try:
+        openfile("edgecreate.v1", True)
+        assert False, "explicit .v1 create must raise RepyArgumentError"
+    except RepyArgumentError:
+        pass

@@ -1,0 +1,33 @@
+
+# Test 10 — Partial-create / consistency test.
+# Repeated create attempts interleaved with read checks to ensure no partial or truncated version left behind.
+
+base = "tc10_partial"
+# Start from scratch
+f0 = openfile(base, True)
+f0.writeat("start", 0)
+f0.close()
+
+# Attempt several create cycles; if a partial version appears (e.g., empty or truncated), we detect it by reading
+for i in range(6):
+    try:
+        nf = openfile(base, True)
+        content = nf.readat(None, 0)
+        # content must be at least the previous data (non-empty)
+        assert content != ""
+        nf.close()
+    except Exception:
+        # Creation might fail in some implementations; that's allowed, but we continue testing
+        pass
+
+# Final verification: open the base (latest) and read
+try:
+    final = openfile(base, False)
+    data = final.readat(None, 0)
+    # Must be non-empty and should contain "start" from original
+    assert data != ""
+    assert "start" in data
+    final.close()
+except Exception:
+    # If we fail to open/read, treat as a test failure
+    assert False

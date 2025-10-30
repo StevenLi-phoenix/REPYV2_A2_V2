@@ -1,0 +1,22 @@
+# jd5517_attackcase8.r2py
+# reading older versions is allowed
+
+f1 = openfile("case8_base", True)
+f1.writeat("orig", 0)
+f1.close()
+
+# create new version if allowed
+try:
+    f2 = openfile("case8_base", True)
+    f2.writeat("later", 0)
+    f2.close()
+except FileInUseError:
+    pass
+
+older = openfile("case8_base.v1", False)
+try:
+    data_old = older.readat(None, 0)
+finally:
+    older.close()
+
+assert data_old == "orig"

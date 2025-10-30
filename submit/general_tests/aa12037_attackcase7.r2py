@@ -1,0 +1,19 @@
+# Test: Writing to older files is not allowed
+
+f1 = openfile("a7_testfile", True)
+f1.writeat("HELLOTHERE", 0)
+f1.close()
+
+# Create a new version
+f2 = openfile("a7_testfile", True)
+f2.close()
+
+# Try writing to older version
+f3 = openfile("a7_testfile", False)
+
+try:
+    f3.writeat("WRITINGTOFILE", 0)
+    f3.close()
+    assert False, "Cannot allow writing to older versions"
+except FileInUseError:
+    pass

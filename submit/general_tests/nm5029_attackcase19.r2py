@@ -1,0 +1,10 @@
+# <netid>_attackcase14_mem_pressure_version_copy.r2py
+name = "t14_mem"
+CHUNK = 4096; ITER = 4096   # ~16MB
+blk = "A" * CHUNK
+f = openfile(name, True)
+i = 0; off = 0
+while i < ITER:
+  f.writeat(blk, off); off = off + CHUNK; i = i + 1
+f.close()
+v1 = openfile(name, True); v1.close()        # should not crash due to memory

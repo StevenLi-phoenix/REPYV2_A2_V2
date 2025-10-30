@@ -1,0 +1,10 @@
+name = "explicit_test.v1"
+try:
+  h = openfile(name, True)
+  try: h.write("oops"); h.close()
+  except: pass
+  try: log("VULN: explicit_version_creation_allowed")
+  except: pass
+except:
+  # expected
+  pass

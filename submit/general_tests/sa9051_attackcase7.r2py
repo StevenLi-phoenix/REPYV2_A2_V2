@@ -1,0 +1,15 @@
+g1 = openfile("race", True)
+g1.writeat("orig", 0)
+g1.close()
+
+g2 = openfile("race", True)
+g2.writeat("mid", 0)
+g2.close()
+
+older = openfile("race.v1", False)
+
+g3 = openfile("race", True)
+g3.writeat("new", 0)
+g3.close()
+
+older.close()

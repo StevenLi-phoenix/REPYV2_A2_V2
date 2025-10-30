@@ -1,0 +1,37 @@
+# Test Case 10: Test listfiles() returns only base names, not version files
+# listfiles() should abstract away version files and show only base names
+
+# Create files with versions
+f1 = openfile("alpha.txt", True)
+f1.writeat("a", 0)
+f1.close()
+
+f2 = openfile("alpha.txt", True)
+f2.writeat("a2", 0)
+f2.close()
+
+f3 = openfile("beta.txt", True)
+f3.writeat("b", 0)
+f3.close()
+
+# Get file listing
+files = listfiles()
+
+# Should not contain version files in the list
+for f in files:
+    if ".v" in f and f[-1].isdigit():
+        # Found a version file in listing
+        log("ATTACK SUCCESSFUL: listfiles() returned version file: " + f + "\n")
+        exitall()
+
+# Should contain base names
+if "alpha.txt" not in files or "beta.txt" not in files:
+    log("ATTACK SUCCESSFUL: listfiles() missing base names\n")
+    exitall()
+
+# Should not have duplicates
+if len(files) != len(set(files)):
+    log("ATTACK SUCCESSFUL: listfiles() returned duplicates\n")
+    exitall()
+
+log("Test passed - listfiles() returns base names only\n")

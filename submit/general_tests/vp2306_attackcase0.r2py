@@ -1,0 +1,11 @@
+#check for illegal names
+
+illegal_names = [".hidden", "UPpERCASE", "name with space", "#*()illegalsymbols", ""," "]
+for n in illegal_names:
+    try:
+        openfile(n, True)
+        assert False
+    except RepyArgumentError:
+        pass
+    except Exception:
+        raise

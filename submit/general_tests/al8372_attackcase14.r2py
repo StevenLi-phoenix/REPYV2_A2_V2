@@ -1,0 +1,17 @@
+# Attack Case 14: Offset-based writes
+
+fq = openfile("quickreopen", True)
+fq.writeat("quick", 0)
+fq.close()
+
+fq2 = openfile("quickreopen", False)
+assert fq2.readat(None, 0) == "quick"
+fq2.close()
+
+foff = openfile("offsets", True)
+foff.writeat("0123456789", 0)
+foff.writeat("XX", 5)
+result = foff.readat(None, 0)
+assert result == "01234XX789", "Offset writes should work correctly"
+foff.close()
+

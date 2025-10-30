@@ -1,0 +1,32 @@
+mycontext['lock'] = createlock()
+mycontext['list_results'] = []
+
+def thread_create_files():
+    try:
+        for i in range(5):
+            f = openfile("listrace" + str(i) + ".txt", True)
+            f.writeat("data", 0)
+            f.close()
+            sleep(0.05)
+    except Exception as e:
+        pass
+
+def thread_list_files():
+    try:
+        for i in range(10):
+            files = listfiles()
+            mycontext['lock'].acquire(True)
+            mycontext['list_results'].append(len(files))
+            mycontext['lock'].release()
+            sleep(0.03)
+    except Exception as e:
+        pass
+
+try:
+    createthread(thread_create_files)
+    createthread(thread_list_files)
+    
+    sleep(0.8)
+
+except Exception as e:
+    pass

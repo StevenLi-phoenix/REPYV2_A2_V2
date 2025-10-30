@@ -1,0 +1,26 @@
+def slow_writer():
+    f = openfile("testfile", True)
+    sleep(2)  # Hold file open
+    f.writeat("Thread 1 data", 0)
+    f.close()
+
+def fast_opener():
+    sleep(0.1)  # Small delay to ensure first thread opens first
+    try:
+        f = openfile("testfile", True)  # Try to create another version
+        f.writeat("Thread 2 data", 0)
+        f.close()
+        log("FileInUseError: Created new version while previous was still open\n")
+    except FileInUseError:
+        pass
+    except Exception as e:
+        log("An error occurred: " + str(e) + "\n")
+
+f = openfile("testfile", True)
+f.writeat("Initial data", 0)
+f.close()
+
+createthread(slow_writer)
+createthread(fast_opener)
+
+sleep(3)

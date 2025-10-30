@@ -1,0 +1,13 @@
+"""
+Attack Case 6: Test that non-version filenames containing '.v' are handled appropriately.
+"""
+
+# Create an ordinary file whose name contains '.v' but is NOT a versioned file.
+f = openfile("movie.voucher", True)
+f.writeat("hello", 0)
+f.close()
+
+# listfiles() SHOULD include the exact filename "movie.voucher" (it's not a version file).
+files = listfiles()
+if "movie.voucher" not in files:
+    raise Exception("Non-version filename 'movie.voucher' was hidden or renamed")
