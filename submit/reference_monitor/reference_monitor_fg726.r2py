@@ -1,0 +1,463 @@
+# reference_monitor_fg726.r2py
+
+"""
+Reference monitor implementing immutable, versioned files per assignment spec.
+- Creates base file when first created
+- On create=True and base exists: create next version filename.vN copying latest contents
+- Prevents creating explicit .vN files manually
+- Prevents creating a new version while the latest version is open (FileInUseError)
+- Older versions are read-only (write attempts raise FileInUseError)
+- removefile is forbidden (RepyArgumentError)
+- listfiles hides version names and lists only base filenames
+"""
+
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+# Helper to detect explicit version filenames: ends with ".v<digits>"
+def _is_explicit_version(name):
+    # Return True iff name ends with ".v<digits>"
+    # Examples: "a.v1" -> True, "a.v01" -> True, "a.v" -> False, "a.vx" -> False, "a" -> False
+    # Implemented without any banned constructs (no ternary, no comprehensions).
+    idx = -1
+    i = 0
+    n = len(name)
+    # find last occurrence of ".v"
+    while i < n - 1:
+        if name[i] == '.' and name[i+1] == 'v':
+            idx = i
+        i = i + 1
+
+    if idx == -1:
+        return False
+
+    base = name[:idx]
+    suffix = name[idx+2:]
+
+    if base == "":
+        return False
+    if suffix == "":
+        return False
+
+    j = 0
+    while j < len(suffix):
+        ch = suffix[j]
+        if ch < '0' or ch > '9':
+            return False
+        j = j + 1
+
+    return True
+
+
+# Global monitor state (kept in the security layer's context)
+# versions_map: base_name -> list of versions in increasing order, where index 0 is base (base has no ".v")
+# open_handles: mapping filename -> count of open handles
+# latest_open_flag: base_name -> bool indicating whether the latest version is currently open
+versions_map = {}
+open_handles = {}
+latest_open_flag = {} #spec #4
+finalized_versions = {}  # base -> last finalized version name, to make latest file immutable
+
+# One per-base lock to serialize version creation and writes
+base_locks = {}
+
+def _get_lock(base):
+    """Return the lock object for a given base filename."""
+    if base not in base_locks:
+        base_locks[base] = createlock()
+    return base_locks[base]
+
+
+# internal helpers
+def _ensure_entry_for_base(base):
+    if base not in versions_map:
+        versions_map[base] = []
+        latest_open_flag[base] = False
+
+def _register_created(filename):
+    # filename either "base" or "base.vN"
+    if ".v" in filename:
+        base = filename.split(".v", 1)[0]
+    else:
+        base = filename
+    _ensure_entry_for_base(base)
+    lst = versions_map[base]
+
+    # ensure uniqueness and ordering: base (no .v) should be at index 0 if present
+    exists = False
+    i = 0
+    while i < len(lst):
+        if lst[i] == filename:
+            exists = True
+            break
+        i = i + 1
+    if not exists:
+        if filename == base:  #can be used for attack later!!
+            # insert base at front
+            # only insert if not present
+            # shift others to the right
+            newlst = [filename]
+            j = 0
+            while j < len(lst):
+                newlst.append(lst[j])
+                j = j + 1
+            versions_map[base] = newlst
+        else:
+            # append version name at the end
+            lst.append(filename)
+            versions_map[base] = lst
+
+def _register_open(filename):
+    # increment open handle count for this filename
+    if filename in open_handles:
+        open_handles[filename] = open_handles[filename] + 1
+    else:
+        open_handles[filename] = 1
+
+    # set latest_open_flag for base if this filename is the latest
+    if ".v" in filename:
+        base = filename.split(".v", 1)[0]
+    else:
+        base = filename
+    _ensure_entry_for_base(base)
+    lst = versions_map.get(base, [])
+    latest = base
+    if lst and len(lst) > 0:
+        latest = lst[-1]
+    if filename == latest:
+        latest_open_flag[base] = True #spec #4
+
+def _register_close(filename):
+    if filename in open_handles:
+        count = open_handles[filename] - 1
+        if count < 0:
+            count = 0
+        open_handles[filename] = count
+    # update latest_open_flag for the base
+    if ".v" in filename:
+        base = filename.split(".v", 1)[0]
+    else:
+        base = filename
+    _ensure_entry_for_base(base)
+    lst = versions_map.get(base, [])
+    if lst and len(lst) > 0:
+        latest = lst[-1]
+    else:
+        latest = base
+    latest_count = 0
+    if latest in open_handles:
+        latest_count = open_handles[latest]
+    if latest_count > 0:
+        latest_open_flag[base] = True
+    else:
+        latest_open_flag[base] = False
+
+def _highest_version(base):
+    lst = versions_map.get(base, [])
+    maxv = 0
+    i = 0
+    while i < len(lst):
+        name = lst[i]
+        prefix = base + ".v"
+        # check if name starts with prefix
+        starts = False
+        # simple startswith impl
+        j = 0
+        if len(name) >= len(prefix):
+            starts = True
+            while j < len(prefix):
+                if name[j] != prefix[j]:
+                    starts = False
+                    break
+                j = j + 1
+        if starts:
+            suffix = name[len(prefix):]
+            # check digits
+            ok = True
+            k = 0
+            if suffix == "":
+                ok = False
+            while ok and k < len(suffix):
+                ch = suffix[k]
+                if ch < '0' or ch > '9':
+                    ok = False
+                k = k + 1
+            if ok:
+                # convert suffix to int
+                v = 0
+                k = 0
+                while k < len(suffix):
+                    v = v * 10 + (ord(suffix[k]) - ord('0'))
+                    k = k + 1
+                if v > maxv:
+                    maxv = v
+        i = i + 1
+    return maxv
+
+# VM wrapper
+class VMFile():
+    def __init__(self, filename, create):
+
+        # Disallow explicit version creation with create=True
+        if create and _is_explicit_version(filename):
+            raise RepyArgumentError("Cannot create explicit version files")
+
+        # If opening an explicit version with create=False -> open that version only if exists
+        if not create and _is_explicit_version(filename):
+            # try to open exactly that version (underlying will raise if missing)
+            self.under = openfile(filename, False)
+            # record and mark open
+            self.name = filename
+            _register_created(self.name)
+            _register_open(self.name)
+            return
+
+        # If not create, and not explicit version -> try to open base or exact filename
+        if not create:
+            self.under = openfile(filename, False)
+            self.name = filename
+            _register_created(self.name)
+            _register_open(self.name)
+            return
+
+        # create == True, filename is not explicit version
+        base = filename
+        if ".v" in filename:
+            base = filename.split(".v", 1)[0]
+
+        lock = _get_lock(base)
+        lock.acquire(True)
+        # Attempt to open base to detect existence
+        try:
+            basehandle = openfile(filename, False)
+
+            # base exists — read its contents (may be empty) and close
+            try:
+                content = basehandle.readat(None, 0)
+            except Exception:
+                content = ""
+            try:
+                basehandle.close()
+            except Exception:
+                pass
+
+            # Ensure we know about base
+            _register_created(filename)
+            _ensure_entry_for_base(filename)
+
+            # Get current version list for this base
+            lst = versions_map.get(filename, [])
+            if not lst:
+                lst = [filename]
+                versions_map[filename] = lst
+
+            # Determine the latest version to copy from (base or last .vN)
+            latest_name = lst[-1] #? error?
+
+            # If the latest version is currently open, block new creation
+            if latest_open_flag.get(filename, False):
+                raise FileInUseError("Latest version is currently open; cannot create new version")
+
+            # Read content from the latest version (not always the base!)
+            try:
+                latest_file = openfile(latest_name, False)
+                content = latest_file.readat(None, 0)
+                latest_file.close()
+            except Exception:
+                content = ""
+
+            # --- Second re-check before creating the new version (TOCTTOU protection) ---
+            # If someone opened or wrote to the latest during the copy window, abort creation.
+            # This ensures we never copy stale data.
+            if latest_open_flag.get(filename, False) or open_handles.get(latest_name, 0) > 0:
+                raise FileInUseError("Latest version was opened or written during creation; aborting")
+
+            # Compute the next version number from the existing ones
+            maxv = _highest_version(filename)
+            newv = maxv + 1
+            new_name = filename + ".v" + str(newv)
+
+            # Create the new version and copy content
+            self.under = openfile(new_name, True)
+            self.name = new_name
+            _register_created(self.name)
+
+            if content:
+                self.under.writeat(content, 0)
+
+            _register_open(self.name)
+            return
+        
+
+        except FileNotFoundError:
+            # base doesn't exist at all -> create base file
+            self.under = openfile(filename, True)
+            self.name = filename
+            _register_created(self.name)
+            _register_open(self.name)
+            return
+
+        except Exception:
+            # Any other exception should propagate up
+            raise
+        finally:
+            lock.release()
+    # readat: always allowed
+    def readat(self, num_bytes, offset):
+        return self.under.readat(num_bytes, offset)
+
+    # writeat: allowed only if this handle refers to the latest version of the base
+    def writeat(self, data, offset):
+        try:
+            # get the filename associated with this handle; if missing, deny
+            try:
+                target_name = self.name
+            except Exception:
+                raise FileInUseError("Cannot write: missing handle filename mapping")
+
+            # derive base from target_name (find last ".v")
+            base = target_name
+            pos = -1
+            i = 0
+            n = len(target_name)
+            while i < n - 1:
+                if target_name[i] == '.' and target_name[i+1] == 'v':
+                    pos = i
+                i = i + 1
+            if pos != -1:
+                base = target_name[:pos]
+
+            lock = _get_lock(base)
+            lock.acquire(True)
+
+            try:
+                _ensure_entry_for_base(base)
+                lst = versions_map.get(base, [])
+                latest_name = base
+                if lst and len(lst) > 0:
+                    latest_name = lst[-1]
+
+                # allow write only when this handle's name equals the latest registered name
+                if target_name != latest_name:
+                    raise FileInUseError("Cannot write to older version")
+                # Before performing write
+                if base in finalized_versions and target_name == finalized_versions[base]:
+                    raise FileInUseError("Cannot write: latest version is finalized (immutable)")
+                return self.under.writeat(data, offset)
+            
+            finally:
+                lock.release()
+
+        except FileInUseError:
+            raise
+        except Exception:
+            raise
+
+    def close(self):
+        try:
+            # use stored self.name to update registration; avoid introspection on underlying object
+            name = None
+            try:
+                name = self.name
+            except Exception:
+                name = None
+
+            res = self.under.close()
+
+            if name:
+                _register_close(name)
+
+                # --- Mark as finalized if this was the latest version ---
+                base = name
+                if ".v" in name:
+                    base = name.split(".v", 1)[0]
+                _ensure_entry_for_base(base)
+                lst = versions_map.get(base, [])
+                if lst and name == lst[-1]:
+                    latest_open_flag[base] = False
+                    finalized_versions[base] = name  # remember the latest closed version
+            return res
+        except Exception:
+            # best-effort: still call underlying close
+            try:
+                return self.under.close()
+            except Exception:
+                # propagate if underlying close also fails
+                raise
+
+# LP functions exposed to the child context
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    # deletion is not allowed per spec
+    raise RepyArgumentError("removefile not allowed")
+
+def LPlistfiles():
+    # Return only finalized base filenames (hide version numbers)
+    baselist = []
+
+    # Collect keys (base names) from finalized_versions
+    for base in finalized_versions:
+        # avoid duplicates just in case
+        found = False
+        i = 0
+        while i < len(baselist):
+            if baselist[i] == base:
+                found = True
+                break
+            i = i + 1
+        if not found:
+            baselist.append(base)
+
+    # Defensive: ensure only strings are returned
+    safe_list = []
+    i = 0
+    while i < len(baselist):
+        if isinstance(baselist[i], str):
+            safe_list.append(baselist[i])
+        i = i + 1
+
+    return safe_list
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

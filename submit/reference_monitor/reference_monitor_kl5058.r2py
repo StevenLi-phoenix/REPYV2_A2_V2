@@ -1,0 +1,189 @@
+"""
+Immutable versioned file system - ALL files immutable after close
+"""
+TYPE="type"
+ARGS="args"
+RETURN="return"
+EXCP="exceptions"
+TARGET="target"
+FUNC="func"
+OBJC="objc"
+
+open_handles={}
+next_version={}
+
+class VMFile():
+    def __init__(self,fn,create):
+        self.handle=None
+        self.readonly=False
+        self.filename=fn
+        
+        #parse version
+        if '.v' in fn:
+            parts=fn.rsplit('.v',1)
+            if len(parts)==2 and parts[1]:
+                try:
+                    vnum=int(parts[1])
+                    if vnum>0:
+                        if create:
+                            raise RepyArgumentError("Cannot create explicit version files")
+                        #Open version file read-only
+                        self.handle=openfile(fn,False)
+                        self.filename=fn
+                        self.readonly=True
+                        return
+                    else:
+                        if create:
+                            raise RepyArgumentError("Cannot create explicit version files")
+                        raise FileNotFoundError
+                except ValueError:
+                    if not create:
+                        raise FileNotFoundError
+        
+        base=fn
+        
+        #initialize version tracking
+        if base not in next_version:
+            highest=0
+            #if base exists
+            try:
+                openfile(base,False).close()
+                highest=0
+            except:
+                pass
+            #check version files
+            for i in range(1,10000):
+                try:
+                    openfile(base+'.v'+str(i),False).close()
+                    highest=i
+                except:
+                    if i>highest+10:
+                        break
+            next_version[base]=highest
+        
+        if create:
+            #find latest version
+            curr_v=next_version[base]
+            if curr_v==0:
+                latest_name=base
+            else:
+                latest_name=base+'.v'+str(curr_v)
+            
+            #if latest open
+            if latest_name in open_handles:
+                raise FileInUseError
+            
+            #if version exist
+            exists=False
+            try:
+                ftest=openfile(latest_name,False)
+                ftest.close()
+                exists=True
+            except:
+                pass
+            
+            if exists:
+                #copy latest
+                src=openfile(latest_name,False)
+                data=src.readat(None,0)
+                src.close()
+                
+                #create new
+                new_v=curr_v+1
+                new_name=base+'.v'+str(new_v)
+                
+                if len(new_name)<=120:
+                    self.handle=openfile(new_name,True)
+                    if data:
+                        self.handle.writeat(data,0)
+                    self.filename=new_name
+                    next_version[base]=new_v
+                    open_handles[new_name]=True
+                else:
+                    self.handle=openfile(latest_name,False)
+                    self.filename=latest_name
+                    self.readonly=True
+            else:
+                #create base
+                self.handle=openfile(base,True)
+                self.filename=base
+                next_version[base]=0
+                open_handles[base]=True
+        else:
+            try:
+                self.handle=openfile(base,False)
+                self.readonly=True
+            except:
+                raise FileNotFoundError
+    
+    def readat(self,sz,off):
+        return self.handle.readat(sz,off)
+    
+    def writeat(self,data,off):
+        if self.readonly:
+            raise FileInUseError
+        return self.handle.writeat(data,off)
+    
+    def close(self):
+        r=self.handle.close()
+        if self.filename in open_handles:
+            del open_handles[self.filename]
+        return r
+
+def LPopenfile(f,c):
+    return VMFile(f,c)
+
+def LPremovefile(f):
+    raise RepyArgumentError
+
+def LPlistfiles():
+    result=[]
+    all_files=listfiles()
+    for f in all_files:
+        if '.v' in f:
+            parts=f.rsplit('.v',1)
+            if len(parts)==2 and parts[1]:
+                try:
+                    int(parts[1])
+                    continue
+                except ValueError:
+                    pass
+        result.append(f)
+    return result
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

@@ -1,0 +1,375 @@
+"""
+==============================================================================
+ATTACK CASE: cyw6947_attackcase3.r2py
+==============================================================================
+Target NetID:        cyw6947
+Original Test:       test02_file_in_use.r2py
+Test File Path:      submit/general_tests/test02_file_in_use.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-2402
+  Task UUID:         ef65ee8b-cf7e-47d4-8652-26e9dca92ff8
+  Machine Type:      Standard_D4s_v3
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:20:58.551593
+  End Time:          2025-10-27T19:21:02.610983
+  Runtime:           4.0594 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       e6f61bc89fc2dbeb595df049992d39fc
+  Attack MD5:        e3d71292176fa6cefdf0e347cd5ba628
+  Combined MD5:      444ff9de820c4cf7a82983b27ba197f0
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 280, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 8, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 185, in LPopenfile
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 280, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 8, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 185, in LPopenfile
+  Exception (with class '.exception'): Failed to create new version file (already open?)
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Test 2: Cannot open file while it's already open
+  Verifies FileInUseError is raised when trying to open an already-open file
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: cyw6947)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py
+# 
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# class RepyArgumentError(Exception): pass
+# class exception(Exception): pass
+# 
+# ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyz01234567890._-"
+# 
+# def stardardize_filename(name):
+#     if type(name) != str:
+#         raise RepyArgumentError("filename must be a string")
+#     if not name or name in (".", ".."):
+#         raise RepyArgumentError("invalid filename")
+#     if name[0] == ".":
+#         raise RepyArgumentError("filename cannot start with .")
+#     if len(name) > 120:
+#         raise RepyArgumentError("filename too long")
+#     for ch in name:
+#         if ch not in ALLOWED_CHARS:
+#             raise RepyArgumentError("invalid character in filename")
+#     return name
+# 
+# def name_is_a_version(name):
+#     idx = name.rfind(".v")
+#     if idx <= 0:
+#         return False
+#     base = name[:idx]
+#     suffix = name[idx+2:]
+#     if base == "" or suffix == "":
+#         return False
+#     for ch in suffix:
+#         if ch < '0' or ch > '9':
+#             return False
+#     for ch in suffix:
+#         if ch < '0' or ch > '9':
+#             return False
+#     n = int(suffix)
+#     return n >= 1
+# 
+# def get_version_name(name):
+#     if not name_is_a_version(name):
+#         return None
+#     idx = name.rfind(".v")
+#     base = name[:idx]
+#     num = int(name[idx+2:])
+#     return (base, num)
+# 
+# def get_base_name(name):
+#     parsed = get_version_name(name)
+#     if parsed:
+#         return parsed[0]
+#     else:
+#         return name
+# 
+# def get_all_versions_of_base(base):
+#     try:
+#         all_files = listfiles()
+#     except Exception:
+#         all_files = []
+# 
+#     has_base = False
+#     versions = []
+# 
+#     for f in all_files:
+#         if f == base:
+#             has_base = True
+#         else:
+#             parsed = get_version_name(f)
+#             if parsed:
+#                 base_of_f, version = parsed
+#                 if base_of_f == base:
+#                     versions.append(version)
+# 
+#     i = 1
+#     while i < len(versions):
+#         j = i
+#         while j > 0 and versions[j-1] > versions[j]:
+#             tmp = versions[j-1]
+#             versions[j-1] = versions[j]
+#             versions[j] = tmp
+#             j -= 1
+#         i += 1
+# 
+#     return (has_base, versions)
+# 
+# def get_latest_name(base):
+#     has_base, nums = get_all_versions_of_base(base)
+#     if len(nums) > 0:
+#         return base + ".v" + str(nums[-1])
+#     elif has_base:
+#         return base
+#     else:
+#         return None
+# 
+# def get_next_version(base):
+#     has_base, nums = get_all_versions_of_base(base)
+#     if len(nums) > 0:
+#         n = (nums[-1] + 1)
+#     else:
+#         n = 1
+#     return base + ".v" + str(n)
+# 
+# class VMFile():
+#     def __init__(self, handle, filename, is_a_version, can_write):
+#     # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#     # (Incomplete: does not handle further versions like v2, v3, etc.)
+#         # if create:
+#         #     if filename in listfiles():
+#         #         # File exists → create version 1
+#         #         prev_file = openfile(filename, False)
+#         #         content = prev_file.readat(None, 0)
+# 
+#         #         new_name = filename + ".v1"
+#         #         self.VMfile = openfile(new_name, True)
+#         #         self.VMfile.writeat(content, 0)
+#         #     else:
+#         #         # File doesn't exist → create filename
+#         #         self.VMfile = openfile(filename, True)
+#         # else:
+#         #     # Open existing file normally
+#         #     self.VMfile = openfile(filename, False)
+#         self._handle = handle
+#         self._filename = filename
+#         self._is_a_version = is_a_version
+#         self.can_write = can_write
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._handle.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self._is_a_version:
+#             raise RepyArgumentError("can't write to versioned file")
+#         if not self.can_write:
+#             raise RepyArgumentError("file not opened for writing")
+#         return self._handle.writeat(data, offset)
+# 
+# 
+#     def close(self):
+#         return self._handle.close()
+# 
+# 
+# def LPopenfile(filename, create):
+#     name = stardardize_filename(filename)
+#     if name_is_a_version(name):
+#         if create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         try:
+#             base = openfile(name, False)
+#         except Exception as e:
+#             raise exception("Version file not found")
+# 
+#         return VMFile(base, name, is_a_version=True, can_write=False)
+# 
+#     if not create:
+#         try: base_file = openfile(name, False)
+#         except Exception as e:
+#             raise exception("Cannot find/open file")
+#         return VMFile(base_file, name, is_a_version=False, can_write=True)
+# 
+#     latest = get_latest_name(name)
+#     if latest is None:
+#         try:
+#             new_base = openfile(name, True)
+#         except Exception as e:
+#             raise exception("Failed to create new base file")
+#         return VMFile(new_base, name, is_a_version=False, can_write=True)
+# 
+#     try:
+#         src = openfile(latest, False)
+#     except Exception as e:
+#         raise exception("Failed to create new version file (already open?)")
+# 
+#     try:
+#         dst_name = get_next_version(name)
+#         try:
+#             dst = openfile(dst_name, True)
+#         except Exception as e:
+#             raise exception("Failed to create next version")
+# 
+#         offset = 0
+#         while True:
+#             chunk = src.readat(4096, offset)
+#             if not chunk:
+#                 break
+#             dst.writeat(chunk, offset)
+#             offset += len(chunk)
+#     finally:
+#         try:
+#             src.close()
+#         except Exception:
+#             pass
+#     return VMFile(dst, dst_name, is_a_version=False, can_write=True)
+# 
+# 
+# 
+# def LPremovefile(filename):
+#     stardardize_filename(filename)
+#     raise RepyArgumentError("removefile forbidden by reference monitor")
+# 
+# def LPlistfiles():
+#     try:
+#         all_files = listfiles()
+#     except Exception:
+#         all_files = []
+# 
+#     bases = {}
+#     for f in all_files:
+#         b = get_base_name(f)
+#         bases[b] = True
+# 
+#     keys = []
+#     for k in bases.keys():
+#         keys.append(k)
+# 
+#     i = 0
+#     while i < len(keys):
+#         min_idx = i
+#         j = i + 1
+#         while j < len(keys):
+#             if keys[j] < keys[min_idx]:
+#                 min_idx = j
+#             j += 1
+#         if min_idx != i:
+#             tmp = keys[i]
+#             keys[i] = keys[min_idx]
+#             keys[min_idx] = tmp
+#         i += 1
+#     return keys
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile2", True)
+try:
+    f2 = openfile("testfile2", True)
+    log("ERROR: Should not allow opening already-open file\n")
+    exitall()
+except FileInUseError:
+    pass
+f1.close()
+

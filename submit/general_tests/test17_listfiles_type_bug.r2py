@@ -1,0 +1,23 @@
+"""
+Target: zs2985
+Vulnerability: LPlistfiles() returns str(result) instead of result (returns string not list)
+Attack: Call listfiles() and verify it returns a proper list type
+"""
+
+# Create a file
+f = openfile("test", True)
+f.writeat("data", 0)
+f.close()
+
+# Call listfiles
+files = listfiles()
+
+# Check if it's actually a list (not a string representation)
+if not isinstance(files, list):
+    log("ERROR: listfiles() should return a list, not " + str(type(files)) + "\n")
+    exitall()
+
+# Check if we can iterate and access elements properly
+if "test" not in files:
+    log("ERROR: test file should be in listfiles\n")
+    exitall()

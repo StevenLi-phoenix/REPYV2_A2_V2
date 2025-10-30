@@ -1,0 +1,23 @@
+"""
+Test 4: Cannot write to old versions
+Verifies immutability is enforced after closing files
+"""
+
+f1 = openfile("testfile4", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile4", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Try to open and write to the base version (now immutable)
+f3 = openfile("testfile4", False)
+try:
+    f3.writeat("Hack", 0)
+    log("ERROR: Should not allow writing to old version\n")
+    exitall()
+except FileInUseError:
+    pass
+f3.close()
+

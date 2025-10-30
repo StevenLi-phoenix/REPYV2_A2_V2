@@ -1,0 +1,350 @@
+"""
+==============================================================================
+ATTACK CASE: n13302308_attackcase6.r2py
+==============================================================================
+Target NetID:        n13302308
+Original Test:       test21_filename_edge_cases.r2py
+Test File Path:      submit/general_tests/test21_filename_edge_cases.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-4329
+  Task UUID:         a316b5cd-011e-4244-9b88-9299bf1d133c
+  Machine Type:      m5.large
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:25:06.769711
+  End Time:          2025-10-27T19:25:12.236338
+  Runtime:           5.4666 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       d239f1e316a38c84e025805c71e4424d
+  Attack MD5:        ff058ba3b8ff9df14934fbafc02bcb42
+  Combined MD5:      38607334e5df9e4e33f3adfac8bf9c9d
+
+FAILURE DETAILS:
+  Reason:            ERROR: data.value should be in listfiles
+
+
+STDOUT:
+  ERROR: data.value should be in listfiles
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: kl5058, npj2009
+  Vulnerability: Edge cases in filename handling (length, parsing)
+  Attack: Test with long filenames and files with multiple .v patterns
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: n13302308)
+# ============================================================================
+# # reference_monitor_n13302308.r2py
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# 
+# # functions for filename checks
+# 
+# def _allowed(name):
+#     # only allow lowercase letters, numbers, '_', '-', and '.'
+#     valid = "abcdefghijklmnopqrstuvwxyz0123456789._-"
+#     if len(name) == 0 or len(name) > 120:
+#         return False
+#     for ch in name:
+#         if ch not in valid:
+#             return False
+#     return True
+# 
+# def _is_versioned(name):
+#     # checks if base file has versions -  base.v1 , base.v2
+#     parts = name.split(".v")
+#     return len(parts) == 2 and parts[1].isdigit()
+# 
+# def _parse_version(name):
+#     # returns (base, version_number) if file has versions
+#     if _is_versioned(name):
+#         base, num = name.split(".v")
+#         return (base, int(num))
+#     return None
+# 
+# def _validate_filename(name):
+#     # disallowed: '', '.', '..', start with '.', >120 chars, or invalid chars / as per prof def
+#     if not isinstance(name, str):
+#         raise RepyArgumentError("Invalid filename type")
+#     if name == "" or name == "." or name == "..":
+#         raise RepyArgumentError("Invalid filename")
+#     if name[0] == '.':
+#         raise RepyArgumentError("Filename cannot start with a period")
+#     if len(name) > 120:
+#         raise RepyArgumentError("Filename too long")
+#     if not _allowed(name):
+#         raise RepyArgumentError("Filename contains invalid characters")
+# 
+# 
+# # metadata tracking (stores versions, open count, latest version info)
+# 
+# _meta = {}
+# 
+# def _ensure_meta(base):
+#     if base not in _meta:
+#         _meta[base] = {"versions": [], "open_count": {}, "latest": None}
+# 
+# def _register_physical(base, phys, may_update_latest=True):
+#     # adds a version to metadata
+#     _ensure_meta(base)
+#     meta = _meta[base]
+#     if phys not in meta["versions"]:
+#         meta["versions"].append(phys)
+#     if phys not in meta["open_count"]:
+#         meta["open_count"][phys] = 0
+# 
+#     # only update "latest" if allowed
+#     if not may_update_latest:
+#         return
+# 
+#     cur = meta["latest"]
+#     if cur is None:
+#         meta["latest"] = phys
+#         return
+# 
+#     curv = _parse_version(cur)
+#     physv = _parse_version(phys)
+# 
+#     # always advance to higher version numbers
+#     if physv and curv:
+#         if physv[1] >= curv[1]:
+#             meta["latest"] = phys
+#     elif physv and not curv:
+#         meta["latest"] = phys
+# 
+# def _latest_physical(base):
+#     if base not in _meta:
+#         return None
+#     return _meta[base]["latest"]
+# 
+# def _is_open(phys, base):
+#     meta = _meta.get(base)
+#     if not meta:
+#         return False
+#     return meta["open_count"].get(phys, 0) > 0
+# 
+# def _inc_open(phys, base):
+#     _ensure_meta(base)
+#     meta = _meta[base]
+#     meta["open_count"][phys] = meta["open_count"].get(phys, 0) + 1
+# 
+# def _dec_open(phys, base):
+#     meta = _meta.get(base)
+#     if not meta:
+#         return
+#     cur = meta["open_count"].get(phys, 0)
+#     if cur > 0:
+#         meta["open_count"][phys] = cur - 1
+# 
+# def _next_version_number(base):
+#     # finds the next version number for new file creation
+#     maxn = 0
+#     for v in _meta.get(base, {}).get("versions", []):
+#         parsed = _parse_version(v)
+#         if parsed:
+#             _, n = parsed
+#             if n > maxn:
+#                 maxn = n
+#     return maxn + 1
+# 
+# 
+# # file wrapper(enforces immutability rules as per prof's def)
+# 
+# class VMFile():
+#     def __init__(self, physname, base, underlying, create_flag):
+#         self._phys = physname      # physical filename (like testfile.v2)
+#         self._base = base          # logical base name (like testfile)
+#         self._file = underlying    # actual repy file object
+#         self._closed = False
+#         self._create = create_flag
+#         _inc_open(self._phys, self._base)
+# 
+#     def readat(self, num_bytes, offset):
+#         # reading file is always allowed
+#         return self._file.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         # writing allowed only to the latest version
+#         latest = _latest_physical(self._base)
+#         if self._phys != latest:
+#             raise FileInUseError("Cannot write to older version")
+#         return self._file.writeat(data, offset)
+# 
+#     def close(self):
+#         if not self._closed:
+#             _dec_open(self._phys, self._base)
+#             self._closed = True
+#         return self._file.close()
+# 
+# 
+# # main code
+# 
+# def LPopenfile(filename, create):
+#     _validate_filename(filename)
+# 
+#     if _is_versioned(filename):
+#         # explicit version open: cannot create, and shouldn't change latest
+#         base, num = _parse_version(filename)
+#         _validate_filename(base)
+#         if create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+# 
+#         phys_list = listfiles()
+#         if filename not in phys_list and (base not in _meta or filename not in _meta[base]["versions"]):
+#             raise FileNotFoundError("Version not found")
+# 
+#         underlying = openfile(filename, False)
+#         _ensure_meta(base)
+#         _register_physical(base, filename, may_update_latest=False)
+#         return VMFile(filename, base, underlying, create)
+# 
+#     else:
+#         base = filename
+#         _validate_filename(base)
+#         latest = _latest_physical(base)
+# 
+#         if create:
+#             if latest is None:
+#                 # first file version should start from v1
+#                 newname = base + ".v1"
+#                 underlying = openfile(newname, True)
+#                 _register_physical(base, newname, may_update_latest=True)
+#                 return VMFile(newname, base, underlying, True)
+#             else:
+#                 if _is_open(latest, base):
+#                     raise FileInUseError("File already in use")
+# 
+#                 # copy contents from previous file and name it base + next consecutive version number
+#                 nv = _next_version_number(base)
+#                 newname = base + ".v" + str(nv)
+#                 latest_under = openfile(latest, False)
+#                 content = latest_under.readat(None, 0)
+#                 latest_under.close()
+# 
+#                 new_under = openfile(newname, True)
+#                 if content:
+#                     new_under.writeat(content, 0)
+#                 _register_physical(base, newname, may_update_latest=True)
+#                 return VMFile(newname, base, new_under, True)
+# 
+#         else:
+#             # if opening without create=True, return latest version
+#             if latest is None:
+#                 # rescan directory to rebuild db/file info that exists so that I dont have to rm files for every run
+#                 phys = listfiles()
+#                 candidates = []
+#                 for p in phys:
+#                     pv = _parse_version(p)
+#                     if pv and pv[0] == base:
+#                         candidates.append((pv[1], p))
+#                 if candidates:
+#                     candidates.sort()
+#                     _, latest = candidates[-1]
+#                     _register_physical(base, latest, may_update_latest=True)
+#                 else:
+#                     raise FileNotFoundError("File not found")
+# 
+#             underlying = openfile(latest, False)
+#             return VMFile(latest, base, underlying, False)
+# 
+# def LPremovefile(filename):
+#     # deleteion of file not allowed
+#     raise RepyArgumentError("removefile is not permitted")
+# 
+# def LPlistfiles():
+#     # list plain file name no version numbers
+#     phys = listfiles()
+#     bases = {}
+#     for p in phys:
+#         pv = _parse_version(p)
+#         if pv:
+#             base, _ = pv
+#             bases[base] = True
+#         else:
+#             bases[p] = True
+#     return list(bases.keys())
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+# Test 1: Long filename
+longname = "a" * 100
+f = openfile(longname, True)
+f.writeat("data", 0)
+f.close()
+
+# Create version
+f = openfile(longname, True)
+content = f.readat(None, 0)
+if content != "data":
+    log("ERROR: Version should copy content\n")
+    exitall()
+
+# Should be writable since it's the latest version
+try:
+    f.writeat("new", 0)
+except FileInUseError:
+    log("ERROR: Latest version should be writable\n")
+    exitall()
+f.close()
+
+# Test 2: File with .v but not a version
+f2 = openfile("data.value", True)
+f2.writeat("value_data", 0)
+f2.close()
+
+# Verify it appears in listfiles
+files = listfiles()
+if "data.value" not in files:
+    log("ERROR: data.value should be in listfiles\n")
+    exitall()

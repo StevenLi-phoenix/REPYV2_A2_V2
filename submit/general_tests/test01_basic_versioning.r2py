@@ -1,0 +1,27 @@
+"""
+Test 1: Basic file creation and versioning
+Verifies that file versioning works correctly (base -> v1 -> v2)
+"""
+
+# Create base file
+f1 = openfile("testfile1", True)
+f1.writeat("HelloWorld", 0)
+f1.close()
+
+# Create first version (v1)
+f2 = openfile("testfile1", True)
+content = f2.readat(None, 0)
+if content != "HelloWorld":
+    log("ERROR: Version should copy previous content\n")
+    exitall()
+f2.writeat("Version2", 10)
+f2.close()
+
+# Create second version (v2)
+f3 = openfile("testfile1", True)
+content = f3.readat(None, 0)
+if content != "HelloWorldVersion2":
+    log("ERROR: Version should copy latest content\n")
+    exitall()
+f3.close()
+

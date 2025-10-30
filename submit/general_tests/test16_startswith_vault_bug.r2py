@@ -1,0 +1,32 @@
+"""
+Targets: aa12037, al8372, bzy205, jaa10243, krg9790, nb4048, sr7991, zs2985
+Vulnerability: Uses startswith() which incorrectly matches "file.vault" when checking for "file.v*"
+Attack: Create "data.vault" then "data" - should not confuse them as versions
+"""
+
+# Create file with .v in name but not a version
+f1 = openfile("data.vault", True)
+f1.writeat("vault_data", 0)
+f1.close()
+
+# Create file with same prefix
+f2 = openfile("data", True)
+f2.writeat("base_data", 0)
+f2.close()
+
+# Create version of data - should copy from "data", not "data.vault"
+f3 = openfile("data", True)
+content = f3.readat(None, 0)
+if content != "base_data":
+    log("ERROR: Should copy from data, not data.vault\n")
+    exitall()
+f3.close()
+
+# Both should be in listfiles
+files = listfiles()
+if "data" not in files:
+    log("ERROR: data should be in listfiles\n")
+    exitall()
+if "data.vault" not in files:
+    log("ERROR: data.vault should be in listfiles\n")
+    exitall()

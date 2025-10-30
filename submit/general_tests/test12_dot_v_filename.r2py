@@ -1,0 +1,14 @@
+"""
+Test 12: Files with .v but not version pattern
+Verifies that files like "file.version" are allowed and listed
+"""
+
+f1 = openfile("file.version", True)
+f1.writeat("NotAVersion", 0)
+f1.close()
+
+files = listfiles()
+if "file.version" not in files:
+    log("ERROR: Non-version .v file should be listed\n")
+    exitall()
+

@@ -1,0 +1,243 @@
+"""
+==============================================================================
+ATTACK CASE: am12850_attackcase3.r2py
+==============================================================================
+Target NetID:        am12850
+Original Test:       test21_filename_edge_cases.r2py
+Test File Path:      submit/general_tests/test21_filename_edge_cases.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-1001
+  Task UUID:         9a3174f6-dd29-42db-9ee1-ac214913ea56
+  Machine Type:      c2-standard-4
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:18:55.794417
+  End Time:          2025-10-27T19:19:00.903807
+  Runtime:           5.1094 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       06566ce46a1e51e2561dc96bb19a1bb1
+  Attack MD5:        ff058ba3b8ff9df14934fbafc02bcb42
+  Combined MD5:      fae4fddef3bd173c30f4311a136d4b01
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 124, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 29, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 78, in LPopenfile
+    "monitor.r2py", line 34, in __init__
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 124, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 29, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 78, in LPopenfile
+    "monitor.r2py", line 34, in __init__
+  Exception (with class 'exception_hierarchy.RepyArgumentError'): Cannot create explicit version files
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: kl5058, npj2009
+  Vulnerability: Edge cases in filename handling (length, parsing)
+  Attack: Test with long filenames and files with multiple .v patterns
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: am12850)
+# ============================================================================
+# """
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# mycontext["open_files"] = set()
+# 
+# def getNextVersion(filename):
+#     version = 1
+#     while(filename + ".v" + str(version) in listfiles()):
+#         version += 1
+#     return version
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+# 
+#         self.filename = filename
+#         self.is_old = ".v" in filename
+# 
+#         if filename in mycontext["open_files"]:
+#             raise FileInUseError("New version cannot be created while latest is open")
+# 
+#         if create and '.v' in filename:
+#             raise RepyArgumentError("Cannot create explicit version files")
+# 
+#         # If a file with the same 'filename' already exists, this creates a new version such as 'filename.v1'.
+#         if create:
+#             if filename in listfiles():
+#                 # File exists → create next version 
+#                 next_version = getNextVersion(filename)
+# 
+#                 prev_file = openfile(filename, False)
+#                 content = prev_file.readat(None, 0)
+#                 prev_file.close()
+# 
+#                 new_name = filename + ".v" + str(next_version)
+#                 version_file = openfile(new_name, True)
+#                 version_file.writeat(content, 0)
+#                 version_file.close()
+# 
+#                 self.VMfile = openfile(filename, False)
+#                 
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.VMfile = openfile(filename, True)
+#         else:
+#             # Open existing file normally
+#             self.VMfile = openfile(filename, False)
+#         
+#         if '.v' not in filename:
+#             mycontext["open_files"].add(filename)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self.is_old:
+#             raise FileInUseError("Cannot write to old versions")
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         if '.v' not in self.filename:   
+#             mycontext["open_files"].discard(self.filename)
+#         return self.VMfile.close()
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("File deletion not allowed")
+# 
+# def LPlistfiles():
+#     all_files = listfiles()
+#     filtered_files = [file for file in all_files if ".v" not in file]
+#     return filtered_files
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# Test 1: Long filename
+longname = "a" * 100
+f = openfile(longname, True)
+f.writeat("data", 0)
+f.close()
+
+# Create version
+f = openfile(longname, True)
+content = f.readat(None, 0)
+if content != "data":
+    log("ERROR: Version should copy content\n")
+    exitall()
+
+# Should be writable since it's the latest version
+try:
+    f.writeat("new", 0)
+except FileInUseError:
+    log("ERROR: Latest version should be writable\n")
+    exitall()
+f.close()
+
+# Test 2: File with .v but not a version
+f2 = openfile("data.value", True)
+f2.writeat("value_data", 0)
+f2.close()
+
+# Verify it appears in listfiles
+files = listfiles()
+if "data.value" not in files:
+    log("ERROR: data.value should be in listfiles\n")
+    exitall()

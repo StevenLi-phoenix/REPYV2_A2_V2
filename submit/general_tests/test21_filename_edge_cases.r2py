@@ -1,0 +1,37 @@
+"""
+Targets: kl5058, npj2009
+Vulnerability: Edge cases in filename handling (length, parsing)
+Attack: Test with long filenames and files with multiple .v patterns
+"""
+
+# Test 1: Long filename
+longname = "a" * 100
+f = openfile(longname, True)
+f.writeat("data", 0)
+f.close()
+
+# Create version
+f = openfile(longname, True)
+content = f.readat(None, 0)
+if content != "data":
+    log("ERROR: Version should copy content\n")
+    exitall()
+
+# Should be writable since it's the latest version
+try:
+    f.writeat("new", 0)
+except FileInUseError:
+    log("ERROR: Latest version should be writable\n")
+    exitall()
+f.close()
+
+# Test 2: File with .v but not a version
+f2 = openfile("data.value", True)
+f2.writeat("value_data", 0)
+f2.close()
+
+# Verify it appears in listfiles
+files = listfiles()
+if "data.value" not in files:
+    log("ERROR: data.value should be in listfiles\n")
+    exitall()

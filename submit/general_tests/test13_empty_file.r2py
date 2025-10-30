@@ -1,0 +1,16 @@
+"""
+Test 13: Empty file versioning
+Verifies that empty files can be versioned correctly
+"""
+
+f1 = openfile("testfile13", True)
+f1.close()
+
+f2 = openfile("testfile13", True)
+content = f2.readat(None, 0)
+if content != "":
+    log("ERROR: Empty file should copy as empty\n")
+    exitall()
+f2.writeat("Now has content", 0)
+f2.close()
+

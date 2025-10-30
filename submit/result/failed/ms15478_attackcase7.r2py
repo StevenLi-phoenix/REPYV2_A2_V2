@@ -1,0 +1,242 @@
+"""
+==============================================================================
+ATTACK CASE: ms15478_attackcase7.r2py
+==============================================================================
+Target NetID:        ms15478
+Original Test:       test06_no_delete.r2py
+Test File Path:      submit/general_tests/test06_no_delete.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-9986
+  Task UUID:         4860e980-1940-4ece-a96f-2f166255b30f
+  Machine Type:      t3.medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:24:30.797102
+  End Time:          2025-10-27T19:24:35.791173
+  Runtime:           4.9941 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       1b89f01e8c01a2bdb77340f97b360f2f
+  Attack MD5:        f678f6274c6aebb6175f1739b4d9401d
+  Combined MD5:      2bd782582e38e1405026c56f5910dd74
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should not allow file deletion
+
+
+STDOUT:
+  ERROR: Should not allow file deletion
+
+ORIGINAL TEST DESCRIPTION:
+  Test 6: Cannot delete files
+  Verifies that file deletion is blocked
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ms15478)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# 
+# def base_exists(filename):
+#     """Return True if the base name (filename or any version) exists in listfiles()."""
+#     base_name, junk = name_version_seperator(filename)
+#     files = listfiles()
+#     for i in files:
+#         base, junk = name_version_seperator(i)
+#         if base == base_name:
+#             return True
+#     return False
+# 
+# 
+# 
+# def getLatestVersionNumber(base_name):
+#     """Returns the highest version number of files that start with base_name.
+#     'report' → if report, report.v1, report.v2 exist, returns 2
+#     """
+#     max_version = 0
+#     for i in listfiles():
+#         base, ver = name_version_seperator(i)
+#         if base == base_name:
+#             # If no version number, treat as v0
+#             ver = ver or 0
+#             if ver > max_version:
+#                 max_version = ver
+#     return max_version
+# 
+# def name_version_seperator(filename):
+#     """
+#     If filename ends with .v<digits>, return (base_name, version_int).
+#     Otherwise return (filename, None).
+#     Example: "foo.txt.v2" -> ("foo.txt", 2)
+#     """
+#     # Find the last occurrence of ".v"
+#     if not isinstance(filename, str):
+#         return (filename, None)
+# 
+#     idx = filename.rfind(".v")
+#     if idx == -1:
+#         return (filename, None)
+# 
+#     base = filename[:idx]
+#     suffix = filename[idx+2:]
+# 
+#     if suffix.isdigit() and base:
+#         return (base, int(suffix))
+# 
+#     return (filename, 0)
+# 
+# def validate_filenameiscorrect(filename, create):
+#     """
+#     Rules:If create==True, filename must NOT have a version suffix (.vN)
+#     Example allowed: "testfile.v2" "False"; "testfile" "False"; "testfile" "True"
+#     Example blocked: "testfile.v2" "True"
+#     So, If create==True and version is not none->[output of name_version_seperator() function when the version doesn't exist], then the action must be blocked.
+#     """
+#     base, ver = name_version_seperator(filename)
+#     if create and ver is not None:
+#         raise Exception("openfile('base.vn', True) is Forbidden OR This Version doesn't exist yet:\n Manual creation of versioned filenames is forbidden.\n Example allowed:\n'testfile.v2', False\n 'testfile', False\n 'testfile', True\n Example blocked:\n  'testfile.v2', True")
+#     # otherwise allowed
+#     return True
+# 
+# 
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#     # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#         validate_filenameiscorrect(filename,create)
+#         self.isopen = True
+#         if create:
+#             if base_exists(filename):
+#                 # Gettting the current latest version. Setting the current latest_version and the new version variables
+#                 latest_version = getLatestVersionNumber(filename)
+#                 new_version = latest_version + 1
+# 
+#                 # Copy the contents of old file to a temp_content_store
+#                 prev_file = openfile(filename, False)
+#                 old_content = prev_file.readat(None, 0)
+#                 prev_file.close()
+# 
+#                 # Create a new file with the new version number and copy the old contents. File not closed 
+#                 base_name, trash = name_version_seperator(filename)
+#                 
+#                 #Below syntax was python3 version of formatted strings. Changed it to python2 version.
+#                 #newfilename = f"{base_name}.v{new_version}"
+#                 newfilename = "{}.v{}".format(base_name, new_version)
+# 
+#                 self.version = new_version
+#                 self.filename = newfilename
+#                 self.VMfile = openfile(newfilename, True)
+#                 self.VMfile.writeat(old_content, 0)
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.version = 0
+#                 self.filename = filename
+#                 self.VMfile = openfile(filename, True)
+#         else:
+#             # Open existing file normally
+#             self.version = 0
+#             self.filename = filename
+#             self.VMfile = openfile(filename, False)
+# 
+#     def readat(self, num_bytes, offset):
+#         if self.isopen:
+#             return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self.isopen:    
+#             base, junk = name_version_seperator(self.filename)
+#             if self.version < getLatestVersionNumber(self.filename):
+#                 #Below syntax was python3 version of formatted strings. Changed it to python2 version.
+#                 #raise Exception(f"Cannot write: '{self.filename}.v{self.version}' is not the latest version (v{latest}).")
+#                 raise Exception("Cannot write: '%s.v%d' is not the latest version (v%d)." % (self.filename, self.version, latest))
+#             else:
+#                 return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         if self.isopen:    
+#             self.isopen = False
+#             self.VMfile.close()
+#         return True
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     removefile(filename)
+# 
+# def LPlistfiles():
+#     return listfiles()
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: [str],
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+f1 = openfile("testfile6", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    removefile("testfile6")
+    log("ERROR: Should not allow file deletion\n")
+    exitall()
+except RepyArgumentError:
+    pass
+

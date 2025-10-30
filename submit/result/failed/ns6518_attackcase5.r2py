@@ -1,0 +1,334 @@
+"""
+==============================================================================
+ATTACK CASE: ns6518_attackcase5.r2py
+==============================================================================
+Target NetID:        ns6518
+Original Test:       test21_filename_edge_cases.r2py
+Test File Path:      submit/general_tests/test21_filename_edge_cases.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-7562
+  Task UUID:         da029a7b-b48b-45e3-94bd-0a80289aba61
+  Machine Type:      t3.medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:02.768200
+  End Time:          2025-10-27T19:26:07.973752
+  Runtime:           5.2056 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       88c082bc714dfb1b485cb2f0be8daf97
+  Attack MD5:        ff058ba3b8ff9df14934fbafc02bcb42
+  Combined MD5:      6c731d722ac78d26af5e43afe66c2fb7
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 217, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 34, in <module>
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 172, in LPlistfiles
+    "/app/safe.py", line 515, in exceptionraiser
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 217, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 34, in <module>
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 172, in LPlistfiles
+  Unsafe call: ("Unsafe call 'sorted' with args '(['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'data.value'],)', kwargs '{}'",)
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: kl5058, npj2009
+  Vulnerability: Edge cases in filename handling (length, parsing)
+  Attack: Test with long filenames and files with multiple .v patterns
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ns6518)
+# ============================================================================
+# 
+# 
+# # ------------------------------
+# # Internal metadata
+# # ------------------------------
+# _metadata = {}
+# 
+# def _is_explicit_version_name(filename):
+#     if not isinstance(filename, str):
+#         return False
+#     idx = filename.rfind(".v")
+#     if idx <= 0:
+#         return False
+#     suf = filename[idx+2:]
+#     if suf == "":
+#         return False
+#     for ch in suf:
+#         if ch < '0' or ch > '9':
+#             return False
+#     return True
+# 
+# def _split_base_and_version(filename):
+#     idx = filename.rfind(".v")
+#     if idx <= 0:
+#         return (None, None)
+#     base = filename[:idx]
+#     suf = filename[idx+2:]
+#     if suf == "":
+#         return (None, None)
+#     for ch in suf:
+#         if ch < '0' or ch > '9':
+#             return (None, None)
+#     try:
+#         return (base, int(suf))
+#     except:
+#         return (None, None)
+# 
+# def _find_version_record_by_name(base_meta, realname):
+#     for rec in base_meta["versions"]:
+#         if rec["name"] == realname:
+#             return rec
+#     return None
+# 
+# def _next_version_number_for_base(base_meta):
+#     return len(base_meta["versions"])
+# 
+# def _copy_contents_from_name_to_fileobj(src_realname, dst_fileobj):
+#     # Important: openfile here refers to the underlying system openfile, not LPopenfile.
+#     src_tmp = openfile(src_realname, False)
+#     try:
+#         offset = 0
+#         CHUNK = 4096
+#         while True:
+#             data = src_tmp.readat(CHUNK, offset)
+#             if not data:
+#                 break
+#             dst_fileobj.writeat(data, offset)
+#             offset += len(data)
+#     finally:
+#         try:
+#             src_tmp.close()
+#         except:
+#             pass
+# 
+# # ------------------------------
+# # VMFile wrapper
+# # ------------------------------
+# class VMFile():
+#     def __init__(self, base, real, rec):
+#         self._base = base
+#         self._real = real
+#         self._rec = rec
+#         self._fileobj = rec.get("fileobj", None)
+# 
+#     def readat(self, num_bytes, offset):
+#         if self._rec.get("fileobj", None) is None:
+#             self._rec["fileobj"] = openfile(self._rec["name"], False)
+#             self._fileobj = self._rec["fileobj"]
+#             self._rec["open_count"] = self._rec.get("open_count", 0) + 1
+#             self._rec["closed"] = False
+#         return self._fileobj.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         base_meta = _metadata.get(self._base, None)
+#         if base_meta is None:
+#             raise FileInUseError()
+#         latest = base_meta["versions"][base_meta["latest_idx"]]
+#         if latest["name"] != self._rec["name"]:
+#             raise FileInUseError()
+#         if self._rec.get("fileobj", None) is None:
+#             raise FileInUseError()
+#         return self._fileobj.writeat(data, offset)
+# 
+#     def close(self):
+#         try:
+#             if self._rec.get("fileobj", None) is not None:
+#                 res = self._rec["fileobj"].close()
+#             else:
+#                 res = None
+#         finally:
+#             if self._rec.get("open_count", 0) > 0:
+#                 self._rec["open_count"] -= 1
+#             self._rec["fileobj"] = None
+#             if self._rec.get("open_count", 0) <= 0:
+#                 self._rec["closed"] = True
+#         return res
+# 
+# # ------------------------------
+# # LPopenfile / removefile / listfiles
+# # ------------------------------
+# def LPopenfile(filename, create):
+#     if not isinstance(filename, str):
+#         raise RepyArgumentError("filename must be a string")
+# 
+#     if _is_explicit_version_name(filename):
+#         base, vernum = _split_base_and_version(filename)
+#         if base is None:
+#             raise FileNotFoundError()
+#         if create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         base_meta = _metadata.get(base, None)
+#         if base_meta is None:
+#             raise FileNotFoundError()
+#         vrec = _find_version_record_by_name(base_meta, filename)
+#         if vrec is None:
+#             raise FileNotFoundError()
+#         if vrec.get("open_count", 0) > 0:
+#             raise FileInUseError()
+#         underlying = openfile(filename, False)
+#         vrec["fileobj"] = underlying
+#         vrec["open_count"] = vrec.get("open_count", 0) + 1
+#         vrec["closed"] = False
+#         return VMFile(base, filename, vrec)
+#     else:
+#         base = filename
+#         base_meta = _metadata.get(base, None)
+#         if create:
+#             if base_meta is None:
+#                 underlying = openfile(base, True)
+#                 vrec = {"name": base, "open_count": 1, "fileobj": underlying, "closed": False}
+#                 _metadata[base] = {"versions": [vrec], "latest_idx": 0}
+#                 return VMFile(base, base, vrec)
+#             else:
+#                 latest = base_meta["versions"][base_meta["latest_idx"]]
+#                 if latest.get("open_count", 0) > 0:
+#                     raise FileInUseError()
+#                 nextnum = _next_version_number_for_base(base_meta)
+#                 newname = base + ".v" + str(nextnum)
+#                 new_underlying = openfile(newname, True)
+#                 _copy_contents_from_name_to_fileobj(latest["name"], new_underlying)
+#                 newrec = {"name": newname, "open_count": 1, "fileobj": new_underlying, "closed": False}
+#                 base_meta["versions"].append(newrec)
+#                 base_meta["latest_idx"] = len(base_meta["versions"]) - 1
+#                 return VMFile(base, newname, newrec)
+#         else:
+#             if base_meta is None:
+#                 raise FileNotFoundError()
+#             latest = base_meta["versions"][base_meta["latest_idx"]]
+#             if latest.get("open_count", 0) > 0:
+#                 raise FileInUseError()
+#             underlying = openfile(latest["name"], False)
+#             latest["fileobj"] = underlying
+#             latest["open_count"] = latest.get("open_count", 0) + 1
+#             latest["closed"] = False
+#             return VMFile(base, latest["name"], latest)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("removefile is not allowed")
+# 
+# def LPlistfiles():
+#     # Return only base names in sorted order for deterministic results.
+#     return sorted(_metadata.keys())
+# 
+# # ------------------------------
+# # Variable hiding section (do not change)
+# # ------------------------------
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+# Test 1: Long filename
+longname = "a" * 100
+f = openfile(longname, True)
+f.writeat("data", 0)
+f.close()
+
+# Create version
+f = openfile(longname, True)
+content = f.readat(None, 0)
+if content != "data":
+    log("ERROR: Version should copy content\n")
+    exitall()
+
+# Should be writable since it's the latest version
+try:
+    f.writeat("new", 0)
+except FileInUseError:
+    log("ERROR: Latest version should be writable\n")
+    exitall()
+f.close()
+
+# Test 2: File with .v but not a version
+f2 = openfile("data.value", True)
+f2.writeat("value_data", 0)
+f2.close()
+
+# Verify it appears in listfiles
+files = listfiles()
+if "data.value" not in files:
+    log("ERROR: data.value should be in listfiles\n")
+    exitall()

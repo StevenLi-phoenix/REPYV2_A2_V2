@@ -1,0 +1,248 @@
+"""
+==============================================================================
+ATTACK CASE: jnb9552_attackcase10.r2py
+==============================================================================
+Target NetID:        jnb9552
+Original Test:       test20_immutability_enforcement.r2py
+Test File Path:      submit/general_tests/test20_immutability_enforcement.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-5096
+  Task UUID:         ca60e161-c2d8-402c-9284-3af4c71731ee
+  Machine Type:      t3.large
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:22:54.752735
+  End Time:          2025-10-27T19:23:00.481502
+  Runtime:           5.7288 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       82f83bcc6ee6815af2637c0ef4e9b072
+  Attack MD5:        b2a8ad98a6911bcd1c0c5534521a675b
+  Combined MD5:      4406d92f1536ab0d4267b676a1d40203
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 115, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 19, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 67, in LPopenfile
+    "monitor.r2py", line 46, in __init__
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 115, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 19, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 67, in LPopenfile
+    "monitor.r2py", line 46, in __init__
+  Exception (with type 'exceptions.AttributeError'): VMFile instance has no attribute 'VMfile'
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: sa9082, wjl9629, hl5031
+  Vulnerability: Immutability not properly enforced across edge cases
+  Attack: Test immutability with various file opening patterns and edge case names
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: jnb9552)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# openList = []
+# 
+# class VMFile():
+#     def __init__(self, filename, create):      
+#         self.filename = filename
+#         self.create = create
+#         if create:
+#             if ".v" in filename:
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             elif filename in openList:
+#                 raise FileInUseError
+#             else :
+#                 if filename in listfiles():
+#                     prev_file = openfile(filename, False)
+#                     content = prev_file.readat(None, 0)
+#                     new_name = filename
+#                     file_version = 1
+#                     while new_name in listfiles():
+#                         new_name = filename + ".v" + str(file_version)
+#                         file_version = file_version + 1
+#                     self.VMfile = openfile(new_name, True)
+#                     openList.append(new_name)
+#                     self.VMfile.writeat(content, 0)
+#                 else:
+#                     self.VMfile = openfile(filename, True)
+#         else:
+#             if not (filename in listfiles()):
+#                 raise FileNotFoundError
+#             elif not self.VMfile.closed:
+#                 raise FileInUseError
+#             else:
+#                 # Open existing file normally
+#                 self.VMfile = openfile(filename, False)
+#         openList.append(self.filename)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if not ".v" in self.filename and not self.create:
+#             raise FileInUseError
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         openList.remove(self.filename)
+#         return self.VMfile.close()
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("Cannot remove files")
+# 
+# def LPlistfiles():
+#     fileList = listfiles()
+#     for x in fileList:
+#         if ".v" in x:
+#             fileList.remove(x)
+#     return fileList
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# Test 1: Basic immutability
+f = openfile("immutable", True)
+f.writeat("v0", 0)
+f.close()
+
+# Create version
+f = openfile("immutable", True)
+f.writeat("v1", 0)
+f.close()
+
+# Try to open base and write (should fail - it's an old version)
+try:
+    fold = openfile("immutable", False)
+    try:
+        fold.writeat("hack", 0)
+        log("ERROR: Should not be able to write to old version\n")
+        exitall()
+    except FileInUseError:
+        # Expected
+        pass
+    fold.close()
+except FileNotFoundError:
+    pass
+
+# Test 2: Edge case filename
+f2 = openfile("normal", True)
+f2.writeat("test", 0)
+f2.close()
+
+# Version it
+f3 = openfile("normal", True)
+content = f3.readat(None, 0)
+if content != "test":
+    log("ERROR: Version should copy content\n")
+    exitall()
+f3.close()
+
+# Verify listfiles
+files = listfiles()
+if "normal" not in files:
+    log("ERROR: Base file should be in listfiles\n")
+    exitall()
+if "normal.v1" in files:
+    log("ERROR: Version should not be in listfiles\n")
+    exitall()

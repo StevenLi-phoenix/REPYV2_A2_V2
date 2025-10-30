@@ -1,0 +1,233 @@
+"""
+This security layer inadequately handles the Versioned and Immutable functionality
+
+Note:
+    This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+    Also you need to give it an application to run.
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+    
+"""
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+
+# Dictionary of base : filenames
+file_versions = {}
+# Set of exact filenames currently open
+open_files = set()
+
+def _is_explicit_version(name):
+    """Returns a boolean on if the name of a file is the explicit version,
+    used to check if users are trying to create something ending in .vN"""
+    
+    # Split filename into two parts to check if it ends with .vN
+    parts = name.rsplit('.v', 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        return True
+    return False
+
+def _base_name(name):
+    """Returns the base name before .vN"""
+    parts = name.rsplit('.v', 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        return parts[0]
+    return name
+
+def _latest_version(base):
+    """Get the latest version of the file name if it exists"""
+    if base in file_versions:
+        return file_versions[base][-1]
+    else:
+        return None
+
+def  _next_version_name(base):
+    """Return the name of the next version"""
+    if base not in file_versions or not file_versions[base]:
+        return base # new file
+    return base + ".v" + str(len(file_versions[base]))
+
+def _is_valid_filename(name):
+    # Name cannot be empty string, ".", or ".."
+    if name in ("", ".", ".."):
+        return False
+    # Name can't start with a period and since there are no directories, 
+    # can't use /
+    if name[0] == "." or "/" in name:
+        return False
+    # Filenames must be <= 120 characters
+    if len(name) > 120:
+        return False
+    
+    for c in name:
+        # Name can only have a-z, 0-9, -, _, and .
+        if not (('a' <= c <= 'z') or ('0' <= c <= '9') or c == '-' or c == '_' or c == '.'):
+            return False
+    
+    return True
+
+def _refresh_map():
+    # Function to refresh file versions dict
+
+    # Reset each value to nothing
+    for key in file_versions.keys():
+        file_versions[key] = []
+
+    # List all the current files
+    all_files = listfiles()
+
+    # Sort functions lexigraphically so that base names always appear before versions
+    all_files.sort()
+
+    for filename in all_files:
+        # Check if there are any files that are vN of anything
+        parts = filename.rsplit('.v', 1)
+        
+        if len(parts) == 2 and parts[1].isdigit():
+            base = parts[0]
+        # If there is ony one part, or the second part isn't just digits, means it is a base
+        else:
+            base = filename
+            
+        file_versions.setdefault(base, []).append(filename)
+        
+
+class VMFile():
+    def __init__(self, filename, create):
+        # Make sure map is up to date
+        _refresh_map()
+        # save filename for writeat / close
+        self.filename = filename
+
+        # Spec 5, checking if a user is trying to explicitly create a version
+        if _is_explicit_version(filename) and create:
+            raise RepyArgumentError("Cannot create explicit version files")
+        
+        # Make sure user is creating a valid filename
+        if not _is_valid_filename(filename):
+            raise RepyArgumentError("Invalid filename")
+
+        # Get the base of the filename and its latest version
+        base = _base_name(filename)
+        latest = _latest_version(base)
+
+        # Check if the file is already open
+        for file in open_files: # Spec 4
+            open_base = file.rsplit(".v", 1)[0]
+
+            if base == open_base:
+                if create:
+                    raise FileInUseError("Cannot create a file when its latest version is open")
+                else:
+                    raise FileInUseError("Cannot open an already opened file")
+            
+        if create:
+            if filename in listfiles():
+                # File exists, create new version
+                if latest is None:
+                    raise FileNotFoundError("No previous version found")
+
+                new_name = _next_version_name(base)
+
+                # Copy over old content from latest version
+                prev_file = openfile(latest, False)
+                content = prev_file.readat(None, 0)
+                prev_file.close()
+
+                # Rename this file to the new name and copy over content
+                self.filename = new_name
+                self.VMfile = openfile(new_name, True)
+                self.VMfile.writeat(content, 0)
+
+                # Add file to set of all files
+                file_versions[base].append(new_name)
+
+            else:
+                # File doesn't exist, just use the filename given
+                self.VMfile = openfile(filename, True)
+
+                # Add file to set of all files
+                file_versions.setdefault(base, []).append(filename)
+
+        else: # Create == false
+            if filename not in listfiles(): # Check if file exists
+                raise FileNotFoundError("File does not exist")
+                
+            else: # If file exists, open it
+                self.VMfile = openfile(filename, False)
+                self.filename = filename
+    
+        # Add the opened file to the list of all open files
+        open_files.add(self.filename)
+
+    def readat(self, num_bytes, offset):
+        return self.VMfile.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        # Check if the latest version is being written to
+        base = _base_name(self.filename)
+        latest = _latest_version(base)
+
+        # Spec 7
+        if self.filename != latest:
+            raise FileInUseError("Cannot write to older file versions")
+
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        # remove file from list of open files
+        open_files.discard(self.filename)
+        return self.VMfile.close()
+
+
+def LPopenfile(filename, create):
+    obj = VMFile(filename, create)
+    return obj
+
+def LPremovefile(filename): # Spec 8
+    raise RepyArgumentError("removefile is not allowed")
+
+
+def LPlistfiles():
+    return list(file_versions.keys())
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

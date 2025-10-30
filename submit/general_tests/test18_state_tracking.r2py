@@ -1,0 +1,34 @@
+"""
+Targets: iy2112, am14579
+Vulnerability: Improper state tracking in mycontext or version metadata
+Attack: Test file tracking across operations
+"""
+
+# Create a file and version it
+f = openfile("tracked", True)
+f.writeat("v0", 0)
+f.close()
+
+f = openfile("tracked", True)
+f.writeat("v1", 0)
+f.close()
+
+# listfiles should show "tracked" (the base name)
+files = listfiles()
+if "tracked" not in files:
+    log("ERROR: Base file missing from listfiles\n")
+    exitall()
+
+# Version files should not appear
+if "tracked.v1" in files:
+    log("ERROR: Version file should not appear in listfiles\n")
+    exitall()
+
+# Test reopening for read
+try:
+    f = openfile("tracked", False)
+    content = f.readat(None, 0)
+    f.close()
+except FileNotFoundError:
+    log("ERROR: Should be able to open existing file for reading\n")
+    exitall()

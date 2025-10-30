@@ -1,0 +1,263 @@
+"""
+==============================================================================
+ATTACK CASE: ns6266_attackcase1.r2py
+==============================================================================
+Target NetID:        ns6266
+Original Test:       test09_multiple_versions.r2py
+Test File Path:      submit/general_tests/test09_multiple_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-2550
+  Task UUID:         220fc579-467a-4530-920c-5da43570276b
+  Machine Type:      c2-standard-4
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:25:57.017247
+  End Time:          2025-10-27T19:26:01.204225
+  Runtime:           4.1870 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       01f6af0d156b2e54484c22c6a4ec1791
+  Attack MD5:        b705d0458f62c6142becb1b7dfc564ab
+  Combined MD5:      44456970608f9c0cf9085e7783dd8647
+
+FAILURE DETAILS:
+  Reason:            ERROR: Latest version should accumulate all changes
+
+
+STDOUT:
+  ERROR: Latest version should accumulate all changes
+
+ORIGINAL TEST DESCRIPTION:
+  Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+  Verifies that multiple versions can be created and accessed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ns6266)
+# ============================================================================
+# """
+# Defensive Security System for Immutable, Versioned Files
+# 
+# This security layer implements a complete defensive system that enforces:
+# 1. Immutable, versioned files with linear version ordering
+# 2. Protection against tampering and circumvention
+# 3. Proper error handling for all edge cases
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# if 'file_versions' not in mycontext:
+#     mycontext['file_versions'] = {}  # Maps base filename to highest version number
+# if 'open_files' not in mycontext:
+#     mycontext['open_files'] = set()  # Tracks currently open files
+# if 'closed_versions' not in mycontext:
+#     mycontext['closed_versions'] = set()  # Tracks closed versions (immutable)
+# 
+# def _is_explicit_version_filename(filename):
+#     # Returns: (is_version, base_filename, version_number)
+#     idx = filename.rfind('.v')
+#     if idx == -1:
+#         return (False, None, None)
+#     
+#     base = filename[:idx]
+#     suffix = filename[idx + 2:]  # everything after '.v'
+# 
+#     # Validate base and suffix
+#     if base == "" or suffix == "" or not suffix.isdigit():
+#         return (False, None, None)
+#     return (True, base, int(suffix))
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#         self.filename = filename
+#         self.is_version_file = False
+#         self.version_num = None
+#         self.base_filename = filename
+#         
+#         is_version, base, ver_num = _is_explicit_version_filename(filename)
+# 
+#         self.is_version_file = is_version
+#         if is_version:
+#             self.base_filename = base
+#             self.version_num = ver_num
+#         else:
+#             self.base_filename = filename
+#             self.version_num = None
+#         
+#         # Handle version file access
+#         if self.is_version_file:
+#             if create:
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             if filename not in _context["listfiles"]():
+#                 raise FileNotFoundError
+#             self.VMfile = openfile(filename, False)
+#             return
+#         
+#         # Handle regular file operations
+#         if create:
+#             # Check if file is already open
+#             if filename in mycontext['open_files']:
+#                 raise FileInUseError
+#             
+#             # If file exists, create new version
+#             if filename in _context["listfiles"]():
+#                 # Get current highest version
+#                 if filename in mycontext['file_versions']:
+#                     next_version = mycontext['file_versions'][filename] + 1
+#                 else:
+#                     next_version = 1
+#                 
+#                 # Read content from latest version
+#                 latest_file = openfile(filename, False)
+#                 content = latest_file.readat(None, 0)
+#                 latest_file.close()
+#                 
+#                 # Create new version
+#                 version_filename = self.base_filename + '.v' + str(next_version)
+#                 self.VMfile = openfile(version_filename, True)
+#                 self.VMfile.writeat(content, 0)
+#                 
+#                 # Update version tracking
+#                 mycontext['file_versions'][self.base_filename] = next_version
+#             else:
+#                 # Create new file
+#                 self.VMfile = openfile(filename, True)
+#                 mycontext['file_versions'][filename] = 0  # 0 means original file
+#             
+#             # Mark file as open
+#             mycontext['open_files'].add(filename)
+#         else:
+#             # Open existing file
+#             if filename not in _context["listfiles"]():
+#                 raise FileNotFoundError
+#             self.VMfile = openfile(filename, False)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         # Check if this is a version file (older version)
+#         if self.is_version_file:
+#             raise FileInUseError  # Cannot write to older versions
+#         
+#         if self.filename not in mycontext['open_files']:
+#             raise FileInUseError
+# 
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         result = self.VMfile.close()
+# 
+#         if self.is_version_file:
+#             mycontext['closed_versions'].add(self.filename)
+#         else:
+#             # Base files: remove from open_files to allow next version creation
+#             if self.filename in mycontext['open_files']:
+#                 mycontext['open_files'].remove(self.filename)
+#         
+#         return result
+#         
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     # File deletion is not allowed
+#     raise RepyArgumentError("File deletion not allowed")
+# 
+# def LPlistfiles():
+#     # Return only base filenames, not version files
+#     all_files = _context["listfiles"]()
+#     base_files = set()
+#     
+#     for filename in all_files:
+#         is_version, base, _ = _is_explicit_version_filename(filename)
+#         if is_version:
+#             base_files.add(base)
+#         else:
+#             base_files.add(filename)
+#     return list(base_files)
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+

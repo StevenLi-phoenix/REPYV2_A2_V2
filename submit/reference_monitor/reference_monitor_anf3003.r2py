@@ -1,0 +1,420 @@
+"""
+This security layer inadequately handles the Versioned and Immutable functionality
+
+Note:
+    This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+    Also you need to give it an application to run.
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+    
+"""
+
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+# Track file openings
+_latest_version_openings = {}
+
+# Version locks
+_version_locks = set()
+
+def _valid_filename(name):
+    """
+        Name: _valid_filename
+        Arguments: name (String)
+        Returns: Boolean
+        Description: Enforce filename rules. Only lowercase, letters, periods, 
+                     underscores, and hyphens. Names must be between 1 and 120 
+                     characters in length.
+    """
+
+    # Only allow string file names
+    if not isinstance(name, str):
+        return False
+
+    # Only allow names no shorter than 1 character, but no longer than 120 characters
+    if len(name) < 1 or len(name) > 120:
+        return False
+    
+    # Prevent backwards cd files
+    if name == "" or name == "." or name == "..":
+        return False
+    
+    # Prevent files without names
+    if name.startswith("."):
+        return False
+
+    # Allowed characters check
+    for char in name:
+        if not char.islower() and not char.isdigit() and char not in "._-":
+            return False
+    
+    return True
+
+def _split_version(name):
+    """
+        Name: _split_version
+        Arguments: name
+        Returns: name, version
+        Description: Determines if the file exists with a version.
+            If it does, return the file name with the version number. 
+            If not, only return file name and None (no version).
+    """
+
+    # Ensure name is a string
+    if not isinstance(name, str):
+        return name, None
+
+    # Detect versioning by splitting on last occurence of ".v*"
+    components = name.rsplit(".v", 1)
+
+    # CASE 1: There are multiple file versions
+    if len(components) == 2:
+        base, version = components[0], components[1]
+
+        # Edge case: if version is 0, make it None
+        if version.isdigit():
+            if version == "0":
+                return name, None
+            
+            # Ensure type checking
+            if str(int(version)) == version:
+                return base, int(version)
+
+    # CASE 2: There is only one version / no versioning yet
+    return name, None
+
+class FileHandler:
+    def __init__(self, name):
+        # Full file name
+        self.fullname = name
+        # Split into base file name and version
+        self.name, self.version = _split_version(name)
+    
+    def is_versioned(self):
+        """
+            Name: is_versioned
+            Arguments: None
+            Returns: Boolean
+            Description: Return boolean whether or not the file is versioned
+        """
+
+        return self.version is not None
+    
+    def name_exists(self):
+        """
+            Name: name_exists
+            Arguments: None
+            Returns: Boolean
+            Description: Check if the base file name exists in the file system
+        """
+
+        return self.name in listfiles()
+
+    def file_exists(self, name=None):
+        """
+            Name: file_exists
+            Arguments: None
+            Returns: Boolean
+            Description: Check if the file exists in the file system
+        """
+
+        name = name or self.fullname
+        return name in listfiles()
+
+    def latest_version_number(self):
+        """
+            Name: latest_version_number
+            Arguments: None
+            Returns: Integer
+            Description: Return the latest file version number
+        """
+
+        # Default case: set the latest version to 0 (no version / one version)
+        latest = 0
+
+        # Iterate through all files in the file system
+        for file in listfiles():
+            # Extract the base name and file version
+            base, version = _split_version(file)
+
+            # CASE 1: Versioning exists
+            if base == self.name and version is not None:
+                # Take the maximum version as we want the latest
+                latest = max(latest, version)
+
+        # Return the latest version number
+        return latest
+
+    def latest_version_name(self):
+        """
+            Name: latest_version_name
+            Arguments: None
+            Returns: String
+            Description: Return the latest file version name
+        """
+
+        # Get the latest version number of the file
+        latest = self.latest_version_number()
+
+        # CASE 1: Latest there is no version / one version
+        if latest == 0:
+            return self.name
+        
+        # CASE 2: There is a version. Return the latest
+        return self.name + ".v" + str(latest)
+    
+    def next_version_name(self):
+        """
+            Name: next_version_name
+            Arguments: None
+            Returns: String
+            Description: Return the next file name + version
+        """
+
+        # Find next version number by adding 1 to the latest version number
+        next_version_number = self.latest_version_number() + 1
+
+        # Return full file name + new version
+        return self.name + ".v" + str(next_version_number)
+
+class VMFile():
+    def __init__(self, filename, create):
+        """
+            Name: __init__
+            Arguments: filename (String), create (Boolean)
+            Returns: None
+            Description: Initialize a VMFile object. Handles file creation and versioning logic.
+        """
+
+        # Default value: initialize closed as False
+        self._closed = False
+
+        # Store target file name
+        self.filename = filename
+
+        # Initialize a FileHandler for additional file operations
+        file = FileHandler(filename)
+
+        # CASE 1: User wants to create a file or version
+        if create:
+            # SUBCASE A: The base file does not exist, create first version
+            if not file.name_exists():
+                self.VMfile = openfile(self.filename, True)
+
+            # SUBCASE B: The base file exists, we'll create a new version
+            else:
+                # Determine the latest version
+                latest_file = file.latest_version_name()
+
+                # Open latest version (or base file) for reading
+                prev_file = openfile(latest_file, False)
+                content = prev_file.readat(None, 0)
+                prev_file.close()
+
+                # Create the new version file
+                self.VMfile = openfile(self.filename, True)
+
+                # Write copied contents over
+                if content:
+                    self.VMfile.writeat(content, 0)
+
+        # CASE 2: User wants to open an existing file or version
+        else:
+            self.VMfile = openfile(self.filename, False)
+
+        # See if the current file is the latest
+        self._islatest = (self.filename == FileHandler(self.filename).latest_version_name())
+
+        base = FileHandler(self.filename).name
+        if self._islatest:
+            _latest_version_openings[base] = _latest_version_openings.get(base, 0) + 1
+
+    def readat(self, num_bytes, offset):
+        return self.VMfile.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        """
+            Name: writeat
+            Arguments: data (String), offset (Integer)
+            Returns: Integer or None
+            Description: Enforce immutability and security by only allowing writes to latest versions
+        """
+        
+        if self._closed:
+            # Fail silently (as per assignment spec); do not allow to write on closed file
+            return
+
+        # If this file is not the latest version, block attempts to write
+        if not self._islatest:
+            raise FileInUseError("Error: Cannot write to older versions.")
+
+        # Allow writing as normal
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        """
+            Name: close
+            Arguments: None
+            Returns: None
+            Description: Close the VMFile and update open trackings.
+        """
+
+        # Edge case: if the file is already closed, do nothing
+        if self._closed:
+            return None
+
+        # If the open file is the latest, decrement open count
+        if self._islatest:
+            base = FileHandler(self.filename).name
+
+            # Additional check
+            if _latest_version_openings.get(base, 0) > 0:
+                _latest_version_openings[base] -= 1
+        
+        self._closed = True
+        return self.VMfile.close()
+
+def LPopenfile(filename, create):
+    """
+        Name: LPopenfile
+        Arguments: filename (String), create (Boolean)
+        Returns: VMFile object
+        Description: Intercept openfile calls to enforce versioning and immutability.
+                     It will either create a base file, new version, or open an existing
+                     version for modification.
+    """
+
+    # Edge case: validate filename format
+    if not _valid_filename(filename):
+        raise RepyArgumentError("Error: Invalid filename.")
+
+    # Edge case: User attempts to open a versioned file
+    components = filename.rsplit(".v", 1)
+    if create and len(components) == 2 and components[1].isdigit():
+        raise RepyArgumentError("Cannot create explicit version files")
+
+    # Initialize a FileHandler object for the file
+    file = FileHandler(filename)
+
+    # CASE 1: User wants to manually create a versioned file (blocked)
+    if create and file.is_versioned():
+        raise RepyArgumentError("Cannot create explicit version files")
+
+    # CASE 2: User wants to create a file
+    if create:
+        # If file is already open in a different process, block it
+        base = file.name
+        if base in _version_locks:
+            raise FileInUseError("Error: Version creation already in progress.")
+        _version_locks.add(base)
+
+        try:
+            # SUBCASE A: Base file does not exist and no versioning exists
+            if not file.name_exists():
+                file_name = file.name
+            
+            # SUBCASE B: Base file exists, now we must check for versioning
+            else:
+                # If the latest file version is currently open, we stop creation
+                if _latest_version_openings.get(base, 0) > 0:
+                    raise FileInUseError("Error: Cannot create new version. Latest version in use.")
+
+                # Create the new version name
+                file_name = file.next_version_name()
+        finally:
+            # Remove the lock, even on error
+            _version_locks.remove(base)
+
+    # CASE 3: User wants to open existing file or version
+    else:
+        # SUBCASE A: User wants to open a specific version
+        if file.is_versioned():
+            # If the file version does not exist, we'll throw an error
+            if not file.file_exists():
+                raise FileNotFoundError("Error: This version does not exist.")
+
+            file_name = filename
+    
+        # SUBCASE B: User wants to open the base file
+        else:
+            # If the base file does not exist, we'll throw an error
+            if not file.name_exists():
+                raise FileNotFoundError("Error: The base file does not exist.")
+            file_name = file.name
+    
+    # Open the file and return VMFile object
+    return VMFile(file_name, create)
+
+def LPremovefile(filename):
+    # Block deletion of files by raising error
+    raise RepyArgumentError("[Blocked]: File deletion is prohibited.")
+
+def LPlistfiles():
+    # Substitute full list of files into data
+    data = listfiles()
+
+    # Create set so there is only one unique file name
+    files = set()
+
+    # Iterate through the original full list of files
+    for x in data:
+        # Detect versioning by splitting on last occurrence of ".v*"
+        components = x.rsplit(".v", 1)
+
+        if len(components) == 2 and components[1].isdigit():
+            # CASE 1: The file is versioned
+            # Edge case: remove malformed files and versions
+            base, version = _split_version(x)
+            
+            # Add files to the set based on above edge case check
+            if version is not None:
+                files.add(base)
+            else:
+                files.add(x)
+        else:
+            # CASE 2: There is no versioning for the file
+            files.add(x)
+
+    return list(files)
+    
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

@@ -1,0 +1,174 @@
+"""
+==============================================================================
+ATTACK CASE: pg2820_attackcase3.r2py
+==============================================================================
+Target NetID:        pg2820
+Original Test:       test06_no_delete.r2py
+Test File Path:      submit/general_tests/test06_no_delete.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-6480
+  Task UUID:         9718f5ee-1d95-442d-911f-d0f1346bc8e8
+  Machine Type:      m5.large
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:15.892949
+  End Time:          2025-10-27T19:26:19.468426
+  Runtime:           3.5755 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       44dfaeb920249bd1ffb5d76acf92a514
+  Attack MD5:        f678f6274c6aebb6175f1739b4d9401d
+  Combined MD5:      777269f1da2918ce66ea8cb1b703a1e0
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should not allow file deletion
+
+
+STDOUT:
+  ERROR: Should not allow file deletion
+
+ORIGINAL TEST DESCRIPTION:
+  Test 6: Cannot delete files
+  Verifies that file deletion is blocked
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: pg2820)
+# ============================================================================
+# # reference_monitor_pg2820.r2py
+# # A compact, original reference monitor that uses an A/B commit strategy.
+# # NOTE: Intended for RepyV2 (Python 2.7). Do not import stdlib modules.
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# class GuardFile(object):
+#     def __init__(self, fname, create):
+#         self._fname = fname
+#         if create:
+#             tmp_name = self._tmpb_name()
+#             self._under = openfile(tmp_name, True)
+#         else:
+#             self._under = openfile(self._a_name(), False)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._under.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         try:
+#             return self._under.writeat(data, offset)
+#         except Exception:
+#             return None
+# 
+#     def close(self):
+#         try:
+#             self._under.close()
+#         except Exception:
+#             pass
+#         if self._is_tmpb_handle_name():
+#             try:
+#                 self._commit_tmpb()
+#             except Exception:
+#                 pass
+#         return None
+# 
+#     def _a_name(self):
+#         return self._fname + ".a"
+# 
+#     def _tmpb_name(self):
+#         return self._fname + ".tmpb"
+# 
+#     def _is_tmpb_handle_name(self):
+#         return (self._tmpb_name() in listfiles())
+# 
+#     def _commit_tmpb(self):
+#         tmp = openfile(self._tmpb_name(), False)
+#         data = tmp.readat(None, 0)
+#         tmp.close()
+# 
+#         a_name = self._a_name()
+#         if a_name in listfiles():
+#             backup = a_name + ".v1"
+#             old = openfile(a_name, False)
+#             olddata = old.readat(None, 0)
+#             old.close()
+#             b = openfile(backup, True)
+#             b.writeat(olddata, 0)
+#             b.close()
+#             removefile(a_name)
+# 
+#         newa = openfile(a_name, True)
+#         newa.writeat(data, 0)
+#         newa.close()
+#         removefile(self._tmpb_name())
+# 
+# def RMopenfile(filename, create):
+#     return GuardFile(filename, create)
+# 
+# def RMremovefile(filename):
+#     if filename + ".a" in listfiles():
+#         removefile(filename + ".a")
+#     if filename + ".a.v1" in listfiles():
+#         removefile(filename + ".a.v1")
+# 
+# def RMlistfiles():
+#     return listfiles()
+# 
+# file_obj_def = {
+#     "obj-type": GuardFile,
+#     "name": "GuardFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": GuardFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": GuardFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": type(None), "target": GuardFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: file_obj_def,
+#     TARGET: RMopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: RMremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: RMlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile6", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    removefile("testfile6")
+    log("ERROR: Should not allow file deletion\n")
+    exitall()
+except RepyArgumentError:
+    pass
+

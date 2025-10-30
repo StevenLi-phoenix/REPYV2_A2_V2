@@ -1,0 +1,200 @@
+"""
+Fixed sample security layer with proper immutability enforcement
+"""
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"
+OBJC = "objc"
+
+# Initialize global state in mycontext
+if "openfiles" not in mycontext:
+    mycontext["openfiles"] = {}
+if "closedfiles" not in mycontext:
+    mycontext["closedfiles"] = {}
+
+
+class VMFile():
+    def __init__(self, filename, create):
+        self.filename = filename
+        self.iswritable = False
+
+        # Check if trying to explicitly create a versioned file
+        if create and '.v' in filename:
+            parts = filename.rsplit('.v', 1)
+            if len(parts) == 2:
+                try:
+                    int(parts[1])
+                    raise RepyArgumentError("Cannot create explicit version files")
+                except ValueError:
+                    pass
+
+        if create:
+            # Check if file is already open
+            if filename in mycontext["openfiles"] and mycontext["openfiles"][filename]:
+                raise FileInUseError("File is already open")
+
+            allfiles = listfiles()
+
+            # Check if base file exists
+            if filename in allfiles:
+                # Find the highest version number
+                highestver = 0
+                for f in allfiles:
+                    if f.startswith(filename + '.v'):
+                        verstr = f[len(filename) + 2:]
+                        try:
+                            vernum = int(verstr)
+                            if vernum > highestver:
+                                highestver = vernum
+                        except ValueError:
+                            pass
+
+                # Determine the latest version file
+                if highestver > 0:
+                    latestfile = filename + '.v' + str(highestver)
+                else:
+                    latestfile = filename
+
+                # Check if latest version is open
+                if latestfile in mycontext["openfiles"] and mycontext["openfiles"][latestfile]:
+                    raise FileInUseError("File is already open")
+
+                # Read content from latest version
+                prevfile = openfile(latestfile, False)
+                content = prevfile.readat(None, 0)
+                prevfile.close()
+
+                # Create new version
+                newver = highestver + 1
+                newname = filename + '.v' + str(newver)
+                self.VMfile = openfile(newname, True)
+                self.VMfile.writeat(content, 0)
+                self.actualname = newname
+                self.iswritable = True
+            else:
+                # Create base file
+                self.VMfile = openfile(filename, True)
+                self.actualname = filename
+                self.iswritable = True
+
+            # Mark as open
+            mycontext["openfiles"][filename] = True
+            mycontext["openfiles"][self.actualname] = True
+
+        else:
+            # Opening for reading
+            if filename not in listfiles():
+                raise FileNotFoundError("File not found")
+
+            # Check if already open
+            if filename in mycontext["openfiles"] and mycontext["openfiles"][filename]:
+                raise FileInUseError("File is already open")
+
+            self.VMfile = openfile(filename, False)
+            self.actualname = filename
+
+            # Check if this is an old version
+            if filename in mycontext["closedfiles"] and mycontext["closedfiles"][filename]:
+                self.iswritable = False
+            else:
+                # Check if it's a version file
+                if '.v' in filename:
+                    parts = filename.rsplit('.v', 1)
+                    if len(parts) == 2:
+                        try:
+                            int(parts[1])
+                            # Version file, read-only
+                            self.iswritable = False
+                        except ValueError:
+                            self.iswritable = True
+                else:
+                    self.iswritable = True
+
+            # Mark as open
+            mycontext["openfiles"][filename] = True
+
+    def readat(self, num_bytes, offset):
+        return self.VMfile.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        if not self.iswritable:
+            raise FileInUseError("Cannot write to an old version")
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        result = self.VMfile.close()
+
+        # Mark file as closed (immutable)
+        mycontext["closedfiles"][self.actualname] = True
+        if self.filename != self.actualname:
+            mycontext["closedfiles"][self.filename] = True
+
+        # Mark as no longer open
+        if self.filename in mycontext["openfiles"]:
+            mycontext["openfiles"][self.filename] = False
+        if self.actualname in mycontext["openfiles"]:
+            mycontext["openfiles"][self.actualname] = False
+
+        return result
+
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("File removal is not allowed")
+
+def LPlistfiles():
+    allfiles = listfiles()
+    basefiles = []
+
+    for filename in allfiles:
+        if '.v' in filename:
+            parts = filename.rsplit('.v', 1)
+            if len(parts) == 2:
+                try:
+                    int(parts[1])
+                    continue
+                except ValueError:
+                    pass
+        basefiles.append(filename)
+
+    return basefiles
+
+
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+secure_dispatch_module()

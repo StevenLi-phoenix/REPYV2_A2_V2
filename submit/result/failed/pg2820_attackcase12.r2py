@@ -1,0 +1,195 @@
+"""
+==============================================================================
+ATTACK CASE: pg2820_attackcase12.r2py
+==============================================================================
+Target NetID:        pg2820
+Original Test:       test21_filename_edge_cases.r2py
+Test File Path:      submit/general_tests/test21_filename_edge_cases.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-5457
+  Task UUID:         89cf5b59-af39-4ade-a9e7-cbb65cbe2356
+  Machine Type:      n2-standard-4
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:15.905232
+  End Time:          2025-10-27T19:26:21.137934
+  Runtime:           5.2327 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       44dfaeb920249bd1ffb5d76acf92a514
+  Attack MD5:        ff058ba3b8ff9df14934fbafc02bcb42
+  Combined MD5:      b633f6f2033557ae376d9fb0011c5a22
+
+FAILURE DETAILS:
+  Reason:            ERROR: Version should copy content
+
+
+STDOUT:
+  ERROR: Version should copy content
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: kl5058, npj2009
+  Vulnerability: Edge cases in filename handling (length, parsing)
+  Attack: Test with long filenames and files with multiple .v patterns
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: pg2820)
+# ============================================================================
+# # reference_monitor_pg2820.r2py
+# # A compact, original reference monitor that uses an A/B commit strategy.
+# # NOTE: Intended for RepyV2 (Python 2.7). Do not import stdlib modules.
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# class GuardFile(object):
+#     def __init__(self, fname, create):
+#         self._fname = fname
+#         if create:
+#             tmp_name = self._tmpb_name()
+#             self._under = openfile(tmp_name, True)
+#         else:
+#             self._under = openfile(self._a_name(), False)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._under.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         try:
+#             return self._under.writeat(data, offset)
+#         except Exception:
+#             return None
+# 
+#     def close(self):
+#         try:
+#             self._under.close()
+#         except Exception:
+#             pass
+#         if self._is_tmpb_handle_name():
+#             try:
+#                 self._commit_tmpb()
+#             except Exception:
+#                 pass
+#         return None
+# 
+#     def _a_name(self):
+#         return self._fname + ".a"
+# 
+#     def _tmpb_name(self):
+#         return self._fname + ".tmpb"
+# 
+#     def _is_tmpb_handle_name(self):
+#         return (self._tmpb_name() in listfiles())
+# 
+#     def _commit_tmpb(self):
+#         tmp = openfile(self._tmpb_name(), False)
+#         data = tmp.readat(None, 0)
+#         tmp.close()
+# 
+#         a_name = self._a_name()
+#         if a_name in listfiles():
+#             backup = a_name + ".v1"
+#             old = openfile(a_name, False)
+#             olddata = old.readat(None, 0)
+#             old.close()
+#             b = openfile(backup, True)
+#             b.writeat(olddata, 0)
+#             b.close()
+#             removefile(a_name)
+# 
+#         newa = openfile(a_name, True)
+#         newa.writeat(data, 0)
+#         newa.close()
+#         removefile(self._tmpb_name())
+# 
+# def RMopenfile(filename, create):
+#     return GuardFile(filename, create)
+# 
+# def RMremovefile(filename):
+#     if filename + ".a" in listfiles():
+#         removefile(filename + ".a")
+#     if filename + ".a.v1" in listfiles():
+#         removefile(filename + ".a.v1")
+# 
+# def RMlistfiles():
+#     return listfiles()
+# 
+# file_obj_def = {
+#     "obj-type": GuardFile,
+#     "name": "GuardFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": GuardFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": GuardFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": type(None), "target": GuardFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: file_obj_def,
+#     TARGET: RMopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: RMremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: RMlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+# Test 1: Long filename
+longname = "a" * 100
+f = openfile(longname, True)
+f.writeat("data", 0)
+f.close()
+
+# Create version
+f = openfile(longname, True)
+content = f.readat(None, 0)
+if content != "data":
+    log("ERROR: Version should copy content\n")
+    exitall()
+
+# Should be writable since it's the latest version
+try:
+    f.writeat("new", 0)
+except FileInUseError:
+    log("ERROR: Latest version should be writable\n")
+    exitall()
+f.close()
+
+# Test 2: File with .v but not a version
+f2 = openfile("data.value", True)
+f2.writeat("value_data", 0)
+f2.close()
+
+# Verify it appears in listfiles
+files = listfiles()
+if "data.value" not in files:
+    log("ERROR: data.value should be in listfiles\n")
+    exitall()

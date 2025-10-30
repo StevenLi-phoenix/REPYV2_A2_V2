@@ -1,0 +1,298 @@
+"""
+==============================================================================
+ATTACK CASE: eb4286_attackcase4.r2py
+==============================================================================
+Target NetID:        eb4286
+Original Test:       test16_startswith_vault_bug.r2py
+Test File Path:      submit/general_tests/test16_startswith_vault_bug.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-9237
+  Task UUID:         0fcf88f4-343f-401b-8f56-2651e6d4dfd4
+  Machine Type:      Standard_D4s_v3
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:21:24.317729
+  End Time:          2025-10-27T19:21:28.378406
+  Runtime:           4.0607 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       a59972b1ec6bbb8920a30a3146dbb991
+  Attack MD5:        8f001b374ace212a6d5f595dbcbedf6a
+  Combined MD5:      f629734e7263e0398027dc5cf18fb820
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 181, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 18, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 125, in LPopenfile
+    "monitor.r2py", line 67, in __init__
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/emulfile.py", line 177, in emulated_open
+    "/app/emulfile.py", line 289, in __init__
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 181, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 18, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 125, in LPopenfile
+    "monitor.r2py", line 67, in __init__
+  Exception (with class 'exception_hierarchy.FileNotFoundError'): Cannot openfile non-existent file "data.v0" without creating it!
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: aa12037, al8372, bzy205, jaa10243, krg9790, nb4048, sr7991, zs2985
+  Vulnerability: Uses startswith() which incorrectly matches "file.vault" when checking for "file.v*"
+  Attack: Create "data.vault" then "data" - should not confuse them as versions
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: eb4286)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#     # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+# 
+#         # Initialize entries
+#         if 'open_files' not in mycontext:
+#             mycontext['open_files'] = {}
+#         if 'file_versions' not in mycontext:
+#             mycontext['file_versions'] = {}
+#         
+#         self.filename = filename
+#         self.create = create
+#         self.readonly = False
+# 
+#         # Explicit version file creation not allowed
+#         if ".v" in filename:
+#             parts = filename.rsplit('.v', 1)
+#             if len(parts) == 2 and parts[1].isdigit():
+#                 self.base_filename = parts[0]
+#                 self.version_num = int(parts[1])
+#                 self.is_version_file = True
+#                 
+#                 # Cannot create explicit version files
+#                 if create:
+#                     raise RepyArgumentError("Cannot create explicit version files")
+#             else:
+#                 self.base_filename = filename
+#                 self.version_num = None
+#                 self.is_version_file = False
+#         else:
+#             self.base_filename = filename
+#             self.version_num = None
+#             self.is_version_file = False
+# 
+#         if create:
+#              # Check if file is already open
+#             if self.base_filename in mycontext['open_files']:
+#                 raise FileInUseError("File is already open")
+#             
+#             all_files = listfiles()
+#             
+#             if self.base_filename in all_files:
+#                 # File exists -> create new version
+#                 current_version = mycontext['file_versions'].get(self.base_filename, 1)
+#                 new_version = current_version + 1
+#                 
+#                 # Read most recent version file with the content
+#                 versioned_name = self.base_filename + '.v' + str(current_version)
+#                 versioned_file = openfile(versioned_name, False)
+#                 content = versioned_file.readat(None, 0)
+#                 versioned_file.close()
+#                 versioned_file.readonly = True
+#                 versioned_file.is_version_file = True
+#                 
+#                 # Update version counter and create new current version file
+#                 mycontext['file_versions'][self.base_filename] = new_version
+#                 new_name = self.base_filename + '.v' + str(new_version)
+#                 self.VMfile = openfile(new_name, True)
+#                 self.VMfile.writeat(content, 0)
+#             else:
+#                 # New file -> create initial version
+#                 self.VMfile = openfile(self.base_filename, True)
+#                 mycontext['file_versions'][self.base_filename] = 0
+#             
+#             # Mark file as open
+#             mycontext['open_files'][self.base_filename] = True
+#         else:
+#             all_files = listfiles()
+#         
+#             if self.is_version_file:
+#                 # Opening a specific version file -> always read-only
+#                 if self.filename not in all_files:
+#                     raise FileNotFoundError("File does not exist")
+#                 
+#                 # All version files are read-only
+#                 self.readonly = True
+#                 self.VMfile = openfile(self.filename, False)
+# 
+#             else:
+#                 # Opening the newest version file
+#                 if self.filename not in all_files:
+#                     raise FileNotFoundError("File does not exist")
+#                 
+#                 # Check if file is already open
+#                 if self.filename in mycontext['open_files']:
+#                     raise FileInUseError("File is already open")
+#                 
+#                 # Newest files are writable 
+#                 self.readonly = False
+#                 self.VMfile = openfile(self.filename, False)
+#                 mycontext['open_files'][self.filename] = True
+#     
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self.readonly:
+#             raise FileInUseError("Cannot write to old version.")
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         if not self.is_version_file and self.base_filename in mycontext.get('open_files', {}):
+#             del mycontext['open_files'][self.base_filename]
+#         return self.VMfile.close()
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("File deletion is not allowed")
+# 
+# def LPlistfiles():
+#     all_files = listfiles()
+#     base_files = []
+# 
+#     for file in all_files:
+#         if ".v" in file:
+#             parts = file.rsplit('.v', 1)
+#             if len(parts) == 2 and parts[1].isdigit():
+#                 if parts[0] not in base_files:
+#                     base_files.append(parts[0])
+#         elif file not in base_files:
+#                 base_files.append(file)
+#         
+#     return base_files
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# Create file with .v in name but not a version
+f1 = openfile("data.vault", True)
+f1.writeat("vault_data", 0)
+f1.close()
+
+# Create file with same prefix
+f2 = openfile("data", True)
+f2.writeat("base_data", 0)
+f2.close()
+
+# Create version of data - should copy from "data", not "data.vault"
+f3 = openfile("data", True)
+content = f3.readat(None, 0)
+if content != "base_data":
+    log("ERROR: Should copy from data, not data.vault\n")
+    exitall()
+f3.close()
+
+# Both should be in listfiles
+files = listfiles()
+if "data" not in files:
+    log("ERROR: data should be in listfiles\n")
+    exitall()
+if "data.vault" not in files:
+    log("ERROR: data.vault should be in listfiles\n")
+    exitall()

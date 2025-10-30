@@ -1,0 +1,32 @@
+"""
+Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+Verifies that multiple versions can be created and accessed
+"""
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+

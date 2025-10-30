@@ -1,0 +1,30 @@
+"""
+Test 7: listfiles() should not show version files
+Verifies that version files are filtered from listfiles() output
+"""
+
+f1 = openfile("testfile7", True)
+f1.writeat("v0", 0)
+f1.close()
+
+f2 = openfile("testfile7", True)
+f2.writeat("v1", 0)
+f2.close()
+
+f3 = openfile("testfile7", True)
+f3.writeat("v2", 0)
+f3.close()
+
+# Check that version files are not listed
+files = listfiles()
+for f in files:
+    if '.v' in f:
+        parts = f.rsplit('.v', 1)
+        if len(parts) == 2:
+            try:
+                int(parts[1])
+                log("ERROR: Version file should not be in listfiles(): " + f + "\n")
+                exitall()
+            except ValueError:
+                pass
+

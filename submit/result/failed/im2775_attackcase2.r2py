@@ -1,0 +1,272 @@
+"""
+==============================================================================
+ATTACK CASE: im2775_attackcase2.r2py
+==============================================================================
+Target NetID:        im2775
+Original Test:       test09_multiple_versions.r2py
+Test File Path:      submit/general_tests/test09_multiple_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-4751
+  Task UUID:         68dc3576-6e85-4390-b182-21a9bd40b5e2
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:22:02.204418
+  End Time:          2025-10-27T19:22:07.986181
+  Runtime:           5.7818 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       ed439b8aeb45a67bdf351052394bef55
+  Attack MD5:        b705d0458f62c6142becb1b7dfc564ab
+  Combined MD5:      1bc4aaef12b022eae2f538c177810f14
+
+FAILURE DETAILS:
+  Reason:            ERROR: Latest version should accumulate all changes
+
+
+STDOUT:
+  ERROR: Latest version should accumulate all changes
+
+ORIGINAL TEST DESCRIPTION:
+  Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+  Verifies that multiple versions can be created and accessed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: im2775)
+# ============================================================================
+# """
+# This security layer implements Versioned and Immutable file functionality.
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# open_files = {}
+# version_counts = {}
+# 
+# def get_base_filename(filename):
+#     if '.v' in filename:
+#         parts = filename.split('.v')
+#         if len(parts) == 2:
+#             try:
+#                 int(parts[1])
+#                 return parts[0]
+#             except ValueError:
+#                 pass
+#     return filename
+# 
+# def get_version_number(filename):
+#     if '.v' in filename:
+#         parts = filename.split('.v')
+#         if len(parts) == 2:
+#             try:
+#                 return int(parts[1])
+#             except ValueError:
+#                 pass
+#     return None
+# 
+# def get_latest_version_number(base_filename):
+#     if base_filename in version_counts:
+#         return version_counts[base_filename]
+#     return 0
+# 
+# def build_version_filename(base_filename, version_num):
+#     return base_filename + '.v' + str(version_num)
+# 
+# def is_file_open(filename):
+#     return filename in open_files
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#         self.filename = filename
+#         self.is_writable = False
+#         self.VMfile = None
+#         
+#         version_num = get_version_number(filename)
+#         if version_num is not None and create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         
+#         base_filename = get_base_filename(filename)
+#         
+#         if create:
+#             if is_file_open(base_filename):
+#                 raise FileInUseError("File is already open")
+#             
+#             latest_version = get_latest_version_number(base_filename)
+#             for v in range(1, latest_version + 1):
+#                 version_file = build_version_filename(base_filename, v)
+#                 if is_file_open(version_file):
+#                     raise FileInUseError("A version of this file is already open")
+#             
+#             if base_filename in listfiles():
+#                 latest_version = get_latest_version_number(base_filename)
+#                 
+#                 # If this is the first version being created
+#                 if latest_version == 0:
+#                     # Copy base file to v1
+#                     prev_file = openfile(base_filename, False)
+#                     content = prev_file.readat(None, 0)
+#                     prev_file.close()
+#                     
+#                     v1_file = openfile(base_filename + '.v1', True)
+#                     v1_file.writeat(content, 0)
+#                     v1_file.close()
+#                     
+#                     version_counts[base_filename] = 1
+#                 
+#                 # Now create the new version
+#                 new_version = version_counts[base_filename] + 1
+#                 new_filename = build_version_filename(base_filename, new_version)
+#                 
+#                 # Copy from the previous version
+#                 prev_version = version_counts[base_filename]
+#                 if prev_version == 0:
+#                     prev_filename = base_filename
+#                 else:
+#                     prev_filename = build_version_filename(base_filename, prev_version)
+#                 
+#                 prev_file = openfile(prev_filename, False)
+#                 content = prev_file.readat(None, 0)
+#                 prev_file.close()
+#                 
+#                 self.VMfile = openfile(new_filename, True)
+#                 self.VMfile.writeat(content, 0)
+#                 self.filename = new_filename
+#                 self.is_writable = True
+#                 version_counts[base_filename] = new_version
+#             else:
+#                 self.VMfile = openfile(base_filename, True)
+#                 self.filename = base_filename
+#                 self.is_writable = True
+#                 if base_filename not in version_counts:
+#                     version_counts[base_filename] = 0
+#             
+#             open_files[self.filename] = self
+#         else:
+#             if is_file_open(filename):
+#                 raise FileInUseError("File is already open")
+#             
+#             try:
+#                 self.VMfile = openfile(filename, False)
+#                 self.filename = filename
+#                 self.is_writable = False
+#                 open_files[self.filename] = self
+#             except FileNotFoundError:
+#                 raise FileNotFoundError("File not found")
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if not self.is_writable:
+#             raise FileInUseError("Cannot write to older versions")
+#         
+#         base_filename = get_base_filename(self.filename)
+#         version_num = get_version_number(self.filename)
+#         
+#         if version_num is not None:
+#             latest_version = get_latest_version_number(base_filename)
+#             if version_num < latest_version:
+#                 raise FileInUseError("Cannot write to older versions")
+#         
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         result = self.VMfile.close()
+#         if self.filename in open_files:
+#             del open_files[self.filename]
+#         self.is_writable = False
+#         return result
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("File deletion is not allowed")
+# 
+# def LPlistfiles():
+#     all_files = listfiles()
+#     base_files = []
+#     seen = set()
+#     
+#     for f in all_files:
+#         base = get_base_filename(f)
+#         if base not in seen:
+#             seen.add(base)
+#             base_files.append(base)
+#     
+#     return base_files
+# 
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, int)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, int, type(None)), (int, int)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# secure_dispatch_module()
+# ============================================================================
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+

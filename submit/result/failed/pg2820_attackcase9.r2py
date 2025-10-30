@@ -1,0 +1,172 @@
+"""
+==============================================================================
+ATTACK CASE: pg2820_attackcase9.r2py
+==============================================================================
+Target NetID:        pg2820
+Original Test:       test12_dot_v_filename.r2py
+Test File Path:      submit/general_tests/test12_dot_v_filename.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-5149
+  Task UUID:         bc2fdde5-7ee8-4564-b495-2c627e58ac63
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:15.900320
+  End Time:          2025-10-27T19:26:20.888841
+  Runtime:           4.9885 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       44dfaeb920249bd1ffb5d76acf92a514
+  Attack MD5:        a7d5c17bb270fce5bb08224a91fb60f6
+  Combined MD5:      7c5659039f2287db5466a54ea32d6d5e
+
+FAILURE DETAILS:
+  Reason:            ERROR: Non-version .v file should be listed
+
+
+STDOUT:
+  ERROR: Non-version .v file should be listed
+
+ORIGINAL TEST DESCRIPTION:
+  Test 12: Files with .v but not version pattern
+  Verifies that files like "file.version" are allowed and listed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: pg2820)
+# ============================================================================
+# # reference_monitor_pg2820.r2py
+# # A compact, original reference monitor that uses an A/B commit strategy.
+# # NOTE: Intended for RepyV2 (Python 2.7). Do not import stdlib modules.
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# class GuardFile(object):
+#     def __init__(self, fname, create):
+#         self._fname = fname
+#         if create:
+#             tmp_name = self._tmpb_name()
+#             self._under = openfile(tmp_name, True)
+#         else:
+#             self._under = openfile(self._a_name(), False)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._under.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         try:
+#             return self._under.writeat(data, offset)
+#         except Exception:
+#             return None
+# 
+#     def close(self):
+#         try:
+#             self._under.close()
+#         except Exception:
+#             pass
+#         if self._is_tmpb_handle_name():
+#             try:
+#                 self._commit_tmpb()
+#             except Exception:
+#                 pass
+#         return None
+# 
+#     def _a_name(self):
+#         return self._fname + ".a"
+# 
+#     def _tmpb_name(self):
+#         return self._fname + ".tmpb"
+# 
+#     def _is_tmpb_handle_name(self):
+#         return (self._tmpb_name() in listfiles())
+# 
+#     def _commit_tmpb(self):
+#         tmp = openfile(self._tmpb_name(), False)
+#         data = tmp.readat(None, 0)
+#         tmp.close()
+# 
+#         a_name = self._a_name()
+#         if a_name in listfiles():
+#             backup = a_name + ".v1"
+#             old = openfile(a_name, False)
+#             olddata = old.readat(None, 0)
+#             old.close()
+#             b = openfile(backup, True)
+#             b.writeat(olddata, 0)
+#             b.close()
+#             removefile(a_name)
+# 
+#         newa = openfile(a_name, True)
+#         newa.writeat(data, 0)
+#         newa.close()
+#         removefile(self._tmpb_name())
+# 
+# def RMopenfile(filename, create):
+#     return GuardFile(filename, create)
+# 
+# def RMremovefile(filename):
+#     if filename + ".a" in listfiles():
+#         removefile(filename + ".a")
+#     if filename + ".a.v1" in listfiles():
+#         removefile(filename + ".a.v1")
+# 
+# def RMlistfiles():
+#     return listfiles()
+# 
+# file_obj_def = {
+#     "obj-type": GuardFile,
+#     "name": "GuardFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": GuardFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": GuardFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": type(None), "target": GuardFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: file_obj_def,
+#     TARGET: RMopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: RMremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: RMlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("file.version", True)
+f1.writeat("NotAVersion", 0)
+f1.close()
+
+files = listfiles()
+if "file.version" not in files:
+    log("ERROR: Non-version .v file should be listed\n")
+    exitall()
+

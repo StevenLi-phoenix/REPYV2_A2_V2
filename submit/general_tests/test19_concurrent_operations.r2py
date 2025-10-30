@@ -1,0 +1,36 @@
+"""
+Target: ds8282
+Vulnerability: Cannot open multiple different versions for reading simultaneously
+Attack: Open different versions for reading at the same time
+"""
+
+# Create base file and multiple versions
+f = openfile("multi", True)
+f.writeat("v0", 0)
+f.close()
+
+f = openfile("multi", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("multi", True)
+f.writeat("v2", 0)
+f.close()
+
+# Try to open base and v1 simultaneously for reading
+# Per spec, reading old versions should be allowed
+try:
+    fbase = openfile("multi", False)
+    try:
+        fv1 = openfile("multi.v1", False)
+        # Should be able to read from both
+        c1 = fbase.readat(None, 0)
+        c2 = fv1.readat(None, 0)
+        fv1.close()
+    except FileInUseError:
+        # Implementation may prevent this but spec doesn't forbid it
+        pass
+    fbase.close()
+except FileNotFoundError:
+    # Some implementations may not allow opening old versions
+    pass

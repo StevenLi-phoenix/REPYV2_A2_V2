@@ -1,0 +1,16 @@
+"""
+Test 6: Cannot delete files
+Verifies that file deletion is blocked
+"""
+
+f1 = openfile("testfile6", True)
+f1.writeat("data", 0)
+f1.close()
+
+try:
+    removefile("testfile6")
+    log("ERROR: Should not allow file deletion\n")
+    exitall()
+except RepyArgumentError:
+    pass
+

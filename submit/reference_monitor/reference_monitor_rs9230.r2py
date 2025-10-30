@@ -1,0 +1,277 @@
+"""
+This security layer implements Versioned and Immutable file functionality
+
+Note:
+    This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+    Also you need to give it an application to run.
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+    
+"""
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"
+OBJC = "objc"
+
+_created_basenames = set()
+_latest_index = {}
+_open_counts = {}
+_sealed = set()
+
+_actual_listfiles = listfiles
+
+def _is_versioned_name(filename):
+    if ".v" in filename:
+        parts = filename.rsplit(".v", 1)
+        if len(parts) == 2:
+            base = parts[0]
+            tail = parts[1]
+            if base and tail.isdigit():
+                return base, int(tail)
+    return None, None
+
+def _base_of(filename):
+    base, n = _is_versioned_name(filename)
+    if base is not None:
+        return base
+    else:
+        return filename
+
+def _concrete_path(base, idx):
+    if idx == 0:
+        return base
+    else:
+        return base + ".v" + str(idx)
+
+def _latest_path(base):
+    idx = _latest_index.get(base, None)
+    if idx is None:
+        return None
+    else:
+        return _concrete_path(base, idx)
+
+def _file_exists(path):
+    try:
+        fh = openfile(path, False)
+        fh.close()
+        return True
+    except Exception:
+        return False
+
+def _discover_existing_latest_index(base):
+    try:
+        files = _actual_listfiles()
+    except Exception:
+        files = []
+    max_idx = -1
+    for name in files:
+        b, n = _is_versioned_name(name)
+        if b is not None:
+            if b == base and n > max_idx:
+                max_idx = n
+        else:
+            if name == base:
+                if max_idx < 0:
+                    max_idx = 0
+                else:
+                    if 0 > max_idx:
+                        max_idx = 0
+    return max_idx
+
+def _ensure_latest_not_open(base):
+    latest = _latest_path(base)
+    if latest is not None:
+        cnt = _open_counts.get(latest, 0)
+        if cnt > 0:
+            raise FileInUseError("Latest version is open; cannot create a new version")
+
+def _inc_open(path):
+    current = _open_counts.get(path, 0)
+    _open_counts[path] = current + 1
+
+def _dec_open(path):
+    if path in _open_counts:
+        count = _open_counts[path] - 1
+        if count > 0:
+            _open_counts[path] = count
+        else:
+            del _open_counts[path]
+
+class VMFile(object):
+    def __init__(self, filename, create):
+        self._requested = filename
+        self._base = _base_of(filename)
+        self._index = None
+        self._path = None
+        self._fh = None
+        self._writable = False
+
+        ver_base, ver_idx = _is_versioned_name(filename)
+        is_versioned = (ver_base is not None)
+
+        if is_versioned and create:
+            raise RepyArgumentError("Cannot create explicit version files")
+
+        if self._base not in _latest_index:
+            latest_on_disk = _discover_existing_latest_index(self._base)
+            if latest_on_disk >= 0:
+                _latest_index[self._base] = latest_on_disk
+                _created_basenames.add(self._base)
+
+        if is_versioned:
+            self._base = ver_base
+            self._index = ver_idx
+            self._path = _concrete_path(self._base, self._index)
+            if not _file_exists(self._path):
+                raise FileNotFoundError("Version does not exist")
+            self._fh = openfile(self._path, False)
+            _inc_open(self._path)
+            self._writable = False
+            return
+
+        if create:
+            existing_idx = _latest_index.get(self._base, None)
+            if existing_idx is None:
+                existing_idx = _discover_existing_latest_index(self._base)
+            if existing_idx is None or existing_idx < 0:
+                self._index = 0
+                self._path = _concrete_path(self._base, 0)
+                self._fh = openfile(self._path, True)
+                _inc_open(self._path)
+                _created_basenames.add(self._base)
+                _latest_index[self._base] = 0
+                self._writable = True
+            else:
+                _ensure_latest_not_open(self._base)
+                latest_path = _concrete_path(self._base, existing_idx)
+                src = openfile(latest_path, False)
+                data = src.readat(None, 0)
+                src.close()
+                new_idx = existing_idx + 1
+                new_path = _concrete_path(self._base, new_idx)
+                out = openfile(new_path, True)
+                if data:
+                    out.writeat(data, 0)
+                self._index = new_idx
+                self._path = new_path
+                self._fh = out
+                _inc_open(self._path)
+                _created_basenames.add(self._base)
+                _latest_index[self._base] = new_idx
+                self._writable = True
+        else:
+            base_path = _concrete_path(self._base, 0)
+            if not _file_exists(base_path):
+                raise FileNotFoundError("Base file not found")
+            self._index = 0
+            self._path = base_path
+            self._fh = openfile(self._path, False)
+            _inc_open(self._path)
+            self._writable = False
+
+    def readat(self, num_bytes, offset):
+        return self._fh.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        if self._path in _sealed:
+            raise FileInUseError("Cannot write to a closed/immutable version")
+        current_latest_idx = _latest_index.get(self._base, -1)
+        if current_latest_idx != self._index:
+            raise FileInUseError("Cannot write to an older version")
+        if not self._writable:
+            raise FileInUseError("This handle is not writable")
+        return self._fh.writeat(data, offset)
+
+    def close(self):
+        res = self._fh.close()
+        _dec_open(self._path)
+        _sealed.add(self._path)
+        self._writable = False
+        return res
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("File deletion is not allowed")
+
+def LPlistfiles():
+    try:
+        fs = _actual_listfiles()
+    except Exception:
+        fs = []
+
+    # Build an order-preserving, de-duplicated list of basenames (no sorted()).
+    names = []
+
+    def _append_unique(x):
+        for y in names:
+            if y == x:
+                return
+        names.append(x)
+
+    # Fold filesystem entries, stripping version suffixes.
+    for name in fs:
+        b, n = _is_versioned_name(name)
+        if b is not None:
+            _append_unique(b)
+        else:
+            _append_unique(name)
+
+    # Include any basenames created this run (if not already present).
+    for bn in _created_basenames:
+        _append_unique(bn)
+
+    return names
+
+    try:
+        fs = _actual_listfiles()
+    except Exception:
+        fs = []
+    basenames = set()
+    for name in fs:
+        b, n = _is_versioned_name(name)
+        if b is not None:
+            basenames.add(b)
+        else:
+            basenames.add(name)
+    for bn in _created_basenames:
+        basenames.add(bn)
+    visible = sorted(list(basenames))
+    return visible
+
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close},
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+secure_dispatch_module()

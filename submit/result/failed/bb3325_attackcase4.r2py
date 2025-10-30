@@ -1,0 +1,425 @@
+"""
+==============================================================================
+ATTACK CASE: bb3325_attackcase4.r2py
+==============================================================================
+Target NetID:        bb3325
+Original Test:       test09_multiple_versions.r2py
+Test File Path:      submit/general_tests/test09_multiple_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-9817
+  Task UUID:         4f8128ff-f4d4-4f0c-bbdd-32919ee2ca61
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:20:19.426062
+  End Time:          2025-10-27T19:20:25.107751
+  Runtime:           5.6817 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       f5a51c3258540aa9e1f186a36b603cff
+  Attack MD5:        b705d0458f62c6142becb1b7dfc564ab
+  Combined MD5:      cdeff8cbc4c8ada90b83efcf4a841863
+
+FAILURE DETAILS:
+  Reason:            ERROR: Base file should remain unchanged
+
+
+STDOUT:
+  ERROR: Base file should remain unchanged
+
+ORIGINAL TEST DESCRIPTION:
+  Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+  Verifies that multiple versions can be created and accessed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: bb3325)
+# ============================================================================
+# """
+# Reference monitor implementing immutable, linear versioned files for Repy V2.
+# Filename: reference_monitor_bb3325.r2py
+# 
+# """
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# # Capture originals before overriding
+# _ORIG_listfiles  = listfiles
+# _ORIG_openfile   = openfile
+# _ORIG_removefile = removefile
+# 
+# # Registry for version management
+# _file_registry = {}
+# 
+# # Simple in-process per-base lock to serialize creates
+# _create_locks = {}  # base -> bool
+# 
+# def _acquire_create_lock(base):
+#     if base not in _create_locks:
+#         _create_locks[base] = False
+#     if _create_locks[base]:
+#         return False
+#     _create_locks[base] = True
+#     return True
+# 
+# def _release_create_lock(base):
+#     if base in _create_locks:
+#         _create_locks[base] = False
+# 
+# def _valid_basename(name):
+#     if not isinstance(name, str):
+#         return False
+#     if name == "" or name in (".", "..") or name.startswith("."):
+#         return False
+#     if len(name) > 120:
+#         return False
+#     for ch in name:
+#         o = ord(ch)
+#         # allow lowercase letters, numbers, hyphen, underscore, and period
+#         if not ((97 <= o <= 122) or (48 <= o <= 57) or ch in "-_."):
+#             return False
+#     return True
+# 
+# 
+# def _is_versioned_name(name):
+#     if not isinstance(name, str):
+#         return (False, name, None)
+#     parts = name.rsplit('.v', 1)
+#     if len(parts) == 2:
+#         base, num = parts[0], parts[1]
+#         if base != "" and num.isdigit() and int(num) >= 1:
+#             return (True, base, int(num))
+#     return (False, name, None)
+# 
+# def _ensure_base_entry(base):
+#     if base not in _file_registry:
+#         _file_registry[base] = {
+#             "latest": None,
+#             "next_v": 1,
+#             "versions": set(),
+#             "open_counts": {}
+#         }
+# 
+# def _version_exists(base, vername):
+#     reg = _file_registry.get(base)
+#     return bool(reg) and (vername in reg["versions"])
+# 
+# def _inc_open_count(base, vername):
+#     reg = _file_registry[base]
+#     oc = reg["open_counts"]
+#     oc[vername] = oc.get(vername, 0) + 1
+# 
+# def _dec_open_count(base, vername):
+#     reg = _file_registry.get(base)
+#     if not reg:
+#         return
+#     oc = reg["open_counts"]
+#     if vername in oc:
+#         newv = oc.get(vername, 1) - 1
+#         if newv <= 0:
+#             if vername in oc:
+#                 del oc[vername]
+#         else:
+#             oc[vername] = newv
+# 
+# def _is_latest_open(base):
+#     reg = _file_registry.get(base)
+#     if not reg:
+#         return False
+#     latest = reg["latest"]
+#     if not latest:
+#         return False
+#     return reg["open_counts"].get(latest, 0) > 0
+# 
+# def _reconstruct_base_from_disk(base):
+#     """
+#     Rebuild registry entries for `base` from the underlying filesystem.
+#     Choose latest as highest .vN (or base if no .vN exists). Return True if any found.
+#     """
+#     items = _ORIG_listfiles()
+#     max_v = -1
+#     latest_name = None
+#     found_any = False
+# 
+#     ii = 0
+#     while ii < len(items):
+#         name = items[ii]
+#         isv, b, v = _is_versioned_name(name)
+#         if isv and b == base:
+#             found_any = True
+#             if v > max_v:
+#                 max_v = v
+#                 latest_name = name
+#         elif name == base:
+#             found_any = True
+#             if 0 > max_v:
+#                 max_v = 0
+#                 latest_name = name
+#         ii += 1
+# 
+#     if not found_any:
+#         return False
+# 
+#     _ensure_base_entry(base)
+#     reg = _file_registry[base]
+# 
+#     # Register all members for this base
+#     ii = 0
+#     while ii < len(items):
+#         name = items[ii]
+#         isv, b, v = _is_versioned_name(name)
+#         if (isv and b == base) or name == base:
+#             reg["versions"].add(name)
+#         ii += 1
+# 
+#     reg["latest"] = latest_name
+#     # avoid inline ternary for Repy safety checker
+#     if max_v >= 0:
+#         reg["next_v"] = max_v + 1
+#     else:
+#         reg["next_v"] = 1
+#     return True
+# 
+# class VMFile(object):
+#     def __init__(self, base_name, version_name, underlying_fh):
+#         self.base_name = base_name
+#         self.version_name = version_name
+#         self._fh = underlying_fh
+#         self._closed = False
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._fh.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         reg = _file_registry.get(self.base_name)
+#         if not reg:
+#             raise FileInUseError
+#         if self.version_name != reg["latest"]:
+#             raise FileInUseError
+#         return self._fh.writeat(data, offset)
+# 
+#     def close(self):
+#         if self._closed:
+#             try:
+#                 return self._fh.close()
+#             finally:
+#                 pass
+#         self._closed = True
+#         try:
+#             return self._fh.close()
+#         finally:
+#             _dec_open_count(self.base_name, self.version_name)
+# 
+# def LPopenfile(filename, create):
+#     if not isinstance(filename, str):
+#         raise RepyArgumentError("filename must be a string")
+# 
+#     is_ver, base_or_name, vnum = _is_versioned_name(filename)
+# 
+#     if is_ver:
+#         base = base_or_name
+#         if create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         if not _valid_basename(base):
+#             raise FileNotFoundError
+# 
+#         # Ensure registry knows the full set for this base
+#         if not _version_exists(base, filename):
+#             if not _reconstruct_base_from_disk(base):
+#                 raise FileNotFoundError
+#             if not _version_exists(base, filename):
+#                 raise FileNotFoundError
+# 
+#         fh = _ORIG_openfile(filename, False)
+#         _inc_open_count(base, filename)
+#         return VMFile(base, filename, fh)
+# 
+#     # base-name access
+#     base = filename
+#     if not _valid_basename(base):
+#         raise RepyArgumentError("invalid filename (only lowercase letters and digits allowed)")
+# 
+#     _ensure_base_entry(base)
+#     reg = _file_registry[base]
+# 
+#     if create:
+#         # First creation
+#         if reg["latest"] is None:
+#             fh = _ORIG_openfile(base, True)
+#             reg["versions"].add(base)
+#             reg["latest"] = base
+#             _inc_open_count(base, base)
+#             return VMFile(base, base, fh)
+# 
+#         # Cannot create new version while latest is open
+#         if _is_latest_open(base):
+#             raise FileInUseError
+# 
+#         # Acquire per-base lock for create to avoid double-creates
+#         if not _acquire_create_lock(base):
+#             raise FileInUseError
+#         try:
+#             # Choose next available .vN
+#             vnum = reg["next_v"]
+#             while True:
+#                 newname = base + ".v" + str(vnum)
+#                 if newname not in reg["versions"]:
+#                     # ensure no underlying collision
+#                     underlying_items = _ORIG_listfiles()
+#                     found_underlying = False
+#                     ii = 0
+#                     while ii < len(underlying_items):
+#                         if underlying_items[ii] == newname:
+#                             found_underlying = True
+#                             break
+#                         ii += 1
+#                     if not found_underlying:
+#                         break
+#                 vnum += 1
+# 
+#             latest = reg["latest"]
+#             src = _ORIG_openfile(latest, False)
+#             dst = _ORIG_openfile(newname, True)
+#             try:
+#                 offset = 0
+#                 CHUNK = 8192
+#                 while True:
+#                     chunk = src.readat(CHUNK, offset)
+#                     if not chunk:
+#                         break
+#                     dst.writeat(chunk, offset)
+#                     offset += len(chunk)
+#             finally:
+#                 try:
+#                     src.close()
+#                 except:
+#                     pass
+# 
+#             reg["versions"].add(newname)
+#             reg["latest"] = newname
+#             reg["next_v"] = vnum + 1
+#             _inc_open_count(base, newname)
+#             return VMFile(base, newname, dst)
+#         finally:
+#             _release_create_lock(base)
+# 
+#     else:
+#         if reg["latest"] is None:
+#             # If registry empty but disk might have entries (e.g., restarted layer),
+#             # reconstruct to preserve accuracy.
+#             if not _reconstruct_base_from_disk(base):
+#                 raise FileNotFoundError
+#         latest = reg["latest"]
+#         fh = _ORIG_openfile(latest, False)
+#         _inc_open_count(base, latest)
+#         return VMFile(base, latest, fh)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("removefile is not allowed by reference monitor")
+# 
+# def LPlistfiles():
+#     """
+#     Return a list of base file names (hide .vN and temporary files).
+#     Matches RepyV2 API exactly.
+#     """
+#     orig = _ORIG_listfiles()
+#     bases = []
+#     seen = set()
+# 
+#     i = 0
+#     while i < len(orig):
+#         nm = orig[i]
+#         # skip temporary artifacts
+#         if nm.find('.tmp') != -1:
+#             i += 1
+#             continue
+#         parts = nm.rsplit('.v', 1)
+#         if len(parts) == 2 and parts[0] != "" and parts[1].isdigit():
+#             cand = parts[0]
+#         else:
+#             cand = nm
+#         if cand not in seen:
+#             seen.add(cand)
+#             bases.append(cand)
+#         i += 1
+# 
+#     return bases
+# 
+# 
+# # Type manifest (do not edit)
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+

@@ -1,0 +1,206 @@
+"""
+==============================================================================
+ATTACK CASE: ah7163_attackcase4.r2py
+==============================================================================
+Target NetID:        ah7163
+Original Test:       test12_dot_v_filename.r2py
+Test File Path:      submit/general_tests/test12_dot_v_filename.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-7562
+  Task UUID:         a529ea65-9174-4a71-8ec8-46ce8d85f222
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:18:44.103969
+  End Time:          2025-10-27T19:18:49.910699
+  Runtime:           5.8067 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       b4421065425d62d5ce2e92c334d5df15
+  Attack MD5:        a7d5c17bb270fce5bb08224a91fb60f6
+  Combined MD5:      ce30d2e7da4439087dde1cb43e28590f
+
+FAILURE DETAILS:
+  Reason:            ERROR: Non-version .v file should be listed
+
+
+STDOUT:
+  ERROR: Non-version .v file should be listed
+
+ORIGINAL TEST DESCRIPTION:
+  Test 12: Files with .v but not version pattern
+  Verifies that files like "file.version" are allowed and listed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ah7163)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# open_files = set()
+# latest_version = {}
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+# 
+#         self.name = filename
+#         parts = filename.split(".v")
+# 
+#         if len(parts) == 2 and parts[1].isdigit():
+#             self.base = parts[0]
+#             self.version = int(parts[1])
+#         else:
+#             self.base = filename
+#             self.version = None
+#         
+#         existing_files = set(listfiles())
+# 
+#         if create and self.version is not None:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         
+#         if filename in open_files:
+#             raise FileInUseError("File already open")
+# 
+#         if create:
+#             if filename in existing_files:
+#                 # find latest version
+#                 cur = 0
+#                 while (self.base + ".v" + str(cur+1)) in existing_files:
+#                     cur += 1
+#                 
+# 
+#                 if cur == 0:
+#                     latest = self.base
+#                 else:
+#                     latest = self.base + ".v" + str(cur)
+#                 
+#                 if latest in open_files:
+#                     raise FileInUseError("Cannot version while latest is open")
+# 
+#                 prev_file = openfile(latest, False)
+#                 content = prev_file.readat(None, 0)
+#                 prev_file.close()
+# 
+#                 new_name = self.base + ".v" + str(cur+1)
+#                 new_file = openfile(new_name, True)
+#                 self.file = new_file
+#                 self.file.writeat(content, 0)
+#                 self.name = new_name
+#                 latest_version[self.base] = new_name
+#             
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.file = openfile(filename, True)
+#                 latest_version[self.base] = filename
+#         else:
+#             # Open existing file normally
+#             if filename not in existing_files:
+#                 raise FileNotFoundError(filename)
+#             self.file = openfile(filename, False)
+#         
+#         open_files.add(self.name)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.file.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         latest = latest_version.get(self.base, self.base)
+#         if latest != self.name:
+#             raise FileInUseError("Cannot write to older version")
+#         
+#         return self.file.writeat(data, offset)
+# 
+#     def close(self):
+#         res = self.file.close()
+#         if self.name in open_files:
+#             open_files.remove(self.name)
+#         
+#         return res
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("removefile is not allowed")
+# 
+# def LPlistfiles():
+#     existing_files = listfiles()
+#     bases = []
+#     for file in existing_files:
+#         base = file.split(".v")[0]
+#         if base not in bases:
+#             bases.append(base)
+#     return bases
+# 
+# 
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+f1 = openfile("file.version", True)
+f1.writeat("NotAVersion", 0)
+f1.close()
+
+files = listfiles()
+if "file.version" not in files:
+    log("ERROR: Non-version .v file should be listed\n")
+    exitall()
+

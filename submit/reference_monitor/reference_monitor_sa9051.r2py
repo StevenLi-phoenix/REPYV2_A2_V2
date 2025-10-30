@@ -1,0 +1,215 @@
+"""
+Defensive Security System - Reference Monitor for Immutable Versioned Files
+NetID: sa9051
+"""
+
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"
+OBJC = "objc"
+
+_underlying_openfile = openfile
+_underlying_listfiles = listfiles
+_underlying_removefile = removefile
+
+file_metadata = {}
+CHILD_CONTEXT_DEF = {}
+
+def parse_versioned_filename(filename):
+    if not isinstance(filename, str):
+        return (None, None)
+    if filename.count('.v') == 0:
+        return (None, None)
+    parts = filename.rsplit('.v', 1)
+    if len(parts) != 2:
+        return (None, None)
+    base, suffix = parts[0], parts[1]
+    if suffix.isdigit() and suffix != '':
+        num = int(suffix)
+        if num >= 1:
+            return (base, num)
+    return (None, None)
+
+def base_from_filename(filename):
+    base, num = parse_versioned_filename(filename)
+    if base is not None:
+        return base
+    else:
+        return filename
+
+def _ensure_meta(base):
+    if base not in file_metadata:
+        file_metadata[base] = {'ver': 0, 'latest': base, 'open': set()}
+    return file_metadata[base]
+
+def _is_underlying_open(base, underlying_name):
+    meta = file_metadata.get(base)
+    if not meta:
+        return False
+    for vm in meta['open']:
+        if getattr(vm, 'filename', None) == underlying_name:
+            return True
+    return False
+
+def _underlying_basenames():
+    names = _underlying_listfiles()
+    bases = set()
+    for n in names:
+        bases.add(base_from_filename(n))
+    return bases
+
+class VMFile():
+    def __init__(self, filename, create, underlying_obj, base, version_num):
+        self.filename = filename
+        self.create = create
+        self._f = underlying_obj
+        self.base = base
+        self.version = version_num or 0
+        self._closed = False
+        meta = _ensure_meta(self.base)
+        meta['open'].add(self)
+        if self.version >= meta.get('ver', 0):
+            meta['latest'] = self.filename
+            meta['ver'] = self.version
+
+    def readat(self, num_bytes, offset):
+        return self._f.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        meta = file_metadata.get(self.base)
+        if (meta is None) or (meta.get('latest') != self.filename):
+            raise FileInUseError("Cannot write to older versions")
+        return self._f.writeat(data, offset)
+
+    def close(self):
+        if self._closed:
+            return self._f.close()
+        try:
+            res = self._f.close()
+        finally:
+            meta = file_metadata.get(self.base)
+            if meta is not None and self in meta['open']:
+                meta['open'].remove(self)
+            self._closed = True
+        return res
+
+def LPopenfile(filename, create):
+    if not isinstance(filename, str):
+        return _underlying_openfile(filename, create)
+
+    base, ver = parse_versioned_filename(filename)
+    if base is not None:
+        if create:
+            raise RepyArgumentError("Cannot create explicit version files")
+        if _is_underlying_open(base, filename):
+            raise FileInUseError("File is already open")
+        underlying = _underlying_openfile(filename, False)
+        vm = VMFile(filename, False, underlying, base, ver)
+        meta = file_metadata.get(base)
+        if meta is None or ver > meta.get('ver', 0):
+            meta = _ensure_meta(base)
+            meta['ver'] = ver
+            meta['latest'] = filename
+        return vm
+
+    underlying_bases = _underlying_basenames()
+    meta = file_metadata.get(filename)
+
+    if create:
+        if (meta is None) and (filename not in underlying_bases):
+            if _is_underlying_open(filename, filename):
+                raise FileInUseError("File is already open")
+            underlying = _underlying_openfile(filename, True)
+            vm = VMFile(filename, True, underlying, filename, 0)
+            m = _ensure_meta(filename)
+            m['ver'] = 0
+            m['latest'] = filename
+            return vm
+
+        if meta is None:
+            highest_ver = 0
+            highest_name = filename
+            for n in _underlying_listfiles():
+                b, v = parse_versioned_filename(n)
+                if b == filename and v > highest_ver:
+                    highest_ver = v
+                    highest_name = n
+            if filename in _underlying_listfiles():
+                highest_ver = max(highest_ver, 0)
+            meta = _ensure_meta(filename)
+            meta['ver'] = highest_ver
+            meta['latest'] = highest_name
+
+        if _is_underlying_open(filename, meta['latest']):
+            raise FileInUseError("Latest version is currently open; cannot create new version")
+
+        next_ver = meta.get('ver', 0) + 1
+        new_name = filename + ".v" + str(next_ver)
+        prev_name = meta.get('latest', filename)
+        prev_under = _underlying_openfile(prev_name, False)
+        contents = prev_under.readat(None, 0)
+        prev_under.close()
+
+        new_under = _underlying_openfile(new_name, True)
+        if contents:
+            new_under.writeat(contents, 0)
+        vm = VMFile(new_name, True, new_under, filename, next_ver)
+        meta = _ensure_meta(filename)
+        meta['ver'] = next_ver
+        meta['latest'] = new_name
+        return vm
+
+    if _is_underlying_open(filename, filename):
+        raise FileInUseError("File is already open")
+    underlying = _underlying_openfile(filename, False)
+    vm = VMFile(filename, False, underlying, filename, 0)
+    _ensure_meta(filename)  # fixed: do not overwrite latest
+    return vm
+
+def LPremovefile(filename):
+    raise RepyArgumentError("removefile not allowed under immutable, versioned policy")
+
+def LPlistfiles():
+    base_set = set()
+    for b in _underlying_basenames():
+        base_set.add(b)
+    for base in file_metadata.keys():
+        base_set.add(base)
+    return list(sorted(base_set))
+
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+secure_dispatch_module()

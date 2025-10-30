@@ -1,0 +1,233 @@
+TYPE   = "type"
+ARGS   = "args"
+RETURN = "return"
+EXCP   = "exceptions"
+TARGET = "target"
+FUNC   = "func"
+OBJC   = "objc"
+
+OPEN_FILES = {}
+FILE_STATE = {}
+
+# save the real runtime functions before we export our wrappers
+real_openfile = openfile
+real_listfiles = listfiles
+real_removefile = removefile
+
+
+
+# helper functions
+
+
+def split_version(fname):
+  """Return (base, ver). If no '.vN' suffix, ver == 0."""
+  idx = fname.rfind(".v")
+  if idx != -1 and idx + 2 < len(fname):
+    suf = fname[idx+2:]
+    if suf.isdigit():
+      base = fname[:idx]
+      return base, int(suf)
+  return fname, 0
+
+def is_versioned_name(fname):
+  _, v = split_version(fname)
+  return v > 0
+
+def highest_version(base):
+  files = real_listfiles()
+  maxv = 0
+  i = 0
+  while i < len(files):
+    f = files[i]
+    b, v = split_version(f)
+    if b == base and v > maxv:
+      maxv = v
+    i += 1
+  return maxv
+
+def latest_name(base):
+  hv = highest_version(base)
+  if hv > 0:
+    return base + ".v" + str(hv)
+  files = real_listfiles()
+  i = 0
+  while i < len(files):
+    if files[i] == base:
+      return base
+    i += 1
+  return None
+
+def copy_from(src, dst):
+  h = real_openfile(src, False)
+  try:
+    data = h.readat(None, 0)
+  finally:
+    h.close()
+
+  d = real_openfile(dst, True)
+  try:
+    if data:
+      d.writeat(data, 0)
+  finally:
+    d.close()
+
+
+
+# VMFile: wrapper object
+
+
+class VMFile:
+  def __init__(self, name, create):
+    # disallow manual creation of explicit version filenames like "foo.v1"
+    if create and is_versioned_name(name):
+      raise RepyArgumentError()
+
+    base, ver = split_version(name)
+    files = real_listfiles()
+
+    if create:
+      # first creation ever for this base
+      if base not in files and highest_version(base) == 0:
+        self.fname = base
+        self.handle = real_openfile(base, True)
+      else:
+        # base already exists --> create a new version
+        latest = latest_name(base)
+
+        # probe: try to open latest non-creating. If it's open, raise FileInUseError
+        try:
+          probe = real_openfile(latest, False)
+        except FileInUseError:
+          raise FileInUseError()
+        else:
+          try:
+            content = probe.readat(None, 0)
+          finally:
+            probe.close()
+
+        new_ver = highest_version(base) + 1
+        new_name = base + ".v" + str(new_ver)
+
+        # create the new version and initialize with the copied content
+        newf = real_openfile(new_name, True)
+        try:
+          if content:
+            newf.writeat(content, 0)
+        finally:
+          # keep this handle open for the caller
+          self.handle = newf
+
+        self.fname = new_name
+    else:
+      # create=False -> must already exist
+      files = real_listfiles()
+      if name not in files:
+        raise FileNotFoundError()
+      self.fname = name
+      self.handle = real_openfile(name, False)
+
+    # bookkeeping
+    FILE_STATE[self.fname] = "open"
+    b, v = split_version(self.fname)
+    if highest_version(b) == v:
+      OPEN_FILES[b] = self
+
+  def readat(self, num_bytes, offset):
+    return self.handle.readat(num_bytes, offset)
+
+  def writeat(self, data, offset):
+    base, ver = split_version(self.fname)
+    # only allow writes to the latest version (ver == highest)
+    if ver != highest_version(base):
+      # raise FileInUseError
+      raise FileInUseError()
+    return self.handle.writeat(data, offset)
+
+  def close(self):
+    FILE_STATE[self.fname] = "closed"
+    try:
+      self.handle.close()
+    finally:
+      # clear OPEN_FILES mapping if this object was the recorded "open" instance
+      b, v = split_version(self.fname)
+      if OPEN_FILES.get(b) is self:
+        try:
+          del OPEN_FILES[b]
+        except KeyError:
+          pass
+    return True
+
+
+
+# functions exported to the child
+
+
+def LPopenfile(name, create):
+  return VMFile(name, create)
+
+def LPremovefile(name):
+  # removal not allowed
+  raise RepyArgumentError()
+
+def LPlistfiles():
+  raw = real_listfiles()
+  bases = []
+  seen = set()
+  i = 0
+  while i < len(raw):
+    b, _ = split_version(raw[i])
+    if b not in seen:
+      seen.add(b)
+      bases.append(b)
+    i += 1
+  return bases
+
+
+
+# encasementlib
+
+sec_file_def = {
+  "obj-type": VMFile,
+  "name": "VMFile",
+  "writeat": {"type": FUNC,
+              "args": (str, (int, long)),
+              "exceptions": Exception,
+              "return": (int, type(None)),
+              "target": VMFile.writeat},
+  "readat":  {"type": FUNC,
+              "args": ((int, long, type(None)), (int, long)),
+              "exceptions": Exception,
+              "return": str,
+              "target": VMFile.readat},
+  "close":   {"type": FUNC,
+              "args": None,
+              "exceptions": Exception,
+              "return": (bool, type(None)),
+              "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+  TYPE: OBJC,
+  ARGS: (str, bool),
+  EXCP: Exception,
+  RETURN: sec_file_def,
+  TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+  TYPE: FUNC,
+  ARGS: (str,),
+  EXCP: Exception,
+  RETURN: type(None),
+  TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+  TYPE: FUNC,
+  ARGS: None,
+  EXCP: Exception,
+  RETURN: list,
+  TARGET: LPlistfiles
+}
+
+secure_dispatch_module()

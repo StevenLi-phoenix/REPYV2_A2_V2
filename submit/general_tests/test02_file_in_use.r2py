@@ -1,0 +1,14 @@
+"""
+Test 2: Cannot open file while it's already open
+Verifies FileInUseError is raised when trying to open an already-open file
+"""
+
+f1 = openfile("testfile2", True)
+try:
+    f2 = openfile("testfile2", True)
+    log("ERROR: Should not allow opening already-open file\n")
+    exitall()
+except FileInUseError:
+    pass
+f1.close()
+

@@ -1,0 +1,12 @@
+"""
+Test 8: FileNotFoundError for non-existent files
+Verifies proper error handling for non-existent files
+"""
+
+try:
+    f1 = openfile("nonexistent_file_xyz", False)
+    log("ERROR: Should raise FileNotFoundError\n")
+    exitall()
+except FileNotFoundError:
+    pass
+

@@ -1,0 +1,289 @@
+"""
+==============================================================================
+ATTACK CASE: nb4048_attackcase1.r2py
+==============================================================================
+Target NetID:        nb4048
+Original Test:       test16_startswith_vault_bug.r2py
+Test File Path:      submit/general_tests/test16_startswith_vault_bug.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-1525
+  Task UUID:         af817b5f-9e22-4aa9-a8e9-87532345e53a
+  Machine Type:      n2-standard-4
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:25:17.984900
+  End Time:          2025-10-27T19:25:23.158967
+  Runtime:           5.1741 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       6f75d34922282e61f14730d9ef1d3b0d
+  Attack MD5:        8f001b374ace212a6d5f595dbcbedf6a
+  Combined MD5:      42a502f58559d9d9d47be08c34cbd9a6
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 172, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 13, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 117, in LPopenfile
+    "monitor.r2py", line 65, in __init__
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/emulfile.py", line 177, in emulated_open
+    "/app/emulfile.py", line 289, in __init__
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 172, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 13, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 117, in LPopenfile
+    "monitor.r2py", line 65, in __init__
+  Exception (with class 'exception_hierarchy.FileNotFoundError'): Cannot openfile non-existent file "data" without creating it!
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: aa12037, al8372, bzy205, jaa10243, krg9790, nb4048, sr7991, zs2985
+  Vulnerability: Uses startswith() which incorrectly matches "file.vault" when checking for "file.v*"
+  Attack: Create "data.vault" then "data" - should not confuse them as versions
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: nb4048)
+# ============================================================================
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# _base_versions = {} # track versions
+# _version_in_use = {} # track if a version for a file is in use
+# 
+# def _get_version(name):
+#     parts = name.rsplit(".v", 1)
+#     if len(parts) != 2:
+#         return None
+#     base, numpart = parts
+#     if not numpart.isdigit():
+#         return None
+#     return (base, int(numpart))
+# 
+# def _create_next_version(base):
+#     v = _base_versions.get(base, 0) + 1
+#     _base_versions[base] = v
+#     return base + ".v" + str(v), v
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#         self._writable = False
+#         self._closed = False
+#         self._name = filename
+# 
+#         verinfo = _get_version(filename)
+#         if verinfo:
+#             base = verinfo[0]
+#         else:
+#             base = filename
+# 
+#         if create:
+#             if verinfo:
+#                 raise RepyArgumentError("Cannot create explicit version files")
+# 
+#             if _version_in_use.get(base, False):
+#                 raise FileInUseError("Cannot create a new version while previous version is open")
+# 
+#             existing_files = listfiles()
+#             found_existing = False
+#             for fn in existing_files:
+#                 if fn == base or fn.startswith(base + ".v"):
+#                     found_existing = True
+#                     break
+# 
+#             if found_existing:
+#                 old_ver = _base_versions.get(base, 0)
+#                 new_name, new_ver = _create_next_version(base)
+#                 newf = openfile(new_name, True)
+# 
+#                 _version_in_use[base] = True
+#                 try:
+#                     if old_ver == 0:
+#                         src_name = base
+#                     else:
+#                         src_name = base + ".v" + str(old_ver)
+# 
+#                     # load file in 32Kib chunks to avoid loading full file into memory 
+#                     src = openfile(src_name, False)
+#                     offset = 0
+#                     chunk = 32768
+#                     while True:
+#                         data = src.readat(chunk, offset)
+#                         if not data:
+#                             break
+#                         newf.writeat(data, offset)
+#                         offset += len(data)
+#                     src.close()
+# 
+#                     self.VMfile = newf
+#                     self._name = new_name
+#                     self._writable = True
+#                 except:
+#                     _version_in_use[base] = False
+#                     raise
+#             else:
+#                 _base_versions[base] = 0
+#                 self.VMfile = openfile(base, True)
+#                 self._name = base
+#                 self._writable = True
+#                 _version_in_use[base] = True
+# 
+#         else:
+#             # Read-only opens
+#             self.VMfile = openfile(filename, False)
+#             self._writable = False
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self._closed or not self._writable:
+#             raise FileInUseError("Writes not allowed on this version")
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         res = self.VMfile.close()
+#         self._closed = True
+#         if self._writable:
+#             verinfo = _get_version(self._name)
+#             if verinfo is not None:
+#                 base = verinfo[0]
+#             else:
+#                 base = self._name
+#             _version_in_use[base] = False
+#             self._writable = False
+#         return res
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("File deletion not allowed")
+# 
+# def LPlistfiles():
+#     seen = set()
+#     result = []
+#     for f in listfiles():
+#         verinfo = _get_version(f)
+#         if verinfo:
+#             base = verinfo[0]
+#         else: 
+#             base = f
+#         if base not in seen:
+#             seen.add(base)
+#             result.append(base)
+# 
+#     return result
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# Create file with .v in name but not a version
+f1 = openfile("data.vault", True)
+f1.writeat("vault_data", 0)
+f1.close()
+
+# Create file with same prefix
+f2 = openfile("data", True)
+f2.writeat("base_data", 0)
+f2.close()
+
+# Create version of data - should copy from "data", not "data.vault"
+f3 = openfile("data", True)
+content = f3.readat(None, 0)
+if content != "base_data":
+    log("ERROR: Should copy from data, not data.vault\n")
+    exitall()
+f3.close()
+
+# Both should be in listfiles
+files = listfiles()
+if "data" not in files:
+    log("ERROR: data should be in listfiles\n")
+    exitall()
+if "data.vault" not in files:
+    log("ERROR: data.vault should be in listfiles\n")
+    exitall()

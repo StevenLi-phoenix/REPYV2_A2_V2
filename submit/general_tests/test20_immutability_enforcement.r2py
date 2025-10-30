@@ -1,0 +1,51 @@
+"""
+Targets: sa9082, wjl9629, hl5031
+Vulnerability: Immutability not properly enforced across edge cases
+Attack: Test immutability with various file opening patterns and edge case names
+"""
+
+# Test 1: Basic immutability
+f = openfile("immutable", True)
+f.writeat("v0", 0)
+f.close()
+
+# Create version
+f = openfile("immutable", True)
+f.writeat("v1", 0)
+f.close()
+
+# Try to open base and write (should fail - it's an old version)
+try:
+    fold = openfile("immutable", False)
+    try:
+        fold.writeat("hack", 0)
+        log("ERROR: Should not be able to write to old version\n")
+        exitall()
+    except FileInUseError:
+        # Expected
+        pass
+    fold.close()
+except FileNotFoundError:
+    pass
+
+# Test 2: Edge case filename
+f2 = openfile("normal", True)
+f2.writeat("test", 0)
+f2.close()
+
+# Version it
+f3 = openfile("normal", True)
+content = f3.readat(None, 0)
+if content != "test":
+    log("ERROR: Version should copy content\n")
+    exitall()
+f3.close()
+
+# Verify listfiles
+files = listfiles()
+if "normal" not in files:
+    log("ERROR: Base file should be in listfiles\n")
+    exitall()
+if "normal.v1" in files:
+    log("ERROR: Version should not be in listfiles\n")
+    exitall()

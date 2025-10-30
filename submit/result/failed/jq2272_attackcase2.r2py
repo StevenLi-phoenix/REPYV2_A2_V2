@@ -1,0 +1,213 @@
+"""
+==============================================================================
+ATTACK CASE: jq2272_attackcase2.r2py
+==============================================================================
+Target NetID:        jq2272
+Original Test:       test05_read_old_versions.r2py
+Test File Path:      submit/general_tests/test05_read_old_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-8577
+  Task UUID:         4813244c-e01e-4285-b056-9edd0894a3e0
+  Machine Type:      c5.xlarge
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:23:01.077749
+  End Time:          2025-10-27T19:23:04.271322
+  Runtime:           3.1936 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       7b90093b5809c3311fe378778bf483ec
+  Attack MD5:        9bdf70bf198eb3ed48e2c8e61ca597b0
+  Combined MD5:      efb6119b4c02aa02aea500048913e4a0
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should be able to read old version
+
+
+STDOUT:
+  ERROR: Should be able to read old version
+
+ORIGINAL TEST DESCRIPTION:
+  Test 5: Can read from old versions
+  Verifies that old versions remain readable
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: jq2272)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# # parses a given filename and returns a tuple (name: str, version: int)
+# # version will be 0 if a version number is not specified
+# def parse_name(filename):
+#     splitted = filename.split('.');
+# 
+#     # does not have a version number
+#     if (len(splitted) == 1):
+#         return (filename, 0);
+# 
+#     tail = splitted[-1];
+#     if (len(tail) > 0 and tail[0] == 'v'):
+#         # trailing part might be a version number
+#         try:
+#             version = int(tail[1:]);
+#             if (version > 0):
+#                 # valid version number
+#                 return ("".join(filename[:-1]), version);
+#             else:
+#                 return (filename, 0);
+#         except:
+#             # not a valid version number
+#             return (filename, 0);
+#     else:
+#         # trailing part is not a version number
+#         return (filename, 0);
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#         name, version = parse_name(filename);
+#         self.writeable = True;
+#         self.lockfile = None;
+# 
+#         # look for next version number
+#         filelist = listfiles();
+# 
+#         new_version = 1;
+#         while ((name + ".v" + str(new_version)) in filelist):
+#             new_version += 1;
+# 
+#         if (version == 0):
+#             # no version number provided
+#             if (create):
+#                 self.file = openfile(name + ".v" + str(new_version), True);
+#             else:
+#                 self.file = openfile(name + ".v" + str(new_version - 1), False);
+# 
+#             # check for lockfile
+#             if ((name + ".v0" in filelist)):
+#                 # lockfile present, cannot open
+#                 raise FileInUseError;
+#         else:
+#             # version number given
+#             try:
+#                 self.file = openfile(filename, False);
+#                 self.writeable = False;
+#             except FileNotFoundError:
+#                 raise RepyArgumentError("Cannot create explicit version files");
+# 
+#         # create lockfile
+#         if (self.writeable):
+#             self.lockfile = name + ".v0";
+#             openfile(self.lockfile, True).close();
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.file.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if (not self.writeable):
+#             raise FileInUseError("Cannot write to old versions");
+#         return self.file.writeat(data, offset)
+# 
+#     def close(self):
+#         if (self.lockfile):
+#             removefile(self.lockfile);
+#         return self.file.close();
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("Cannot delete files");
+# 
+# def LPlistfiles():
+#     res = set();
+#     for filename in listfiles():
+#         res.add(parse_name(filename)[0]);
+#     return list(res);
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile5", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile5", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Read from base version
+f3 = openfile("testfile5", False)
+content = f3.readat(None, 0)
+if content != "Original":
+    log("ERROR: Should be able to read old version\n")
+    exitall()
+f3.close()
+
+# Read from v1
+f4 = openfile("testfile5.v1", False)
+content = f4.readat(None, 0)
+if content != "NewVersion":
+    log("ERROR: Should be able to read versioned file\n")
+    exitall()
+f4.close()
+

@@ -1,0 +1,344 @@
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+_OPEN_FILES = {}
+_VERSION_METADATA = {}
+_GLOBAL_LOCK = createlock()
+
+COPY_CHUNK_SIZE = 8192
+
+# Custom exceptions
+class RepyArgumentError(Exception):
+    pass
+
+class FileInUseError(Exception):
+    pass
+
+class FileNotFoundError(Exception):
+    pass
+
+def _parse_version_filename(filename):
+    if not filename or '.' not in filename:
+        return None
+        
+    parts = filename.split('.v')
+    if len(parts) == 2:
+        base_part = parts[0]
+        version_part = parts[1]
+        
+        if version_part.isdigit():
+            version_num = int(version_part)
+            if version_num >= 1:
+                return (base_part, version_num)
+    
+    return None
+
+def _get_version_filename(base_filename, version_num):
+    return base_filename + '.v' + str(version_num)
+
+def _file_exists_atomic(filename):
+    try:
+        test_file = openfile(filename, False)
+        test_file.close()
+        return True
+    except:
+        return False
+
+def _scan_existing_versions(base_filename):
+    versions = {}
+    max_version = 0
+    
+    if _file_exists_atomic(base_filename):
+        versions[1] = True
+        max_version = 1
+    
+    version_num = 2
+    while True:
+        version_name = _get_version_filename(base_filename, version_num)
+        if _file_exists_atomic(version_name):
+            versions[version_num] = True
+            if version_num > max_version:
+                max_version = version_num
+            version_num += 1
+        else:
+            break
+    
+    return versions, max_version
+
+def _efficient_file_copy(source_filename, dest_filename):
+    try:
+        source_file = openfile(source_filename, False)
+        dest_file = openfile(dest_filename, True)
+        
+        offset = 0
+        while True:
+            chunk = source_file.readat(COPY_CHUNK_SIZE, offset)
+            if not chunk:
+                break
+            dest_file.writeat(chunk, offset)
+            offset += len(chunk)
+        
+        source_file.close()
+        dest_file.close()
+    except Exception as e:
+        try:
+            removefile(dest_filename)
+        except:
+            pass
+        raise e
+
+class VMFile():
+    def __init__(self, filename, create):
+        self.filename = filename
+        self.base_filename = None
+        self.version_num = None
+        self.is_latest = False
+        self.is_versioned_access = False
+        self._is_closed = False
+        self._actual_filename = None
+        self.VMfile = None
+        
+        _GLOBAL_LOCK.acquire(True)
+        try:
+            self._initialize_file_secure(filename, create)
+        finally:
+            _GLOBAL_LOCK.release()
+
+    def _initialize_file_secure(self, filename, create):
+        version_info = _parse_version_filename(filename)
+        
+        if version_info:
+            base_part, version_num = version_info
+            self.base_filename = base_part
+            self.version_num = version_num
+            self.is_versioned_access = True
+            
+            if create:
+                raise RepyArgumentError("Cannot create explicit version files")
+            
+            if base_part not in _VERSION_METADATA:
+                versions, max_ver = _scan_existing_versions(base_part)
+                _VERSION_METADATA[base_part] = {
+                    'max_version': max_ver,
+                    'versions': versions
+                }
+            
+            metadata = _VERSION_METADATA[base_part]
+            
+            if version_num not in metadata['versions']:
+                raise FileNotFoundError("Version does not exist")
+            
+            version_filename = _get_version_filename(base_part, version_num)
+            
+            if version_filename in _OPEN_FILES:
+                raise FileInUseError("Version file is already open")
+            
+            self.VMfile = openfile(version_filename, False)
+            self._actual_filename = version_filename
+            self.is_latest = (version_num == metadata['max_version'])
+            
+            _OPEN_FILES[version_filename] = True
+            return
+        
+        self.base_filename = filename
+        self.is_versioned_access = False
+        
+        if filename not in _VERSION_METADATA:
+            versions, max_ver = _scan_existing_versions(filename)
+            _VERSION_METADATA[filename] = {
+                'max_version': max_ver,
+                'versions': versions
+            }
+        
+        metadata = _VERSION_METADATA[filename]
+        base_file_exists = _file_exists_atomic(filename)
+        has_versions = metadata['max_version'] > 0
+        
+        if self._is_file_or_version_open(filename):
+            raise FileInUseError("File or its version is already open")
+        
+        if create:
+            if not base_file_exists and not has_versions:
+                self.VMfile = openfile(filename, True)
+                self._actual_filename = filename
+                self.version_num = 1
+                self.is_latest = True
+                
+                _VERSION_METADATA[filename]['versions'][1] = True
+                _VERSION_METADATA[filename]['max_version'] = 1
+                _OPEN_FILES[filename] = True
+                
+            else:
+                current_max = metadata['max_version']
+                
+                latest_version_file = _get_version_filename(filename, current_max)
+                if latest_version_file in _OPEN_FILES:
+                    raise FileInUseError("Cannot create version - latest version is open")
+                
+                new_version_num = current_max + 1
+                new_version_name = _get_version_filename(filename, new_version_num)
+                
+                if current_max == 1 and 1 in metadata['versions']:
+                    source_file = filename
+                else:
+                    source_file = _get_version_filename(filename, current_max)
+                
+                _efficient_file_copy(source_file, new_version_name)
+                
+                _VERSION_METADATA[filename]['max_version'] = new_version_num
+                _VERSION_METADATA[filename]['versions'][new_version_num] = True
+                
+                self.VMfile = openfile(new_version_name, True)
+                self._actual_filename = new_version_name
+                self.version_num = new_version_num
+                self.is_latest = True
+                
+                _OPEN_FILES[new_version_name] = True
+                
+        else:
+            if not base_file_exists and not has_versions:
+                raise FileNotFoundError("File does not exist")
+            
+            if has_versions:
+                latest_version = metadata['max_version']
+                latest_file = _get_version_filename(filename, latest_version)
+                self.VMfile = openfile(latest_file, False)
+                self._actual_filename = latest_file
+                self.version_num = latest_version
+                self.is_latest = True
+            else:
+                self.VMfile = openfile(filename, False)
+                self._actual_filename = filename
+                self.version_num = 1
+                self.is_latest = True
+            
+            _OPEN_FILES[self._actual_filename] = True
+
+    def _is_file_or_version_open(self, base_filename):
+        if base_filename in _OPEN_FILES:
+            return True
+        
+        if base_filename in _VERSION_METADATA:
+            for version_num in _VERSION_METADATA[base_filename]['versions']:
+                version_file = _get_version_filename(base_filename, version_num)
+                if version_file in _OPEN_FILES:
+                    return True
+        
+        return False
+
+    def readat(self, num_bytes, offset):
+        if self._is_closed:
+            raise FileInUseError("File is closed")
+        if self.VMfile is None:
+            raise FileInUseError("File not properly initialized")
+        return self.VMfile.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        if self._is_closed:
+            raise FileInUseError("File is closed")
+        if self.VMfile is None:
+            raise FileInUseError("File not properly initialized")
+            
+        if not self.is_latest:
+            raise FileInUseError("Cannot write to older version")
+        
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        if self._is_closed:
+            return
+            
+        _GLOBAL_LOCK.acquire(True)
+        try:
+            if self._actual_filename and self._actual_filename in _OPEN_FILES:
+                del _OPEN_FILES[self._actual_filename]
+        finally:
+            _GLOBAL_LOCK.release()
+        
+        self._is_closed = True
+        if self.VMfile:
+            return self.VMfile.close()
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("File deletion not allowed")
+
+def LPlistfiles():
+    _GLOBAL_LOCK.acquire(True)
+    try:
+        all_files_raw = listfiles()
+        base_files = []
+        
+        for file_name in all_files_raw:
+            version_info = _parse_version_filename(file_name)
+            if not version_info:
+                base_files.append(file_name)
+        
+        return base_files
+    finally:
+        _GLOBAL_LOCK.release()
+
+def _initialize_global_state():
+    _GLOBAL_LOCK.acquire(True)
+    try:
+        all_files = listfiles()
+        base_files_seen = set()
+        
+        for filename in all_files:
+            version_info = _parse_version_filename(filename)
+            if version_info:
+                base_part, _ = version_info
+                base_files_seen.add(base_part)
+            else:
+                base_files_seen.add(filename)
+        
+        for base_file in base_files_seen:
+            if base_file not in _VERSION_METADATA:
+                versions, max_ver = _scan_existing_versions(base_file)
+                _VERSION_METADATA[base_file] = {
+                    'max_version': max_ver,
+                    'versions': versions
+                }
+    finally:
+        _GLOBAL_LOCK.release()
+
+_initialize_global_state()
+
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}

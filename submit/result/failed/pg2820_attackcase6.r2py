@@ -1,0 +1,180 @@
+"""
+==============================================================================
+ATTACK CASE: pg2820_attackcase6.r2py
+==============================================================================
+Target NetID:        pg2820
+Original Test:       test14_offset_writes.r2py
+Test File Path:      submit/general_tests/test14_offset_writes.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-1456
+  Task UUID:         a54b0232-dbe4-47b8-bd24-0f4f40032391
+  Machine Type:      t3.large
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:15.900789
+  End Time:          2025-10-27T19:26:20.701598
+  Runtime:           4.8008 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       44dfaeb920249bd1ffb5d76acf92a514
+  Attack MD5:        7bfa3cf4af9d4fc392c6c7a0cf6750ba
+  Combined MD5:      885450dda4474ad052d7f914a03f42b4
+
+FAILURE DETAILS:
+  Reason:            ERROR: Content with large offset should be preserved
+
+
+STDOUT:
+  ERROR: Content with large offset should be preserved
+
+ORIGINAL TEST DESCRIPTION:
+  Test 14: Large offset writes
+  Verifies that data written at large offsets is preserved across versions
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: pg2820)
+# ============================================================================
+# # reference_monitor_pg2820.r2py
+# # A compact, original reference monitor that uses an A/B commit strategy.
+# # NOTE: Intended for RepyV2 (Python 2.7). Do not import stdlib modules.
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# class GuardFile(object):
+#     def __init__(self, fname, create):
+#         self._fname = fname
+#         if create:
+#             tmp_name = self._tmpb_name()
+#             self._under = openfile(tmp_name, True)
+#         else:
+#             self._under = openfile(self._a_name(), False)
+# 
+#     def readat(self, num_bytes, offset):
+#         return self._under.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         try:
+#             return self._under.writeat(data, offset)
+#         except Exception:
+#             return None
+# 
+#     def close(self):
+#         try:
+#             self._under.close()
+#         except Exception:
+#             pass
+#         if self._is_tmpb_handle_name():
+#             try:
+#                 self._commit_tmpb()
+#             except Exception:
+#                 pass
+#         return None
+# 
+#     def _a_name(self):
+#         return self._fname + ".a"
+# 
+#     def _tmpb_name(self):
+#         return self._fname + ".tmpb"
+# 
+#     def _is_tmpb_handle_name(self):
+#         return (self._tmpb_name() in listfiles())
+# 
+#     def _commit_tmpb(self):
+#         tmp = openfile(self._tmpb_name(), False)
+#         data = tmp.readat(None, 0)
+#         tmp.close()
+# 
+#         a_name = self._a_name()
+#         if a_name in listfiles():
+#             backup = a_name + ".v1"
+#             old = openfile(a_name, False)
+#             olddata = old.readat(None, 0)
+#             old.close()
+#             b = openfile(backup, True)
+#             b.writeat(olddata, 0)
+#             b.close()
+#             removefile(a_name)
+# 
+#         newa = openfile(a_name, True)
+#         newa.writeat(data, 0)
+#         newa.close()
+#         removefile(self._tmpb_name())
+# 
+# def RMopenfile(filename, create):
+#     return GuardFile(filename, create)
+# 
+# def RMremovefile(filename):
+#     if filename + ".a" in listfiles():
+#         removefile(filename + ".a")
+#     if filename + ".a.v1" in listfiles():
+#         removefile(filename + ".a.v1")
+# 
+# def RMlistfiles():
+#     return listfiles()
+# 
+# file_obj_def = {
+#     "obj-type": GuardFile,
+#     "name": "GuardFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": GuardFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": GuardFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": type(None), "target": GuardFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: file_obj_def,
+#     TARGET: RMopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: RMremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: RMlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile14", True)
+f1.writeat("Start", 0)
+# Fill the gap with spaces to avoid SeekPastEndOfFileError
+f1.writeat(" " * 95, 5)
+f1.writeat("End", 100)
+f1.close()
+
+f2 = openfile("testfile14", True)
+content = f2.readat(None, 0)
+if len(content) < 103:
+    log("ERROR: Content with large offset should be preserved\n")
+    exitall()
+if content[100:103] != "End":
+    log("ERROR: Data at offset should be preserved\n")
+    exitall()
+f2.close()
+

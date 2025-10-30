@@ -1,0 +1,191 @@
+"""
+This security layer inadequately handles the Versioned and Immutable functionality
+
+Note:
+    This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+    Also you need to give it an application to run.
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+    
+"""
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+open_files = {}
+
+class VMFile():
+    def __init__(self, filename, create):
+    # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+    # Fixed to handle further versions like v2, v3, etc.
+        if create and self._is_version_file(filename):
+            raise RepyArgumentError("Cannot create explicit version files")
+        
+        if create:
+            if filename in listfiles():
+                highest_version = self._get_highest_version(filename)
+                
+                if highest_version == 0:
+                    latest_filename = filename
+                else:
+                    latest_filename = filename + ".v" + str(highest_version)
+                
+                if latest_filename in open_files:
+                    raise FileInUseError("Cannot create new version as latest version is open")
+                
+                if highest_version == 0:
+                    prev_file = openfile(filename, False)
+                else:
+                    prev_file = openfile(filename + ".v" + str(highest_version), False)
+                
+                content = prev_file.readat(None, 0)
+                prev_file.close()
+                
+                new_version = highest_version + 1
+                new_filename = filename + ".v" + str(new_version)
+                self.VMfile = openfile(new_filename, True)
+                self.VMfile.writeat(content, 0)
+                self.filename = new_filename
+            else:
+                self.VMfile = openfile(filename, True)
+                self.filename = filename
+            
+            open_files[self.filename] = True
+            self.is_writable = True
+        else:
+            if filename not in listfiles():
+                raise FileNotFoundError("File does not exist")
+            
+            if filename in open_files:
+                raise FileInUseError("File is already open")
+            
+            self.VMfile = openfile(filename, False)
+            self.filename = filename
+            
+            open_files[self.filename] = True
+            
+            self.is_writable = self._is_latest_version(filename)
+    
+    def _is_latest_version(self, filename):
+        if self._is_version_file(filename):
+            parts = filename.rsplit(".v", 1)
+            basefile = parts[0]
+            version = int(parts[1])
+            
+            highest_version = self._get_highest_version(basefile)
+            
+            return version == highest_version
+        else:
+            highest_version = self._get_highest_version(filename)
+        
+            return highest_version == 0
+    
+    def _is_version_file(self, filename):
+        if ".v" not in filename:
+            return False
+        
+        parts = filename.rsplit(".v", 1)
+        if len(parts) != 2:
+            return False
+        
+        version_part = parts[1]
+        
+        if version_part.isdigit() and int(version_part) >= 1:
+            return True
+        
+        return False
+    
+    def _get_highest_version(self, filename):
+        all_files = listfiles()
+        highest = 0
+        
+        for file in all_files:
+            if file.startswith(filename + ".v"):
+                version_part = file[len(filename) + 2:]
+                if version_part.isdigit():
+                    version_num = int(version_part)
+                    if version_num > highest:
+                        highest = version_num
+        
+        return highest
+
+    def readat(self, num_bytes, offset):
+        return self.VMfile.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        if not self.is_writable:
+            raise FileInUseError("Cannot write to old versions")
+        
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        if self.filename in open_files:
+            del open_files[self.filename]
+        
+        return self.VMfile.close()
+
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("Cannot delete files")
+
+def LPlistfiles():
+    all_files_list = listfiles()
+    filelist = []
+
+    for filename in all_files_list:
+        is_version = False
+        if ".v" in filename:
+            parts = filename.rsplit(".v", 1)
+            if len(parts) == 2:
+                version_part = parts[1]
+                if version_part.isdigit() and int(version_part) >= 1:
+                    is_version = True
+        
+        if not is_version:
+            filelist.append(filename)
+    
+    return filelist
+
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

@@ -1,0 +1,220 @@
+"""
+This security layer handles the Versioned and Immutable functionality
+
+Note:
+    This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+    Also you need to give it an application to run.
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+"""
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+# This ensures our internal code uses the real RepyV2 functions, not our wrapped versions
+underlyingopenfile = openfile
+underlyinglistfiles = listfiles
+
+# Global state to track open files
+openfiles = set()
+
+def isversionfile(filename):
+    """Check if filename matches pattern *.v[1-9][0-9]*"""
+    if '.v' not in filename:
+        return False
+    
+    parts = filename.rsplit('.v', 1)
+    if len(parts) != 2:
+        return False
+    
+    versionstr = parts[1]
+    if not versionstr:
+        return False
+    
+    try:
+        versionnum = int(versionstr)
+        return versionnum >= 1
+    except ValueError:
+        return False
+
+def getbasefilename(filename):
+    """Extract base filename from versioned filename"""
+    if not isversionfile(filename):
+        return filename
+    
+    return filename.rsplit('.v', 1)[0]
+
+def findlatestversion(basefilename):
+    """Find the latest version of a file. Returns (filename, version_number)"""
+    allfiles = underlyinglistfiles()
+    
+    if basefilename not in allfiles:
+        return None, -1
+    
+    latest = basefilename
+    latestnum = 0
+    
+    i = 1
+    while True:
+        versionedname = basefilename + ".v" + str(i)
+        if versionedname in allfiles:
+            latest = versionedname
+            latestnum = i
+            i += 1
+        else:
+            break
+    
+    return latest, latestnum
+
+def islatestversionopen(basefilename):
+    """Check if the latest version of this base file is open"""
+    latestfile, dummy = findlatestversion(basefilename)
+    if latestfile is None:
+        return False
+    return latestfile in openfiles
+
+class VMFile():
+    def __init__(self, filename, create):
+        self.requestedfilename = filename
+        self.writable = False
+        self.actualfilename = None
+        self.VMfile = None
+        
+        if create and isversionfile(filename):
+            raise RepyArgumentError("Cannot create explicit version files")
+        
+        if create:
+            base = getbasefilename(filename)
+            
+            if islatestversionopen(base):
+                raise FileInUseError("Cannot create new version while the latest version is open")
+            
+            # Use underlying listfiles to check if file exists
+            if filename in underlyinglistfiles():
+                latestfile, latestnum = findlatestversion(filename)
+
+                # Security check: Verify version sequence integrity
+                # All versions from .v1 to .vN should exist with no gaps
+                allfiles = underlyinglistfiles()
+                for i in range(1, latestnum + 1):
+                    expected_version = filename + ".v" + str(i)
+                    if expected_version not in allfiles:
+                        raise FileInUseError("Version file sequence corrupted - missing " + expected_version)
+
+                newnum = latestnum + 1
+                newfilename = filename + ".v" + str(newnum)
+
+                prevfile = underlyingopenfile(latestfile, False)
+                content = prevfile.readat(None, 0)
+                prevfile.close()
+
+                self.VMfile = underlyingopenfile(newfilename, True)
+                self.VMfile.writeat(content, 0)
+                self.actualfilename = newfilename
+                self.writable = True
+            else:
+                self.VMfile = underlyingopenfile(filename, True)
+                self.actualfilename = filename
+                self.writable = True
+        else:
+        # Opening for reading (create=False)
+
+            # Security check: If opening a version file, verify it's part of valid chain
+            if isversionfile(filename):
+                basefilename = getbasefilename(filename)
+                latestfile, latestnum = findlatestversion(basefilename)
+
+                # Extract version number from requested filename
+                versionstr = filename.rsplit('.v', 1)[1]
+                try:
+                    requestedversion = int(versionstr)
+                except ValueError:
+                    raise RepyArgumentError("Invalid version file format")
+
+                allfiles = underlyinglistfiles()
+                if basefilename not in allfiles:
+                    raise FileNotFoundError("Cannot access orphaned version file - base file missing")
+
+                if requestedversion > latestnum:
+                    raise FileNotFoundError("Cannot access orphaned version file - beyond valid chain")
+
+                for i in range(1, requestedversion + 1):
+                    expected_version = basefilename + ".v" + str(i)
+                    if expected_version not in allfiles:
+                        raise FileNotFoundError("Cannot access version file - chain corrupted before this version")
+
+            self.VMfile = underlyingopenfile(filename, False)
+            self.actualfilename = filename
+            self.writable = False
+        
+        openfiles.add(self.actualfilename)
+
+    def readat(self, numbytes, offset):
+        return self.VMfile.readat(numbytes, offset)
+
+    def writeat(self, data, offset):
+        if not self.writable:
+            raise FileInUseError("Cannot write to read-only file")
+        return self.VMfile.writeat(data, offset)
+
+    def close(self):
+        openfiles.discard(self.actualfilename)
+        return self.VMfile.close()
+
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("File deletion is not allowed")
+
+def LPlistfiles():
+    allfiles = underlyinglistfiles()
+    i = 0
+    while i < len(allfiles):
+        if isversionfile(allfiles[i]):
+            allfiles.pop(i)
+        else:
+            i += 1
+    return allfiles
+
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: (list,),
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

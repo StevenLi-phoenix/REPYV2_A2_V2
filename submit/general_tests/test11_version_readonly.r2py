@@ -1,0 +1,23 @@
+"""
+Test 11: Version files are read-only by default
+Verifies that version files cannot be written to
+"""
+
+f1 = openfile("testfile11", True)
+f1.writeat("V1", 0)
+f1.close()
+
+f2 = openfile("testfile11", True)
+f2.writeat("V2", 0)
+f2.close()
+
+# Try to write to v1
+f3 = openfile("testfile11.v1", False)
+try:
+    f3.writeat("Hack", 0)
+    log("ERROR: Should not allow writing to version file\n")
+    exitall()
+except FileInUseError:
+    pass
+f3.close()
+

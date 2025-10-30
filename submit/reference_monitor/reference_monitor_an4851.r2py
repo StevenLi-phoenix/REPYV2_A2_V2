@@ -1,0 +1,204 @@
+"""
+reference_monitor_an4851.r2py
+
+Immutable / versioned reference monitor (improved over the basic template).
+Creates successive versions filename.v1, filename.v2, ... when openfile(..., create=True)
+is called on an existing filename. Copies the latest version's contents into the new version.
+
+This file must be executed inside the Repy/encasement environment which provides:
+  - listfiles()
+  - openfile(name, create)
+  - removefile(name)
+  - secure_dispatch_module()
+and other supporting machinery.
+
+The bottom section (sec_file_def, CHILD_CONTEXT_DEF, secure_dispatch_module()) is required
+by the testing/hiding framework and must not be modified in the environment.
+"""
+
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"
+OBJC = "objc"
+
+# Helper to find the existing highest version for a filename.
+def _find_latest_version_basename(filename):
+    """
+    Returns (latest_name, latest_index)
+    - If only 'filename' exists and no numbered versions, returns (filename, 0)
+    - If 'filename.vN' exist, returns the one with largest N and N as latest_index.
+    - If nothing exists, returns (None, None)
+    """
+    files = listfiles()
+    base_exists = False
+    max_index = -1
+    max_name = None
+
+    prefix = filename + ".v"
+
+    for f in files:
+        if f == filename:
+            base_exists = True
+            if max_index < 0:
+                max_index = 0
+                max_name = filename
+        elif f.startswith(prefix):
+            # try to interpret suffix as integer
+            suffix = f[len(prefix):]
+            # only accept pure digits
+            if suffix.isdigit():
+                idx = int(suffix)
+                if idx > max_index:
+                    max_index = idx
+                    max_name = f
+
+    if max_index == -1:
+        # nothing existed
+        return (None, None)
+    else:
+        return (max_name, max_index)
+
+
+class VMFile():
+    def __init__(self, filename, create, wrapped_file):
+        """
+        Wraps the actual file object returned by the platform openfile.
+        The wrapped_file is assumed to already be opened by openfile(...).
+        """
+        self._filename = filename
+        self._wrapped = wrapped_file
+        self._closed = False
+
+    def readat(self, num_bytes, offset):
+        # Delegate to underlying file object
+        return self._wrapped.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        # Delegate to underlying file object
+        return self._wrapped.writeat(data, offset)
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            return self._wrapped.close()
+        else:
+            # If already closed, mirror underlying expected behavior (no output)
+            return None
+
+
+def LPopenfile(filename, create):
+    """
+    Open a file for the child context with immutable/version semantics:
+      - If create == True:
+          * If no file with 'filename' exists, create 'filename' (normal)
+          * If 'filename' exists, create the next version 'filename.vN' where N is
+            one higher than the current max version (0 for the base filename),
+            and copy the most recent version's contents into the new version.
+      - If create == False:
+          * Open the exact filename requested (no automatic versioning)
+    Returns a VMFile wrapper object.
+    """
+    # If create is False, open as-is
+    if not create:
+        wrapped = openfile(filename, False)
+        return VMFile(filename, create, wrapped)
+
+    # create == True
+    latest_name, latest_index = _find_latest_version_basename(filename)
+
+    if latest_name is None:
+        # Nothing exists yet; create base filename
+        wrapped = openfile(filename, True)
+        return VMFile(filename, True, wrapped)
+    else:
+        # Something exists already. Create a new numbered version.
+        # Determine next index
+        if latest_index == 0 and latest_name == filename:
+            next_index = 1
+        else:
+            next_index = latest_index + 1
+
+        new_name = filename + ".v" + str(next_index)
+
+        # Copy contents from the latest_name into new_name
+        # Open existing (latest) read-only and read all data
+        prev_file = openfile(latest_name, False)
+        try:
+            try:
+                content = prev_file.readat(None, 0)
+            except Exception:
+                # Underlying may raise; ensure we still proceed to create the new file.
+                content = ""
+        finally:
+            # Best-effort close previous file
+            try:
+                prev_file.close()
+            except Exception:
+                # silent
+                pass
+
+        # Create the new version and write content at offset 0
+        new_file = openfile(new_name, True)
+        try:
+            if content is not None and content != "":
+                try:
+                    new_file.writeat(content, 0)
+                except Exception:
+                    # If writeat fails for some reason, leave file as created (empty)
+                    pass
+        finally:
+            # Do NOT close here — we need to return the open handle to the caller.
+            pass
+
+        return VMFile(new_name, True, new_file)
+
+
+def LPremovefile(filename):
+    # Remove the file using the provided environment call.
+    removefile(filename)
+
+
+def LPlistfiles():
+    return listfiles()
+
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()
+

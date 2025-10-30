@@ -1,0 +1,22 @@
+"""
+Test 14: Large offset writes
+Verifies that data written at large offsets is preserved across versions
+"""
+
+f1 = openfile("testfile14", True)
+f1.writeat("Start", 0)
+# Fill the gap with spaces to avoid SeekPastEndOfFileError
+f1.writeat(" " * 95, 5)
+f1.writeat("End", 100)
+f1.close()
+
+f2 = openfile("testfile14", True)
+content = f2.readat(None, 0)
+if len(content) < 103:
+    log("ERROR: Content with large offset should be preserved\n")
+    exitall()
+if content[100:103] != "End":
+    log("ERROR: Data at offset should be preserved\n")
+    exitall()
+f2.close()
+

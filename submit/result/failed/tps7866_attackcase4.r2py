@@ -1,0 +1,310 @@
+"""
+==============================================================================
+ATTACK CASE: tps7866_attackcase4.r2py
+==============================================================================
+Target NetID:        tps7866
+Original Test:       test05_read_old_versions.r2py
+Test File Path:      submit/general_tests/test05_read_old_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-6451
+  Task UUID:         aad665ee-13e0-43a9-a171-0af0dafa99d7
+  Machine Type:      Standard_D4s_v3
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:28:09.792360
+  End Time:          2025-10-27T19:28:15.370568
+  Runtime:           5.5782 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       cd0cdc4acb243a8d740424b6759c4d62
+  Attack MD5:        9bdf70bf198eb3ed48e2c8e61ca597b0
+  Combined MD5:      2e4defc7db2c4410966b9c7867bb30c7
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should be able to read old version
+
+
+STDOUT:
+  ERROR: Should be able to read old version
+
+ORIGINAL TEST DESCRIPTION:
+  Test 5: Can read from old versions
+  Verifies that old versions remain readable
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: tps7866)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# 
+# TYPE="type";
+# ARGS="args";
+# RETURN="return";
+# EXCP="exceptions";
+# TARGET="target";
+# FUNC="func";
+# OBJC="objc"
+# 
+# _orig_openfile = openfile
+# _orig_removefile = removefile
+# 
+# try:
+#   _FileInUseError = FileInUseError
+# except NameError:
+#   class _FileInUseError(Exception): pass
+# 
+# try:
+#   _RepyArgumentError = RepyArgumentError
+# except NameError:
+#   class _RepyArgumentError(Exception): pass
+# 
+# try:
+#   _FileNotFoundError = FileNotFoundError
+# except NameError:
+#   class _FileNotFoundError(Exception): pass
+# 
+# def _is_explicit_version(fname):
+#   parts = fname.rsplit(".v", 1)
+#   if len(parts) != 2: return False
+#   tail = parts[1]
+#   if len(tail) == 0: return False
+#   i = 0
+#   while i < len(tail):
+#     c = tail[i]
+#     if c < '0' or c > '9':
+#       return False
+#     i = i + 1
+#   return not (tail == "0")
+# 
+# def _base_name(fname):
+#   if _is_explicit_version(fname):
+#     return fname.rsplit(".v", 1)[0]
+#   return fname
+# 
+# def _extract_version_num(fname):
+#   if not _is_explicit_version(fname): return 0
+#   tail = fname.rsplit(".v", 1)[1]
+#   i = 0; val = 0
+#   while i < len(tail):
+#     val = (val * 10) + (ord(tail[i]) - ord('0'))
+#     i = i + 1
+#   return val
+# 
+# def _unique_append(lst, item):
+#   i = 0
+#   while i < len(lst):
+#     if lst[i] == item: return
+#     i = i + 1
+#   lst.append(item)
+# 
+# _versions = {}  
+# 
+# def _versions_list_for(base):
+#   if base not in _versions:
+#     _versions[base] = []
+#   return _versions[base]
+# 
+# def _find_version_index(vers_list, vername):
+#   i = 0
+#   while i < len(vers_list):
+#     if vers_list[i]["name"] == vername:
+#       return i
+#     i = i + 1
+#   return -1
+# 
+# def _latest_entry(vers_list):
+#   if len(vers_list) == 0: return None
+#   return vers_list[len(vers_list)-1]
+# 
+# 
+# class VMFile:
+#   def __init__(self, filename, create):
+#     self._closed = False
+#     self._fh = None
+#     self._name = filename
+#     self._base = _base_name(filename)
+#     self._index = -1
+#     self._explicit_requested = False
+# 
+#     if _is_explicit_version(filename) and create:
+#       raise _RepyArgumentError("Cannot create explicit version files")
+# 
+#     if _is_explicit_version(filename):
+#       self._explicit_requested = True
+#       vers_list = _versions_list_for(self._base)
+#       idx = _find_version_index(vers_list, filename)
+#       if idx == -1:
+#         raise _FileNotFoundError(filename)
+#       if vers_list[idx]["open"] > 0:
+#         raise _FileInUseError("File already open: " + filename)
+#       self._fh = _orig_openfile(filename, False)
+#       vers_list[idx]["open"] = vers_list[idx]["open"] + 1
+#       self._index = idx
+#       self._name = filename
+#       return
+# 
+#     vers_list = _versions_list_for(self._base)
+# 
+#     if create:
+#       if len(vers_list) == 0:
+#         self._explicit_requested = False
+#         self._fh = _orig_openfile(self._base, True)
+#         vers_list.append({"name": self._base, "open": 1})
+#         self._index = 0
+#         self._name = self._base
+#         return
+#       else:
+#         latest = _latest_entry(vers_list)
+#         if latest["open"] > 0:
+#           raise _FileInUseError("Cannot create new version while latest is open")
+# 
+#         highest = 0; i = 0
+#         while i < len(vers_list):
+#           n = _extract_version_num(vers_list[i]["name"])
+#           if n > highest: highest = n
+#           i = i + 1
+#         new_name = self._base + ".v" + str(highest + 1)
+# 
+#         lf = _orig_openfile(latest["name"], False)
+#         data = lf.readat(None, 0); lf.close()
+#         nf = _orig_openfile(new_name, True)
+#         if data is not None and data != "":
+#           nf.writeat(data, 0)
+# 
+#         self._explicit_requested = False
+#         vers_list.append({"name": new_name, "open": 1})
+#         self._fh = nf
+#         self._index = len(vers_list) - 1
+#         self._name = new_name
+#         return
+# 
+#     if len(vers_list) == 0:
+#       raise _FileNotFoundError(self._base)
+# 
+#     latest = _latest_entry(vers_list)
+#     if latest["open"] > 0:
+#       raise _FileInUseError("File already open: " + latest["name"])
+# 
+#     self._explicit_requested = False
+#     self._fh = _orig_openfile(latest["name"], False)
+#     latest["open"] = latest["open"] + 1
+#     self._index = len(vers_list) - 1
+#     self._name = latest["name"]
+# 
+#   def readat(self, num_bytes, offset):
+#     if self._closed: raise Exception("I/O on closed file")
+#     return self._fh.readat(num_bytes, offset)
+# 
+#   def writeat(self, data, offset):
+#     if self._closed: raise Exception("I/O on closed file")
+#     try:
+#       if self._explicit_requested:
+#         raise _FileInUseError("Cannot write to explicit version")
+#     except AttributeError:
+#       pass
+#     vers_list = _versions_list_for(self._base)
+#     if self._index != (len(vers_list) - 1):
+#       raise _FileInUseError("Cannot write to older version")
+#     return self._fh.writeat(data, offset)
+# 
+#   def close(self):
+#     if self._closed: return None
+#     vers_list = _versions_list_for(self._base)
+#     if self._index >= 0 and self._index < len(vers_list):
+#       if vers_list[self._index]["open"] > 0:
+#         vers_list[self._index]["open"] = vers_list[self._index]["open"] - 1
+#     try:
+#       r = self._fh.close()
+#     except:
+#       r = None
+#     self._closed = True
+#     return r
+# 
+# def LPopenfile(filename, create):
+#   return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#   raise _RepyArgumentError("removefile is not allowed in immutable layer")
+# 
+# def LPlistfiles():
+#   out = []
+#   for k in _versions:
+#     _unique_append(out, k)
+#   return out
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+f1 = openfile("testfile5", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile5", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Read from base version
+f3 = openfile("testfile5", False)
+content = f3.readat(None, 0)
+if content != "Original":
+    log("ERROR: Should be able to read old version\n")
+    exitall()
+f3.close()
+
+# Read from v1
+f4 = openfile("testfile5.v1", False)
+content = f4.readat(None, 0)
+if content != "NewVersion":
+    log("ERROR: Should be able to read versioned file\n")
+    exitall()
+f4.close()
+

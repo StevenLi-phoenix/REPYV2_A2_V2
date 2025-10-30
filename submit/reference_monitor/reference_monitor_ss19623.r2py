@@ -1,0 +1,322 @@
+"""
+This security layer adequately enforces Versioned and Immutable file handling.
+
+Note:
+    Uses encasementlib.r2py, restrictions.default, repy.py, and Python.
+    Execute using:
+    python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py
+"""
+
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"  
+OBJC = "objc"
+
+
+# Track open handles and remember the latest version for each file base
+_open_tracker = {}
+_latest_record = {}
+
+
+class VMFile():
+    def __init__(self, filename, create):
+        """
+        Implements versioned file opening and immutable handling.
+        """
+        self.filename = filename
+        self.handle = None
+
+        # Split to see if this is an explicit version file like name.v2
+        split_name = filename.rsplit(".v", 1)
+        is_versioned = False
+        if len(split_name) == 2:
+            # ensure suffix is all digits
+            suf = split_name[1]
+            ok = True
+            i = 0
+            while i < len(suf):
+                ch = suf[i]
+                if ch < '0' or ch > '9':
+                    ok = False
+                    break
+                i += 1
+            if ok and suf != "":
+                is_versioned = True
+
+        # determine base_name without using inline ternary
+        if is_versioned:
+            base_name = split_name[0]
+        else:
+            base_name = filename
+
+        self.base = base_name
+
+        if is_versioned:
+            # safe conversion because we already validated digits
+            self.version_id = int(split_name[1])
+        else:
+            self.version_id = None
+
+        # Get all existing files at this moment
+        files_now = listfiles()
+
+        # Case 1: Creating explicit version manually is not allowed
+        if create and is_versioned:
+            raise RepyArgumentError("Cannot create explicit version files")
+
+        # Case 2: File already open? Raise FileInUseError
+        if filename in _open_tracker:
+            raise FileInUseError("File already open")
+
+        # Handle creation path
+        if create:
+            # Determine if base already exists (base or any versioned)
+            exists = False
+            idx = 0
+            while idx < len(files_now):
+                n = files_now[idx]
+                # if equal to base or starts with base + ".v"
+                # use simple string operations only
+                if n == base_name:
+                    exists = True
+                    break
+                # check prefix match for versioned names
+                prefix = base_name + ".v"
+                # check startswith via slicing
+                if len(n) >= len(prefix):
+                    ok_prefix = True
+                    j = 0
+                    while j < len(prefix):
+                        if n[j] != prefix[j]:
+                            ok_prefix = False
+                            break
+                        j += 1
+                    if ok_prefix:
+                        # verify suffix is numeric
+                        suf = n[len(prefix):]
+                        if suf != "":
+                            k = 0
+                            ok_digits = True
+                            while k < len(suf):
+                                ch = suf[k]
+                                if ch < '0' or ch > '9':
+                                    ok_digits = False
+                                    break
+                                k += 1
+                            if ok_digits:
+                                exists = True
+                                break
+                idx += 1
+
+            if not exists:
+                # brand-new base file
+                self.handle = openfile(base_name, True)
+                _latest_record[base_name] = base_name
+                # record the exact opened filename
+                _open_tracker[self.filename] = True
+            else:
+                # find latest version number (scan all files)
+                max_ver = 0
+                p = 0
+                while p < len(files_now):
+                    namep = files_now[p]
+                    prefix = base_name + ".v"
+                    if len(namep) >= len(prefix):
+                        # check prefix equality
+                        ok_prefix2 = True
+                        r = 0
+                        while r < len(prefix):
+                            if namep[r] != prefix[r]:
+                                ok_prefix2 = False
+                                break
+                            r += 1
+                        if ok_prefix2:
+                            # validate numeric suffix
+                            suf2 = namep[len(prefix):]
+                            if suf2 != "":
+                                s = 0
+                                digits_ok = True
+                                while s < len(suf2):
+                                    ch2 = suf2[s]
+                                    if ch2 < '0' or ch2 > '9':
+                                        digits_ok = False
+                                        break
+                                    s += 1
+                                if digits_ok:
+                                    num = int(suf2)
+                                    if num > max_ver:
+                                        max_ver = num
+                    p += 1
+
+                # determine current_latest without ternary
+                if max_ver == 0:
+                    current_latest = base_name
+                else:
+                    current_latest = base_name + ".v" + str(max_ver)
+
+                # ensure current latest is not open
+                if current_latest in _open_tracker or base_name in _open_tracker:
+                    raise FileInUseError("Cannot create a new version while the latest version is open")
+
+                # copy contents of latest to a new version
+                src = openfile(current_latest, False)
+                content = src.readat(None, 0)
+                src.close()
+
+                new_version = base_name + ".v" + str(max_ver + 1)
+                dst = openfile(new_version, True)
+                if content:
+                    dst.writeat(content, 0)
+
+                self.handle = dst
+                _latest_record[base_name] = new_version
+                # update filename and open tracker with exact opened name
+                self.filename = new_version
+                _open_tracker[self.filename] = True
+
+        else:
+            # Non-create (read existing)
+            # File must exist; otherwise raise FileNotFoundError
+            present = False
+            t = 0
+            while t < len(files_now):
+                if files_now[t] == filename:
+                    present = True
+                    break
+                t += 1
+            if not present:
+                raise FileNotFoundError(filename)
+
+            self.handle = openfile(filename, False)
+            _open_tracker[self.filename] = True
+
+    def readat(self, num_bytes, offset):
+        """Read from any version (allowed)."""
+        return self.handle.readat(num_bytes, offset)
+
+    def writeat(self, data, offset):
+        """
+        Write only if this handle refers to the latest version.
+        Older versions are immutable.
+        """
+        # safe lookup with default
+        if self.base in _latest_record:
+            latest_name = _latest_record[self.base]
+        else:
+            latest_name = self.base
+
+        # write only if this handle is current latest
+        if self.filename != latest_name:
+            raise FileInUseError("Cannot write to an older immutable version")
+        return self.handle.writeat(data, offset)
+
+    def close(self):
+        """Close and untrack."""
+        result = self.handle.close()
+        # remove exact opened name from tracker if present
+        if self.filename in _open_tracker:
+            try:
+                del _open_tracker[self.filename]
+            except:
+                pass
+        return result
+
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+
+def LPremovefile(filename):
+    """Deletion not permitted under this policy."""
+    raise RepyArgumentError("removefile operation is disallowed")
+
+
+def LPlistfiles():
+    """
+    Returns only base filenames, hiding versioned derivatives (.vN).
+    """
+    all_files = listfiles()
+    bases = []
+    i = 0
+    while i < len(all_files):
+        fname = all_files[i]
+        # look for the last occurrence of ".v" that begins a numeric suffix
+        pos = -1
+        j = 0
+        while j + 1 < len(fname):
+            if fname[j] == '.' and fname[j+1] == 'v':
+                # candidate position found; check numeric suffix
+                suf = fname[j+2:]
+                if suf != "":
+                    k = 0
+                    digits_ok = True
+                    while k < len(suf):
+                        ch = suf[k]
+                        if ch < '0' or ch > '9':
+                            digits_ok = False
+                            break
+                        k += 1
+                    if digits_ok:
+                        pos = j
+            j += 1
+
+        if pos != -1:
+            root = fname[:pos]
+        else:
+            root = fname
+
+        # append unique
+        seen = False
+        m = 0
+        while m < len(bases):
+            if bases[m] == root:
+                seen = True
+                break
+            m += 1
+        if not seen:
+            bases.append(root)
+
+        i += 1
+
+    return bases
+
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+# Execute the user code
+secure_dispatch_module()

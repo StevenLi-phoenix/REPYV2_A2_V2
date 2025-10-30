@@ -1,0 +1,15 @@
+"""
+Test 15: Sequential read/write operations
+Verifies that sequential writes work correctly
+"""
+
+f1 = openfile("testfile15", True)
+f1.writeat("AAAA", 0)
+f1.writeat("BBBB", 4)
+f1.writeat("CCCC", 8)
+content = f1.readat(12, 0)
+if content != "AAAABBBBCCCC":
+    log("ERROR: Sequential writes should work\n")
+    exitall()
+f1.close()
+

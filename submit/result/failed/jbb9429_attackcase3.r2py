@@ -1,0 +1,250 @@
+"""
+==============================================================================
+ATTACK CASE: jbb9429_attackcase3.r2py
+==============================================================================
+Target NetID:        jbb9429
+Original Test:       test18_state_tracking.r2py
+Test File Path:      submit/general_tests/test18_state_tracking.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-4535
+  Task UUID:         39279b6b-d739-4142-8a36-efe98ab1424e
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:22:28.134944
+  End Time:          2025-10-27T19:22:32.031320
+  Runtime:           3.8964 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       472f12e7adaa5492cd57be9f6c24272a
+  Attack MD5:        9e0afe5edbe1306db7f522e7f8ba8e30
+  Combined MD5:      4d211dc8136040378aa602919f6b75c2
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 130, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 12, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 71, in LPopenfile
+    "monitor.r2py", line 28, in __init__
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/emulfile.py", line 177, in emulated_open
+    "/app/emulfile.py", line 289, in __init__
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 130, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 12, in <module>
+    "wrapper.r2py", line 255, in _wrapped_objc
+    "wrapper.r2py", line 202, in _wrapped_func
+    "monitor.r2py", line 71, in LPopenfile
+    "monitor.r2py", line 28, in __init__
+  Exception (with class 'exception_hierarchy.FileNotFoundError'): Cannot openfile non-existent file "tracked" without creating it!
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: iy2112, am14579
+  Vulnerability: Improper state tracking in mycontext or version metadata
+  Attack: Test file tracking across operations
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: jbb9429)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# 
+# class VMFile():
+#     latest_versions = {}
+# 
+#     def __init__(self, filename, create):
+#         if create :
+#             version, name = _version_split_name(filename)
+#             if version != -1 : raise RepyArgumentError("Cannot create explicit version files")
+# 
+#             if filename in LPlistfiles():
+#                 prev_file = openfile(filename, False)
+#                 content = prev_file.readat(None, 0)
+#                 prev_file.close()
+# 
+#                 new_name = filename + ".v" + str(version + 1)
+#                 self.VMfile = openfile(new_name, True)
+#                 self.filename = new_name
+#                 self.VMfile.writeat(content, 0)
+#                 VMFile.latest_versions[filename] = version + 1
+# 
+#             else:
+#                 filename = name + ".v1" 
+#                 self.VMfile = openfile(filename, True)
+#                 
+#                 VMFile.latest_versions[name] = 1
+#                 self.filename = filename
+#             
+#         else :
+#             version, name = _version_split_name(filename)
+# 
+#             # Deafult to open the latest version if none is specified
+#             if version == -1 and VMFile.latest_versions.get(filename):
+#                 filename = name + ".v" + str(VMFile.latest_versions[filename])
+#             
+# 
+#             self.VMfile = openfile(filename, False)
+#             self.filename = filename
+#             return
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         version, name  = _version_split_name(self.filename)
+#         if version != VMFile.latest_versions[name] : raise FileInUseError
+# 
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         return self.VMfile.close()
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError('File deletion is not allowed')
+# 
+# def LPlistfiles():
+#     names = set()
+#     for name in listfiles():
+#         _, name = _version_split_name(name)
+#         names.add(name)
+#     return list(names)
+# 
+# def _version_split_name(filename):
+#     suffix_idx = filename.rfind(".v")
+#     if suffix_idx == -1:
+#         return -1, filename
+# 
+#     version_part = filename[suffix_idx + 2:]
+#     if not version_part or not version_part.isdigit():
+#         return -1, filename
+# 
+#     return int(version_part), filename[:suffix_idx]
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: [str],
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+# Create a file and version it
+f = openfile("tracked", True)
+f.writeat("v0", 0)
+f.close()
+
+f = openfile("tracked", True)
+f.writeat("v1", 0)
+f.close()
+
+# listfiles should show "tracked" (the base name)
+files = listfiles()
+if "tracked" not in files:
+    log("ERROR: Base file missing from listfiles\n")
+    exitall()
+
+# Version files should not appear
+if "tracked.v1" in files:
+    log("ERROR: Version file should not appear in listfiles\n")
+    exitall()
+
+# Test reopening for read
+try:
+    f = openfile("tracked", False)
+    content = f.readat(None, 0)
+    f.close()
+except FileNotFoundError:
+    log("ERROR: Should be able to open existing file for reading\n")
+    exitall()

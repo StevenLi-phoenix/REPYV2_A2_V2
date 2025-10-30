@@ -1,0 +1,305 @@
+"""
+==============================================================================
+ATTACK CASE: ar9783_attackcase2.r2py
+==============================================================================
+Target NetID:        ar9783
+Original Test:       test05_read_old_versions.r2py
+Test File Path:      submit/general_tests/test05_read_old_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-4060
+  Task UUID:         28fcfb31-4df5-48aa-8c81-17ea3f5d6208
+  Machine Type:      n2-standard-8
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:19:46.995923
+  End Time:          2025-10-27T19:19:50.533851
+  Runtime:           3.5379 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       6fc64872a5c633243391e5bb535778e0
+  Attack MD5:        9bdf70bf198eb3ed48e2c8e61ca597b0
+  Combined MD5:      536fa4c15e767b27b44c87753b5ff6e6
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should be able to read old version
+
+
+STDOUT:
+  ERROR: Should be able to read old version
+
+ORIGINAL TEST DESCRIPTION:
+  Test 5: Can read from old versions
+  Verifies that old versions remain readable
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ar9783)
+# ============================================================================
+# """
+# This security layer handles Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# def is_valid_filename(filename):
+#    
+#     #if filename is blank
+#     if filename == '':
+#         return False
+#     
+#     #max 120 characters
+#     if len(filename) > 120:
+#         return False
+#     
+#     #valid characters only
+#     #allow 'v' for version numbers
+#     allowed_chars = set('abcdefghijklmnopqrstuvwxyz0123456789.')
+#     for char in filename:
+#         if char not in allowed_chars:
+#             return False
+#    
+#     return True
+#     
+# #tracks file versions and open files
+# file_versions = {}  #current version number
+# open_files = {}  #filename, true if currently open
+# 
+# class VMFile():
+#     def __init__(self, filename, create):
+#     
+#         self.filename = filename
+#         self.is_writable = False
+#         
+#         #if trying to manually create a versioned file
+#         if create and '.v' in filename:
+#             parts = filename.rsplit('.v', 1)
+#             if len(parts) == 2:
+#                 try:
+#                     int(parts[1])
+#                     raise RepyArgumentError("Cannot create explicit version files")
+#                 except ValueError:
+#                     pass  #if not a version number
+#         
+#         #if this is accessing a versioned file
+#         is_versioned_access = False
+#         original_name = filename
+#         requested_version = None
+#         
+#         if '.v' in filename:
+#             parts = filename.rsplit('.v', 1)
+#             if len(parts) == 2:
+#                 try:
+#                     requested_version = int(parts[1])
+#                     is_versioned_access = True
+#                     original_name = parts[0]
+#                 except ValueError:
+#                     pass  #if not a version number
+#         
+#         #trying to create specific file version
+#         if is_versioned_access:
+#             if create:
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             
+#             #if this versioned file is already open
+#             if filename in open_files:
+#                 raise FileInUseError()
+#             
+#             #trying to open the versioned file
+#             self.VMfile = openfile(filename, False)
+#             open_files[filename] = True
+#             self.is_writable = False  #old versions arent writable
+#             return
+#    
+#         #if the original filename is already open
+#         if original_name in open_files:
+#             raise FileInUseError()
+#         
+#         #if any versioned file for this original is already open
+#         if original_name in file_versions:
+#             current_version = file_versions[original_name]
+#             if current_version > 0:
+#                 versioned_name = original_name + '.v' + str(current_version)
+#                 if versioned_name in open_files:
+#                     raise FileInUseError()
+#         
+#         if create:
+#             #check if file ald exists
+#             all_files = listfiles()
+#             
+#             if original_name in all_files:
+#                 #need to create a new version
+#                 #getting current version number
+#                 if original_name not in file_versions:
+#                     file_versions[original_name] = 0
+#                 
+#                 #change version number
+#                 file_versions[original_name] += 1
+#                 new_version = file_versions[original_name]
+#                 versioned_name = original_name + '.v' + str(new_version)
+#                 
+#                 #copy content from the latest version
+#                 if new_version == 1:
+#                     #get from original file
+#                     prev_file = openfile(original_name, False)
+#                     content = prev_file.readat(None, 0)
+#                     prev_file.close()
+#                 else:
+#                     #get from previous version
+#                     prev_versioned_name = original_name + '.v' + str(new_version - 1)
+#                     prev_file = openfile(prev_versioned_name, False)
+#                     content = prev_file.readat(None, 0)
+#                     prev_file.close()
+#                 
+#                 #make new version file with the content
+#                 self.VMfile = openfile(versioned_name, True)
+#                 if content:
+#                     self.VMfile.writeat(content, 0)
+#                 
+#                 open_files[versioned_name] = True
+#                 self.filename = versioned_name
+#                 self.is_writable = True
+#             else:
+#                 #file not there, create the new file
+#                 self.VMfile = openfile(original_name, True)
+#                 open_files[original_name] = True
+#                 self.filename = original_name
+#                 self.is_writable = True
+#                 file_versions[original_name] = 0
+#         else:
+#             #open existing file
+#             if original_name in file_versions and file_versions[original_name] > 0:
+#                 #open the latest version
+#                 current_version = file_versions[original_name]
+#                 versioned_name = original_name + '.v' + str(current_version)
+#                 self.VMfile = openfile(versioned_name, False)
+#                 open_files[versioned_name] = True
+#                 self.filename = versioned_name
+#                 self.is_writable = False  
+#             else:
+#                 #no versions - open the original file
+#                 self.VMfile = openfile(original_name, False)
+#                 open_files[original_name] = True
+#                 self.filename = original_name
+#                 self.is_writable = False  
+#     
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+#     
+#     def writeat(self, data, offset):
+#         if not self.is_writable:
+#             raise FileInUseError()
+#         return self.VMfile.writeat(data, offset)
+#     
+#     def close(self):
+#         result = self.VMfile.close()
+#         #remove file from open file
+#         if self.filename in open_files:
+#             del open_files[self.filename]
+#         return result
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     #File deletion is not allowed
+#     raise RepyArgumentError("File deletion is not permitted")
+# 
+# def LPlistfiles():
+#     all_files = listfiles()
+#     result = []
+#     
+#     for f in all_files:
+#         #if versioned file
+#         if '.v' in f:
+#             parts = f.rsplit('.v', 1)
+#             if len(parts) == 2:
+#                 try:
+#                     int(parts[1])
+#                     continue
+#                 except ValueError:
+#                     result.append(f)
+#         else:
+#             result.append(f)
+#     
+#     return result
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfile"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile5", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile5", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Read from base version
+f3 = openfile("testfile5", False)
+content = f3.readat(None, 0)
+if content != "Original":
+    log("ERROR: Should be able to read old version\n")
+    exitall()
+f3.close()
+
+# Read from v1
+f4 = openfile("testfile5.v1", False)
+content = f4.readat(None, 0)
+if content != "NewVersion":
+    log("ERROR: Should be able to read versioned file\n")
+    exitall()
+f4.close()
+

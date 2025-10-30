@@ -1,0 +1,29 @@
+"""
+Test 5: Can read from old versions
+Verifies that old versions remain readable
+"""
+
+f1 = openfile("testfile5", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile5", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Read from base version
+f3 = openfile("testfile5", False)
+content = f3.readat(None, 0)
+if content != "Original":
+    log("ERROR: Should be able to read old version\n")
+    exitall()
+f3.close()
+
+# Read from v1
+f4 = openfile("testfile5.v1", False)
+content = f4.readat(None, 0)
+if content != "NewVersion":
+    log("ERROR: Should be able to read versioned file\n")
+    exitall()
+f4.close()
+

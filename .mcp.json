@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "repyv2-testing": {
+      "command": "/Users/lishuyu/miniconda3/bin/python",
+      "args": [
+        "/Users/lishuyu/Codes/REPYV2_A2_V2/mcp/mcp_server.py"
+      ],
+      "env": {},
+      "description": "RepyV2 Security Layer Testing Server - Execute and test RepyV2 security layers remotely"
+    }
+  }
+}
+

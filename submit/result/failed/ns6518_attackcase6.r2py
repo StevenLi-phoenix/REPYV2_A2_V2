@@ -1,0 +1,290 @@
+"""
+==============================================================================
+ATTACK CASE: ns6518_attackcase6.r2py
+==============================================================================
+Target NetID:        ns6518
+Original Test:       test09_multiple_versions.r2py
+Test File Path:      submit/general_tests/test09_multiple_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-8912
+  Task UUID:         344e5f1c-3695-420f-a497-6bcd23471703
+  Machine Type:      n2-standard-8
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:26:02.756031
+  End Time:          2025-10-27T19:26:08.043118
+  Runtime:           5.2871 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       88c082bc714dfb1b485cb2f0be8daf97
+  Attack MD5:        b705d0458f62c6142becb1b7dfc564ab
+  Combined MD5:      ff8741b58be76920f3ff65366dc8499d
+
+FAILURE DETAILS:
+  Reason:            ERROR: Base file should remain unchanged
+
+
+STDOUT:
+  ERROR: Base file should remain unchanged
+
+ORIGINAL TEST DESCRIPTION:
+  Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+  Verifies that multiple versions can be created and accessed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ns6518)
+# ============================================================================
+# 
+# 
+# # ------------------------------
+# # Internal metadata
+# # ------------------------------
+# _metadata = {}
+# 
+# def _is_explicit_version_name(filename):
+#     if not isinstance(filename, str):
+#         return False
+#     idx = filename.rfind(".v")
+#     if idx <= 0:
+#         return False
+#     suf = filename[idx+2:]
+#     if suf == "":
+#         return False
+#     for ch in suf:
+#         if ch < '0' or ch > '9':
+#             return False
+#     return True
+# 
+# def _split_base_and_version(filename):
+#     idx = filename.rfind(".v")
+#     if idx <= 0:
+#         return (None, None)
+#     base = filename[:idx]
+#     suf = filename[idx+2:]
+#     if suf == "":
+#         return (None, None)
+#     for ch in suf:
+#         if ch < '0' or ch > '9':
+#             return (None, None)
+#     try:
+#         return (base, int(suf))
+#     except:
+#         return (None, None)
+# 
+# def _find_version_record_by_name(base_meta, realname):
+#     for rec in base_meta["versions"]:
+#         if rec["name"] == realname:
+#             return rec
+#     return None
+# 
+# def _next_version_number_for_base(base_meta):
+#     return len(base_meta["versions"])
+# 
+# def _copy_contents_from_name_to_fileobj(src_realname, dst_fileobj):
+#     # Important: openfile here refers to the underlying system openfile, not LPopenfile.
+#     src_tmp = openfile(src_realname, False)
+#     try:
+#         offset = 0
+#         CHUNK = 4096
+#         while True:
+#             data = src_tmp.readat(CHUNK, offset)
+#             if not data:
+#                 break
+#             dst_fileobj.writeat(data, offset)
+#             offset += len(data)
+#     finally:
+#         try:
+#             src_tmp.close()
+#         except:
+#             pass
+# 
+# # ------------------------------
+# # VMFile wrapper
+# # ------------------------------
+# class VMFile():
+#     def __init__(self, base, real, rec):
+#         self._base = base
+#         self._real = real
+#         self._rec = rec
+#         self._fileobj = rec.get("fileobj", None)
+# 
+#     def readat(self, num_bytes, offset):
+#         if self._rec.get("fileobj", None) is None:
+#             self._rec["fileobj"] = openfile(self._rec["name"], False)
+#             self._fileobj = self._rec["fileobj"]
+#             self._rec["open_count"] = self._rec.get("open_count", 0) + 1
+#             self._rec["closed"] = False
+#         return self._fileobj.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         base_meta = _metadata.get(self._base, None)
+#         if base_meta is None:
+#             raise FileInUseError()
+#         latest = base_meta["versions"][base_meta["latest_idx"]]
+#         if latest["name"] != self._rec["name"]:
+#             raise FileInUseError()
+#         if self._rec.get("fileobj", None) is None:
+#             raise FileInUseError()
+#         return self._fileobj.writeat(data, offset)
+# 
+#     def close(self):
+#         try:
+#             if self._rec.get("fileobj", None) is not None:
+#                 res = self._rec["fileobj"].close()
+#             else:
+#                 res = None
+#         finally:
+#             if self._rec.get("open_count", 0) > 0:
+#                 self._rec["open_count"] -= 1
+#             self._rec["fileobj"] = None
+#             if self._rec.get("open_count", 0) <= 0:
+#                 self._rec["closed"] = True
+#         return res
+# 
+# # ------------------------------
+# # LPopenfile / removefile / listfiles
+# # ------------------------------
+# def LPopenfile(filename, create):
+#     if not isinstance(filename, str):
+#         raise RepyArgumentError("filename must be a string")
+# 
+#     if _is_explicit_version_name(filename):
+#         base, vernum = _split_base_and_version(filename)
+#         if base is None:
+#             raise FileNotFoundError()
+#         if create:
+#             raise RepyArgumentError("Cannot create explicit version files")
+#         base_meta = _metadata.get(base, None)
+#         if base_meta is None:
+#             raise FileNotFoundError()
+#         vrec = _find_version_record_by_name(base_meta, filename)
+#         if vrec is None:
+#             raise FileNotFoundError()
+#         if vrec.get("open_count", 0) > 0:
+#             raise FileInUseError()
+#         underlying = openfile(filename, False)
+#         vrec["fileobj"] = underlying
+#         vrec["open_count"] = vrec.get("open_count", 0) + 1
+#         vrec["closed"] = False
+#         return VMFile(base, filename, vrec)
+#     else:
+#         base = filename
+#         base_meta = _metadata.get(base, None)
+#         if create:
+#             if base_meta is None:
+#                 underlying = openfile(base, True)
+#                 vrec = {"name": base, "open_count": 1, "fileobj": underlying, "closed": False}
+#                 _metadata[base] = {"versions": [vrec], "latest_idx": 0}
+#                 return VMFile(base, base, vrec)
+#             else:
+#                 latest = base_meta["versions"][base_meta["latest_idx"]]
+#                 if latest.get("open_count", 0) > 0:
+#                     raise FileInUseError()
+#                 nextnum = _next_version_number_for_base(base_meta)
+#                 newname = base + ".v" + str(nextnum)
+#                 new_underlying = openfile(newname, True)
+#                 _copy_contents_from_name_to_fileobj(latest["name"], new_underlying)
+#                 newrec = {"name": newname, "open_count": 1, "fileobj": new_underlying, "closed": False}
+#                 base_meta["versions"].append(newrec)
+#                 base_meta["latest_idx"] = len(base_meta["versions"]) - 1
+#                 return VMFile(base, newname, newrec)
+#         else:
+#             if base_meta is None:
+#                 raise FileNotFoundError()
+#             latest = base_meta["versions"][base_meta["latest_idx"]]
+#             if latest.get("open_count", 0) > 0:
+#                 raise FileInUseError()
+#             underlying = openfile(latest["name"], False)
+#             latest["fileobj"] = underlying
+#             latest["open_count"] = latest.get("open_count", 0) + 1
+#             latest["closed"] = False
+#             return VMFile(base, latest["name"], latest)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError("removefile is not allowed")
+# 
+# def LPlistfiles():
+#     # Return only base names in sorted order for deterministic results.
+#     return sorted(_metadata.keys())
+# 
+# # ------------------------------
+# # Variable hiding section (do not change)
+# # ------------------------------
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+

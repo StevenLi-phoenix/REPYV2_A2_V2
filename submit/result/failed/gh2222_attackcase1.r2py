@@ -1,0 +1,211 @@
+"""
+==============================================================================
+ATTACK CASE: gh2222_attackcase1.r2py
+==============================================================================
+Target NetID:        gh2222
+Original Test:       test05_read_old_versions.r2py
+Test File Path:      submit/general_tests/test05_read_old_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-5269
+  Task UUID:         4dfad196-8ba4-4aa3-b503-d06b2461fc2b
+  Machine Type:      c2-standard-4
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:21:36.906788
+  End Time:          2025-10-27T19:21:40.991720
+  Runtime:           4.0849 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       a63b58064db2560de9b012d4bb100494
+  Attack MD5:        9bdf70bf198eb3ed48e2c8e61ca597b0
+  Combined MD5:      948d1638d9a78fb628d11e9123d56973
+
+FAILURE DETAILS:
+  Reason:            ERROR: Should be able to read old version
+
+
+STDOUT:
+  ERROR: Should be able to read old version
+
+ORIGINAL TEST DESCRIPTION:
+  Test 5: Can read from old versions
+  Verifies that old versions remain readable
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: gh2222)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# 
+# 
+# class FileData():
+#     def __init__(self, filename):
+#         self.base_name = filename # file name at creation/ without the version number
+#         self.current_name = filename
+#         self.version_num = 0
+# 
+#     def update_current_name(self):
+#         self.current_name = self.base_name + '.v' + str(self.version_num)  
+# 
+# 
+# class VMFile():
+# 
+#     file_dict = {} #dictionary to keep track of files and their meta data, also assumes no pre-existing files
+# 
+#     def __init__(self, filename, create):
+#         self.file_name = filename
+#     # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#     # (Incomplete: does not handle further versions like v2, v3, etc.)
+#         if create:
+#             if filename.split('.v')[-1].isdigit():
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             
+#             if filename in listfiles():
+#                 
+#                 # returns true if the key doesn't exist, lets us know it's a version of an existing file
+#             
+#                 #filename in VMFile.file_dict.keys()
+#                 # File exists → create new version 
+#                 
+#                 #read contents from previous version
+#                 prev_file = VMFile.file_dict[filename]
+#                 prev_file_opened = openfile(prev_file.current_name, False)
+#                 content = prev_file_opened.readat(None, 0)
+#                 prev_file.version_num += 1
+# 
+#                 #updating filename
+#                 prev_file.update_current_name()
+#                 self.VMfile = openfile(prev_file.current_name, True)
+#                 self.VMfile.writeat(content, 0)
+#             else:
+#                 # File doesn't exist → create filename
+#                 VMFile.file_dict[filename] = FileData(filename) #create entry in map
+#                 self.VMfile = openfile(filename, True)
+#                 
+#         else:
+#             # Open latest version of existing file
+#             if filename in listfiles() and VMFile.file_dict.get(filename) != None: 
+#                 self.VMfile = openfile(VMFile.file_dict[filename].current_name, False)
+#             # Opening older version of a file 
+#             else: 
+#                 self.VMfile = openfile(filename, False)
+#         
+# 
+#     def readat(self, num_bytes, offset):
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         if self.file_name.split('.v')[-1].isdigit():
+#             #now check if it's the latest version
+#             filename_split = self.file_name.split('.')
+#             base_filename = '.'.join(filename_split[:-1])
+#             #log(VMFile.file_dict[base_filename].current_name)
+#             #make sure key exists
+#             if (VMFile.file_dict.get(base_filename) != None):
+#                 if (self.file_name != VMFile.file_dict[base_filename].current_name):
+#                     raise FileInUseError()
+#         
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         return self.VMfile.close()
+# 
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     raise RepyArgumentError()
+#     
+# 
+# def LPlistfiles():
+#     #return listfiles()
+#     return list(VMFile.file_dict.keys())
+# 
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile5", True)
+f1.writeat("Original", 0)
+f1.close()
+
+f2 = openfile("testfile5", True)
+f2.writeat("NewVersion", 0)
+f2.close()
+
+# Read from base version
+f3 = openfile("testfile5", False)
+content = f3.readat(None, 0)
+if content != "Original":
+    log("ERROR: Should be able to read old version\n")
+    exitall()
+f3.close()
+
+# Read from v1
+f4 = openfile("testfile5.v1", False)
+content = f4.readat(None, 0)
+if content != "NewVersion":
+    log("ERROR: Should be able to read versioned file\n")
+    exitall()
+f4.close()
+

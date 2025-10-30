@@ -1,0 +1,12 @@
+"""
+Test 3: Cannot create explicit version files
+Verifies that users cannot directly create files with version pattern (e.g., file.v5)
+"""
+
+try:
+    f1 = openfile("testfile3.v5", True)
+    log("ERROR: Should not allow explicit version creation\n")
+    exitall()
+except RepyArgumentError:
+    pass
+

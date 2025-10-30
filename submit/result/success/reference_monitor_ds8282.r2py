@@ -1,0 +1,182 @@
+TYPE = "type"
+ARGS = "args"
+RETURN = "return"
+EXCP = "exceptions"
+TARGET = "target"
+FUNC = "func"
+OBJC = "objc"
+
+open_files = {}
+
+class VMFile():
+    def __init__(self, filename, create):
+        self.filename = filename
+        self.is_version = False
+        self.version_num = None
+        self.writable = create
+        self.original_name = None
+        
+    
+        if ".v" in filename:
+            parts = filename.rsplit(".v", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                self.original_name = parts[0]
+                self.version_num = int(parts[1])
+                self.is_version = True
+        
+        if create:
+            if self.is_version:
+                raise RepyArgumentError("Cannot create explicit version files")
+            
+            if filename in listfiles():
+                if filename in open_files:
+                    raise FileInUseError("FileInUseError")
+                
+                highest_version = self._get_highest_version(filename)
+                new_version = highest_version + 1
+                new_filename = filename + ".v" + str(new_version)
+                
+                if highest_version > 0:
+                    source_name = filename + ".v" + str(highest_version)
+                else:
+                    source_name = filename
+                
+                source_file = openfile(source_name, False)
+                content = source_file.readat(None, 0)
+                source_file.close()
+                
+                self.VMfile = openfile(new_filename, True)
+                self.VMfile.writeat(content, 0)
+                 
+                open_files[filename] = new_version
+                self.actual_filename = new_filename
+                self.version_num = new_version
+                self.is_version = True
+                self.original_name = filename
+            else:
+                self.VMfile = openfile(filename, True)
+                self.actual_filename = filename
+                open_files[filename] = 0
+        else:
+            if self.is_version:
+                if self.original_name in open_files:
+                    raise FileInUseError("FileInUseError")
+                
+                if filename not in listfiles():
+                    raise FileNotFoundError("FileNotFoundError")
+                
+                self.VMfile = openfile(filename, False)
+                self.actual_filename = filename
+                open_files[self.original_name] = self.version_num
+            else:
+                if filename in open_files:
+                    raise FileInUseError("FileInUseError")
+                
+                if filename not in listfiles():
+                    raise FileNotFoundError("FileNotFoundError")
+                
+                self.VMfile = openfile(filename, False)
+                self.actual_filename = filename
+                open_files[filename] = 0
+    
+    def _get_highest_version(self, filename):
+        all_files = listfiles()
+        highest = 0
+        
+        for f in all_files:
+            if f.startswith(filename + ".v"):
+                version_part = f[len(filename + ".v"):]
+                if version_part.isdigit():
+                    version = int(version_part)
+                    if version > highest:
+                        highest = version
+        
+        return highest
+    
+    def readat(self, num_bytes, offset):
+        return self.VMfile.readat(num_bytes, offset)
+    
+    def writeat(self, data, offset):
+        if not self.writable:
+            raise FileInUseError("FileInUseError")
+        
+        if self.is_version and self.original_name:
+            highest_version = self._get_highest_version(self.original_name)
+            if self.version_num < highest_version:
+                raise FileInUseError("FileInUseError")
+        
+        return self.VMfile.writeat(data, offset)
+    
+    def close(self):
+        result = self.VMfile.close()
+        
+        if self.is_version and self.original_name:
+            if self.original_name in open_files:
+                del open_files[self.original_name]
+        else:
+            if self.filename in open_files:
+                del open_files[self.filename]
+        
+        return result
+
+def LPopenfile(filename, create):
+    return VMFile(filename, create)
+
+def LPremovefile(filename):
+    raise RepyArgumentError("RepyArgumentError")
+
+def LPlistfiles():
+    all_files = listfiles()
+    result = []
+    
+    for f in all_files:
+        if ".v" in f:
+            parts = f.rsplit(".v", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                original = parts[0]
+                if original not in result:
+                    result.append(original)
+            else:
+                if f not in result:
+                    result.append(f)
+        else:
+            if f not in result:
+                result.append(f)
+    
+    return result
+
+# The code below sets up type checking and variable hiding for you.
+# You should not change anything below this point.
+sec_file_def = {
+    "obj-type": VMFile,
+    "name": "VMFile",
+    "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+    "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+    "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+}
+
+CHILD_CONTEXT_DEF["openfile"] = {
+    TYPE: OBJC,
+    ARGS: (str, bool),
+    EXCP: Exception,
+    RETURN: sec_file_def,
+    TARGET: LPopenfile
+}
+
+CHILD_CONTEXT_DEF["removefile"] = {
+    TYPE: FUNC,
+    ARGS: (str,),
+    EXCP: Exception,
+    RETURN: type(None),
+    TARGET: LPremovefile
+}
+
+CHILD_CONTEXT_DEF["listfiles"] = {
+    TYPE: FUNC,
+    ARGS: None,
+    EXCP: Exception,
+    RETURN: list,
+    TARGET: LPlistfiles
+}
+
+secure_dispatch_module()

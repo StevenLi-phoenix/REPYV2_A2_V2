@@ -1,0 +1,255 @@
+"""
+==============================================================================
+ATTACK CASE: mab10219_attackcase21.r2py
+==============================================================================
+Target NetID:        mab10219
+Original Test:       test18_state_tracking.r2py
+Test File Path:      submit/general_tests/test18_state_tracking.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-6804
+  Task UUID:         549e4c0d-5c0e-4d9e-941c-4e4908bce333
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:24:24.879143
+  End Time:          2025-10-27T19:24:30.782210
+  Runtime:           5.9031 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       319be988000c38bdae788238c9ecf51e
+  Attack MD5:        9e0afe5edbe1306db7f522e7f8ba8e30
+  Combined MD5:      d43d75f01a1060549c8da6a741899515
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 219, in secure_dispatch
+    "/app/encasementlib.r2py", line 89, in _layer_code
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 219, in secure_dispatch
+    "/app/encasementlib.r2py", line 89, in _layer_code
+  Exception (with class 'exception_hierarchy.CodeUnsafeError'): Compiling security layer 'monitor.r2py' failed! Got exception: 'Code failed safety check! Error: ("<type 'exceptions.SyntaxError'> invalid syntax (line 34)",)'
+  ---
+
+ORIGINAL TEST DESCRIPTION:
+  Targets: iy2112, am14579
+  Vulnerability: Improper state tracking in mycontext or version metadata
+  Attack: Test file tracking across operations
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: mab10219)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# #creating a list that keeps track what files are versioned 
+# #there should be no modifications/deletion with these files
+# versionedFiles=[]
+# #creating a list that keeps track of what files are opened
+# openedFiles = [] 
+# class VMFile():
+#     def __init__(self, filename, create):
+#     # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#     # (Incomplete: does not handle further versions like v2, v3, etc.)
+#         self.filename = filename
+#         if create: #check if create is True --> user is creating a new file
+#             if filename in listfiles():
+#                 #specification 3: when a user calls and create=True & filename exists, create new "version"
+#                 #should have same contents and a new version number
+#                 # File exists → create version 1
+#                 versionNumber = 1
+#                 while f"{filename}.v{versionNumber}" in listfiles():
+#                     versionNumber+=1 #if version exists, increment version num
+# 
+#                 new_name = f"{filename}.v{versionNumber}" #create name for new file
+#                 if versionNumber == 1: #only original files exist
+#                     currentFile = filename #copy data over from filename (original file)
+#                 else:
+#                     prevVersionNumber = versionNumber - 1 #otherwise copy from the last version
+#                     currentFile = f"{filename}.v{prevVersionNumber}"
+# 
+#                 #changed filename to currentFile,it might not be the original with the new verisoning
+#                 prev_file = openfile(currentFile, False)
+#                 content = prev_file.readat(None, 0)
+# 
+#                 self.VMfile = openfile(new_name, True)
+#                 self.VMfile.writeat(content, 0)
+# 
+#                 versionedFiles.append(new_name)
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.VMfile = openfile(filename, True)
+#         else:
+#             # Open existing file normally
+#             self.VMfile = openfile(filename, False)
+# 
+#         #create lock for mutual exclusion
+#         #used to stop conflicts and crashes in later functions that are called
+#         self.lockedFile = createLock() 
+# 
+#         #specification 4: check for if file is open
+#         if filename in openedFiles:
+#             raise FileInUseError("This file is already open.")
+#         openedFiles.append(filename)
+# 
+#     def readat(self, num_bytes, offset):
+#         #any file from any version may be read
+#         #handle case that closed file may try to be read
+#         if not self.VMfile:
+#             raise FileClosedError("File is closed. ")
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         #check if in versionedFiles (specification 7)
+#         if self.VMfile in versionedFiles: 
+#             raise FileInUseError("This is a previous version, you cannot write to this file.")
+# 
+#         #purpose of locking is so that nothing can happen at the ame time
+#         #prevents simultaneous access
+#         self.lockedFile.acquire(True)
+#         self.VMfile.writeat(data, offset)
+#         self.lockedFile.release()
+# 
+#     def close(self):
+#         #closes files and removes from openedFiles
+#         if self.VMfile:
+#             closing = self.VMfile.close() #close file
+#             if self.filename in openedFiles:
+#                 openedFiles.remove(self.filename)
+#             return closing
+# 
+# 
+# def LPopenfile(filename, create):
+#     #specification 5: create is used on versioned file, manual version creation is NOT allowed
+#     if ".v" in filename and create: 
+#         raise RepyArgumentError("Cannot create explicit version files")
+#     #specification 6: 
+#     if not create:
+#         fileList = listfiles()
+#         if filename not in fileList:
+#             raise FileNotFoundError("File does not exist.")
+# 
+#     vmfile = VMFile(filename, create)
+#     return vmfile
+#     
+# 
+# def LPremovefile(filename):
+#     #specification 8 : no files can be deleted by user
+#     raise RepyArgumentError("File deletion is not allowed in any file!")
+# 
+# def LPlistfiles():
+#     #specification 9: should not show that versions in files exist
+#     #should just show the listing of all files that were created
+#     fileList = listfiles()
+#     noVersions = []
+#     for i in fileList:
+#         n = i.split('.v')[0]
+#         if n not in noVersions: #only unique filenames 
+#             noVersions.append(n)
+#     return noVersions
+# 
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+# Create a file and version it
+f = openfile("tracked", True)
+f.writeat("v0", 0)
+f.close()
+
+f = openfile("tracked", True)
+f.writeat("v1", 0)
+f.close()
+
+# listfiles should show "tracked" (the base name)
+files = listfiles()
+if "tracked" not in files:
+    log("ERROR: Base file missing from listfiles\n")
+    exitall()
+
+# Version files should not appear
+if "tracked.v1" in files:
+    log("ERROR: Version file should not appear in listfiles\n")
+    exitall()
+
+# Test reopening for read
+try:
+    f = openfile("tracked", False)
+    content = f.readat(None, 0)
+    f.close()
+except FileNotFoundError:
+    log("ERROR: Should be able to open existing file for reading\n")
+    exitall()

@@ -1,0 +1,213 @@
+"""
+==============================================================================
+ATTACK CASE: ap9018_attackcase12.r2py
+==============================================================================
+Target NetID:        ap9018
+Original Test:       test09_multiple_versions.r2py
+Test File Path:      submit/general_tests/test09_multiple_versions.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-9565
+  Task UUID:         213f149b-dadf-424e-b6be-6cc9405f6783
+  Machine Type:      m5.large
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-27T19:19:34.092793
+  End Time:          2025-10-27T19:19:40.039625
+  Runtime:           5.9468 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       be589d490cebbb981747691e2cda3e82
+  Attack MD5:        b705d0458f62c6142becb1b7dfc564ab
+  Combined MD5:      3d2cc1b3f35f79f8bc0b62e785fbeb41
+
+FAILURE DETAILS:
+  Reason:            ERROR: Base file should remain unchanged
+
+
+STDOUT:
+  ERROR: Base file should remain unchanged
+
+ORIGINAL TEST DESCRIPTION:
+  Test 9: Multiple versions work correctly (v1, v2, v3, v4, v5)
+  Verifies that multiple versions can be created and accessed
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: ap9018)
+# ============================================================================
+# # My reference monitor
+# # immutable version one
+# # reads from .a, writes to .b
+# # on close, copies b to a only if content starts with S and ends with E
+# 
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"
+# OBJC = "objc"
+# 
+# # helper fn to check filename
+# def okname(name):
+#     if not name:
+#         return False
+#     for c in name:
+#         if not (c.islower() or c.isdigit()):
+#             return False
+#     if "." in name:
+#         return False
+#     return True
+# 
+# class VMFile:
+#     def __init__(self, filename, create):
+#         # base and copies
+#         self.base = filename
+#         self.a = filename + ".a"
+#         self.b = filename + ".b"
+#         self.lock = createlock()
+#         self.closed = False
+# 
+#         # if file exists make copy, else make new one
+#         if create:
+#             if self.a in listfiles():
+#                 self.afile = openfile(self.a, False)
+#                 self.bfile = openfile(self.b, True)
+#                 data = self.afile.readat(None, 0)
+#                 if data:
+#                     self.bfile.writeat(data, 0)
+#             else:
+#                 self.afile = openfile(self.a, True)
+#                 self.bfile = openfile(self.b, True)
+#                 self.afile.writeat("SE", 0)
+#         else:
+#             self.afile = openfile(self.a, False)
+#             self.bfile = openfile(self.b, True)
+#             data = self.afile.readat(None, 0)
+#             if data:
+#                 self.bfile.writeat(data, 0)
+# 
+#     # always read from a
+#     def readat(self, n, off):
+#         return self.afile.readat(n, off)
+# 
+#     # always write to b
+#     def writeat(self, data, off):
+#         if self.closed:
+#             raise Exception("file closed")
+#         return self.bfile.writeat(data, off)
+# 
+#     # close and maybe copy
+#     def close(self):
+#         self.lock.acquire(True)
+#         try:
+#             if self.closed:
+#                 return
+#             stuff = self.bfile.readat(None, 0)
+#             good = False
+#             if stuff and len(stuff) >= 2:
+#                 if stuff[0] == "S" and stuff[-1] == "E":
+#                     good = True
+#             if good:
+#                 try:
+#                     self.afile.close()
+#                 except:
+#                     pass
+#                 self.afile = openfile(self.a, True)
+#                 self.afile.writeat(stuff, 0)
+#             try:
+#                 self.bfile.close()
+#             finally:
+#                 try:
+#                     self.afile.close()
+#                 finally:
+#                     self.closed = True
+#         finally:
+#             self.lock.release()
+# 
+# # wrapper funcs
+# def LPopenfile(filename, create):
+#     if not okname(filename):
+#         raise Exception("bad filename")
+#     if filename.endswith(".a") or filename.endswith(".b"):
+#         raise Exception("bad name ext")
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     removefile(filename)
+# 
+# def LPlistfiles():
+#     return listfiles()
+# 
+# 
+# 
+# 
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# secure_dispatch_module()
+# 
+# ============================================================================
+
+f1 = openfile("testfile9", True)
+f1.writeat("Base", 0)
+f1.close()
+
+# Create versions v1 through v5
+for i in range(1, 6):
+    fx = openfile("testfile9", True)
+    content = fx.readat(None, 0)
+    fx.writeat("V" + str(i), len(content))
+    fx.close()
+
+# Verify base file still has original content (immutable)
+f2 = openfile("testfile9", False)
+content = f2.readat(None, 0)
+if content != "Base":
+    log("ERROR: Base file should remain unchanged\n")
+    exitall()
+f2.close()
+
+# Verify latest version (v5) has all accumulated content
+f3 = openfile("testfile9.v5", False)
+content = f3.readat(None, 0)
+if "BaseV1V2V3V4V5" not in content:
+    log("ERROR: Latest version should accumulate all changes\n")
+    exitall()
+f3.close()
+
