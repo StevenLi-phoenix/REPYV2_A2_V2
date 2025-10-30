@@ -1,0 +1,448 @@
+"""
+==============================================================================
+ATTACK CASE: sl10429_attackcase15.r2py
+==============================================================================
+Target NetID:        sl10429
+Original Test:       ac12757_attackcase10.r2py
+Test File Path:      submit/general_tests\ac12757_attackcase10.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-8205
+  Task UUID:         36a29716-9f67-47bf-8dd0-bee69a6d7358
+  Machine Type:      e2-medium
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-30T14:58:50.931088
+  End Time:          2025-10-30T14:58:52.987402
+  Runtime:           2.0563 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       2a2fbe5ad75c94bf0e76be1fdbd2c14d
+  Attack MD5:        6d07a58fdfd75d5302f624bf9ce4dc28
+  Combined MD5:      f91503977418ddb1a42ea2977c7d83c9
+
+FAILURE DETAILS:
+  Reason:            ---
+Uncaught exception!
+---
+Following is a full traceback, and a user traceback.
+The user traceback 
+
+STDOUT:
+  ---
+  Uncaught exception!
+  ---
+  Following is a full traceback, and a user traceback.
+  The user traceback excludes non-user modules. The most recent call is displayed last.
+  Full debugging traceback:
+    "/app/repy.py", line 134, in execute_namespace_until_completion
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "monitor.r2py", line 233, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "/app/namespace.py", line 957, in __do_func_call
+    "/app/namespace.py", line 1219, in wrapped_function
+    "/app/virtual_namespace.py", line 116, in evaluate
+    "/app/safe.py", line 610, in safe_run
+    "attack.r2py", line 136, in <module>
+  User traceback:
+    "/app/encasementlib.r2py", line 240, in <module>
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "monitor.r2py", line 233, in <module>
+    "/app/encasementlib.r2py", line 175, in _secure_dispatch_closure
+    "/app/encasementlib.r2py", line 225, in secure_dispatch
+    "attack.r2py", line 136, in <module>
+  Exception (with type 'exceptions.Exception'): Attack case failed due to unexpected error: One or more threads failed during operation: Thread 2 failed: Cannot open file "multithread_asset.txt" because it is already open!
+  ---
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: sl10429)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# # Debugging log
+# DEBUG = False # Local configurable variable to turn on/off debugging log
+# org_log = log
+# def log(*args, **kwargs):
+#     if DEBUG:
+#         endl = kwargs.get('endl', "\n")
+#         org_log(*args, **kwargs)
+#         org_log(endl)
+# log("*** Program is in debugging mode, turn this off for for submission ***")
+# 
+# # Filename validation
+# def name_check(name):
+#     """Check that the given filename is valid.
+#     Args:
+#         name (str): The filename to check.
+#     Raises:
+#         RepyArgumentError: If the filename is invalid.
+#     Returns:
+#         str: The validated filename.
+#     """
+#     """
+#     Filenames may only be in the current directory and may only contain 
+#     lowercase letters, numbers, the hyphen, underscore, and period characters.
+#     Also, filenames cannot be '.', '..', the blank string or start with a period. 
+#     There is no concept of a directory or a folder in repy. 
+#     Filenames must be no more than 120 characters long.
+#     """
+#     name = str(name)
+#     for char in name:
+#         if not (char.islower() or char.isdigit() or char in ['-', '_', '.']):
+#             raise RepyArgumentError("Invalid character in filename: " + name)
+#     if name in ['', '.', '..']:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot be blank, '.', '..'")
+#     if name.startswith('.'):
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot start with a period)")
+#     if len(name) > 120:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot be longer than 120 characters)")
+#     if '/' in name or '\\' in name:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot contain directory separators)")
+#     return name
+# 
+# # Copying file
+# def copy(src, dest):
+#     """Copy contents from src file to dest file.
+#     Args:
+#         src (file object): Source file to copy from.
+#         dest (file object): Destination file to copy to.
+#     """
+#     if src not in listfiles():
+#         raise RepyArgumentError("Source file does not exist: " + src)
+#     if dest in listfiles():
+#         raise RepyArgumentError("Destination file already exists: " + dest)
+#     prev_file = openfile(src, False)
+#     content = prev_file.readat(None, 0)
+#     dest_file = openfile(dest, True)
+#     dest_file.writeat(content, 0)
+#     prev_file.close()
+#     dest_file.close()
+# 
+# # Parse versioned filename
+# def is_versioned_filename(filename):
+#     """Check if a filename is versioned.
+#     Args:
+#         filename (str): The filename to check.
+#     Returns:
+#         bool: True if the filename is versioned, False otherwise.
+#     """
+#     return '.v' in filename and filename.rsplit('.v', 1)[1].isdigit()
+# def parse_versioned_filename(filename):
+#     """Parse a versioned filename into its base name and version number.
+#     Args:
+#         filename (str): The versioned filename (e.g., "file.v1").
+#     Returns:
+#         tuple: A tuple containing the base name (str) and version number (int).
+#     Raises:
+#         RepyArgumentError: If the filename is not a valid versioned filename.
+#     """
+#     if not is_versioned_filename(filename):
+#         raise RepyArgumentError("Filename is not versioned: " + filename)
+#     base_name, version_str = filename.rsplit('.v', 1)
+#     return base_name, int(version_str)
+# 
+# def find_max_version(filename):
+#     """Find the maximum version number for a given base filename.
+#     Args:
+#         filename (str): The base filename to check.
+#     Returns:
+#         int: The maximum version number found, or 0 if no versions exist.
+#     """
+#     max_version = 0
+#     fnl = listfiles() # optimize for efficiency, avoid multiple calls to listfiles()
+#     while True:
+#         versioned_filename = filename + ".v" + str(max_version + 1)
+#         if versioned_filename in fnl:
+#             max_version += 1
+#         else:
+#             break
+#     return max_version
+# 
+# class VMFile():
+#     fileopened = []
+#     def __init__(self, filename, create):
+#         # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#         # (Incomplete: does not handle further versions like v2, v3, etc.)
+#         self.filename = name_check(filename)
+#         self.create = bool(create)
+#         self.max_version = 0
+#         log("VMFile init: filename=" + self.filename + ", create=" + str(self.create))
+#         if self.filename in VMFile.fileopened:
+#             raise FileInUseError("File is locked: " + self.filename)
+#         if self.create:
+#             if is_versioned_filename(self.filename):
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             if self.filename in listfiles():
+#                 # find max version
+#                 self.max_version = find_max_version(self.filename)
+#                 new_version_filename = self.filename + ".v" + str(self.max_version + 1)
+#                 # Copy contents to new versioned file
+#                 copy(self.filename, new_version_filename) # Create versioned copy
+#                 # Open the original file for writing the new version
+#                 self.VMfile = openfile(self.filename, True)
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.VMfile = openfile(self.filename, True)
+#         else:
+#             # Open existing file normally
+#             # will pass FileNotFoundError if it doesn't exist
+#             self.VMfile = openfile(self.filename, False)
+#         VMFile.fileopened.append(self.filename)
+# 
+#     def readat(self, num_bytes, offset):
+#         """
+#         Args:
+#             num_bytes (int, long, type(None)): bytes to read, or None to read the whole file
+#             offset (int, long): offset from where to start reading
+# 
+#         Returns:
+#             str: data read from the file
+#         """
+#         log("[READ]" + self.filename)
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         """
+#         Args:
+#             data (str): data to write
+#             offset (int, long): offset from where to start writing
+#         Returns:
+#             int or None: number of bytes written, or None
+#         """
+#         log("[WRITE]" + self.filename)
+#         if is_versioned_filename(self.filename):
+#             raise FileInUseError("Cannot write to a versioned file: " + self.filename)
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         """
+#         Returns:
+#             bool, type(None): __summary__
+#         """
+#         VMFile.fileopened.remove(self.filename)
+#         return self.VMfile.close()
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     """reject any removefile calls to prevent deletion of versioned files"""
+#     raise RepyArgumentError("removefile is not allowed in this security layer.")
+#     # removefile(filename)
+# 
+# def LPlistfiles():
+#     """List all files. Filtering versioned files"""
+#     log("Listing files, filtering versioned files.")
+#     fnl = []
+#     for fname in listfiles():
+#         if not is_versioned_filename(fname):
+#             fnl.append(fname)
+#     return fnl
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# ac12757_multithread_attack.r2py
+# Targets: Multi-threading Race Condition - Version Creation Collision
+
+# Use standard RepyV2 threading
+# (Note: RepyV2 threading might not be true OS threads but cooperative greenlets,
+# but shared global state still requires synchronization to be robust.)
+
+content_t1 = "content_from_thread_1"
+content_t2 = "content_from_thread_2"
+test_filename = "multithread_asset.txt"
+
+# A list to store exceptions from threads
+thread_exceptions = []
+# Use a counter to track thread completion, as jointhread is not available.
+# This assumes threads will eventually finish.
+threads_finished_count = [0] # Use a list to make it mutable in nested scope
+
+# Define a lock for thread_exceptions and threads_finished_count if true concurrency
+# is an issue. For RepyV2's cooperative threading, direct modification might be okay
+# but for robustness, a lock (like a condition variable or mutex) would be better if available.
+# Since we're trying to break it, let's keep it simple for now.
+
+# Wrapper functions to allow createthread to be called with no arguments
+def wrapper_thread_func_1():
+    try:
+        f = openfile(test_filename, True)
+        f.writeat(content_t1, 0)
+        f.close()
+    except Exception as e:
+        thread_exceptions.append("Thread 1 failed: {0}".format(str(e)))
+    finally:
+        threads_finished_count[0] += 1
+
+def wrapper_thread_func_2():
+    try:
+        f = openfile(test_filename, True)
+        f.writeat(content_t2, 0)
+        f.close()
+    except Exception as e:
+        thread_exceptions.append("Thread 2 failed: {0}".format(str(e)))
+    finally:
+        threads_finished_count[0] += 1
+
+
+try:
+    # 1. Initialize the base file
+    initial_file = openfile(test_filename, True)
+    initial_file.writeat("initial content", 0)
+    initial_file.close()
+
+    # 2. Spawn two threads, both trying to 'create' a new version of the same file
+    # This will trigger the race condition in the monitor's LPopenfile
+
+    t1_handle = createthread(wrapper_thread_func_1) # No second argument needed
+    t2_handle = createthread(wrapper_thread_func_2) # No second argument needed
+
+    # Wait for both threads to finish - RepyV2 doesn't have jointhread.
+    # We'll poll the counter and sleep.
+    # Adjust sleep duration as necessary based on RepyV2 execution speed.
+    timeout_seconds = 10 # Give threads up to 10 seconds to finish
+    start_time = getruntime()
+    
+    while threads_finished_count[0] < 2 and getruntime() - start_time < timeout_seconds:
+        sleep(0.1) # Sleep for 100 milliseconds
+
+    if threads_finished_count[0] < 2:
+        raise Exception("Attack case failed: Threads did not complete within timeout!")
+
+    # Check for exceptions from threads
+    if thread_exceptions:
+        raise Exception("One or more threads failed during operation: " + "; ".join(thread_exceptions))
+
+    # 3. Verify the state of versions
+    # We expect myasset.txt.v1 to contain one of the thread's content,
+    # and myasset.txt.v2 (the current file) to contain the other's, or similar.
+    # The bug will be if we don't have two distinct versions, or one is lost.
+
+    # Check the latest version
+    latest_file = openfile(test_filename, False)
+    latest_content = latest_file.readat(None, 0)
+    latest_file.close()
+
+    # We expect the latest file to contain EITHER content_t1 or content_t2
+    if latest_content not in [content_t1, content_t2]:
+        raise Exception("Monitor failed: Latest file content is unexpected! Got: '{0}'".format(latest_content))
+
+    # Check the first explicit version (v1)
+    v1_file = openfile(test_filename + ".v1", False)
+    v1_content = v1_file.readat(None, 0)
+    v1_file.close()
+
+    # Check the second explicit version (v2)
+    # This is the crucial part for detecting if versions were lost due to race.
+    # If only one version was effectively created from the two threads due to race,
+    # this might fail with FileNotFoundError.
+    v2_file_exists = False
+    try:
+        v2_file = openfile(test_filename + ".v2", False)
+        v2_content = v2_file.readat(None, 0)
+        v2_file.close()
+        v2_file_exists = True
+    except FileNotFoundError:
+        # This is a strong indication of a race condition and lost version!
+        pass # We'll check the unique contents later.
+    except Exception as e:
+        raise Exception("Unexpected error opening v2 file: {0}".format(str(e)))
+
+
+    all_contents = [latest_content, v1_content]
+    if v2_file_exists:
+        all_contents.append(v2_content)
+
+    unique_contents = list(set(all_contents))
+
+    # After 1 initial write and 2 'create' calls, there should be 3 unique contents.
+    # The base file will have the *last* of the two thread contents.
+    # myasset.txt.v1 should have "initial content".
+    # myasset.txt.v2 should have the *other* thread's content.
+    # So we must have 3 unique contents in total.
+
+    if len(unique_contents) < 3:
+        # This implies a version was overwritten or not created correctly.
+        raise Exception("Monitor failed: Less than 3 unique file contents found after multi-threaded version creation. Possible lost versions! Contents: {0}".format(unique_contents))
+
+    if "initial content" not in unique_contents:
+        raise Exception("Monitor failed: Initial content was lost during versioning! Contents: {0}".format(unique_contents))
+
+    if content_t1 not in unique_contents or content_t2 not in unique_contents:
+        raise Exception("Monitor failed: One or both thread contents were lost or not versioned correctly! Contents: {0}".format(unique_contents))
+
+
+except FileNotFoundError as e:
+    # This might indicate the versioning didn't happen correctly at all (e.g., .v1 or .v2 missing)
+    raise Exception("Attack case failed due to FileNotFoundError during verification: {0}. This likely means versioning didn't produce expected files.".format(str(e)))
+except Exception as e:
+    raise Exception("Attack case failed due to unexpected error: " + str(e))
+
+# This attack case targets the race condition in LPopenfile's version creation logic.
+# It exploits concurrent updates to current_file_versions and potential content overwrites
+# if not properly synchronized.

@@ -1,0 +1,446 @@
+"""
+==============================================================================
+ATTACK CASE: sl10429_attackcase114.r2py
+==============================================================================
+Target NetID:        sl10429
+Original Test:       lp2989_attackcase10.r2py
+Test File Path:      submit/general_tests\lp2989_attackcase10.r2py
+
+RUNNER INFORMATION:
+  Runner ID:         runner-8267
+  Task UUID:         84f07209-71f6-4dab-a339-b5f748b54754
+  Machine Type:      n2-standard-8
+  Execution Server:  http://100.88.83.27:8000
+
+EXECUTION INFORMATION:
+  Status:            FAILED
+  Start Time:        2025-10-30T15:00:52.548952
+  End Time:          2025-10-30T15:00:54.459317
+  Runtime:           1.9104 seconds
+  Exit Code:         143
+
+FILE HASHES:
+  Monitor MD5:       2a2fbe5ad75c94bf0e76be1fdbd2c14d
+  Attack MD5:        f86a3af7affa421010cc57e7de100ef5
+  Combined MD5:      aff47bd54a1541a21a5d0b7474985f27
+
+FAILURE DETAILS:
+  Reason:            ATTACK SUCCESSFUL: Created negative version
+ATTACK SUCCESSFUL: Created alphabetic version
+ATTACK SUC
+
+STDOUT:
+  ATTACK SUCCESSFUL: Created negative version
+  ATTACK SUCCESSFUL: Created alphabetic version
+  ATTACK SUCCESSFUL: Version files conflict across bases
+
+==============================================================================
+"""
+
+# ============================================================================
+# REFERENCE MONITOR CODE (Target: sl10429)
+# ============================================================================
+# """
+# This security layer inadequately handles the Versioned and Immutable functionality
+# 
+# Note:
+#     This security layer uses encasementlib.r2py, restrictions.default, repy.py and Python
+#     Also you need to give it an application to run.
+#     python repy.py restrictions.default encasementlib.r2py [security_layer].r2py [attack_program].r2py 
+#     
+# """
+# TYPE = "type"
+# ARGS = "args"
+# RETURN = "return"
+# EXCP = "exceptions"
+# TARGET = "target"
+# FUNC = "func"  
+# OBJC = "objc"
+# 
+# # Debugging log
+# DEBUG = False # Local configurable variable to turn on/off debugging log
+# org_log = log
+# def log(*args, **kwargs):
+#     if DEBUG:
+#         endl = kwargs.get('endl', "\n")
+#         org_log(*args, **kwargs)
+#         org_log(endl)
+# log("*** Program is in debugging mode, turn this off for for submission ***")
+# 
+# # Filename validation
+# def name_check(name):
+#     """Check that the given filename is valid.
+#     Args:
+#         name (str): The filename to check.
+#     Raises:
+#         RepyArgumentError: If the filename is invalid.
+#     Returns:
+#         str: The validated filename.
+#     """
+#     """
+#     Filenames may only be in the current directory and may only contain 
+#     lowercase letters, numbers, the hyphen, underscore, and period characters.
+#     Also, filenames cannot be '.', '..', the blank string or start with a period. 
+#     There is no concept of a directory or a folder in repy. 
+#     Filenames must be no more than 120 characters long.
+#     """
+#     name = str(name)
+#     for char in name:
+#         if not (char.islower() or char.isdigit() or char in ['-', '_', '.']):
+#             raise RepyArgumentError("Invalid character in filename: " + name)
+#     if name in ['', '.', '..']:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot be blank, '.', '..'")
+#     if name.startswith('.'):
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot start with a period)")
+#     if len(name) > 120:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot be longer than 120 characters)")
+#     if '/' in name or '\\' in name:
+#         raise RepyArgumentError("Invalid filename: " + name + " (cannot contain directory separators)")
+#     return name
+# 
+# # Copying file
+# def copy(src, dest):
+#     """Copy contents from src file to dest file.
+#     Args:
+#         src (file object): Source file to copy from.
+#         dest (file object): Destination file to copy to.
+#     """
+#     if src not in listfiles():
+#         raise RepyArgumentError("Source file does not exist: " + src)
+#     if dest in listfiles():
+#         raise RepyArgumentError("Destination file already exists: " + dest)
+#     prev_file = openfile(src, False)
+#     content = prev_file.readat(None, 0)
+#     dest_file = openfile(dest, True)
+#     dest_file.writeat(content, 0)
+#     prev_file.close()
+#     dest_file.close()
+# 
+# # Parse versioned filename
+# def is_versioned_filename(filename):
+#     """Check if a filename is versioned.
+#     Args:
+#         filename (str): The filename to check.
+#     Returns:
+#         bool: True if the filename is versioned, False otherwise.
+#     """
+#     return '.v' in filename and filename.rsplit('.v', 1)[1].isdigit()
+# def parse_versioned_filename(filename):
+#     """Parse a versioned filename into its base name and version number.
+#     Args:
+#         filename (str): The versioned filename (e.g., "file.v1").
+#     Returns:
+#         tuple: A tuple containing the base name (str) and version number (int).
+#     Raises:
+#         RepyArgumentError: If the filename is not a valid versioned filename.
+#     """
+#     if not is_versioned_filename(filename):
+#         raise RepyArgumentError("Filename is not versioned: " + filename)
+#     base_name, version_str = filename.rsplit('.v', 1)
+#     return base_name, int(version_str)
+# 
+# def find_max_version(filename):
+#     """Find the maximum version number for a given base filename.
+#     Args:
+#         filename (str): The base filename to check.
+#     Returns:
+#         int: The maximum version number found, or 0 if no versions exist.
+#     """
+#     max_version = 0
+#     fnl = listfiles() # optimize for efficiency, avoid multiple calls to listfiles()
+#     while True:
+#         versioned_filename = filename + ".v" + str(max_version + 1)
+#         if versioned_filename in fnl:
+#             max_version += 1
+#         else:
+#             break
+#     return max_version
+# 
+# class VMFile():
+#     fileopened = []
+#     def __init__(self, filename, create):
+#         # If a file with the same 'filename' already exists, this creates a new version 'filename.v1'.
+#         # (Incomplete: does not handle further versions like v2, v3, etc.)
+#         self.filename = name_check(filename)
+#         self.create = bool(create)
+#         self.max_version = 0
+#         log("VMFile init: filename=" + self.filename + ", create=" + str(self.create))
+#         if self.filename in VMFile.fileopened:
+#             raise FileInUseError("File is locked: " + self.filename)
+#         if self.create:
+#             if is_versioned_filename(self.filename):
+#                 raise RepyArgumentError("Cannot create explicit version files")
+#             if self.filename in listfiles():
+#                 # find max version
+#                 self.max_version = find_max_version(self.filename)
+#                 new_version_filename = self.filename + ".v" + str(self.max_version + 1)
+#                 # Copy contents to new versioned file
+#                 copy(self.filename, new_version_filename) # Create versioned copy
+#                 # Open the original file for writing the new version
+#                 self.VMfile = openfile(self.filename, True)
+#             else:
+#                 # File doesn't exist → create filename
+#                 self.VMfile = openfile(self.filename, True)
+#         else:
+#             # Open existing file normally
+#             # will pass FileNotFoundError if it doesn't exist
+#             self.VMfile = openfile(self.filename, False)
+#         VMFile.fileopened.append(self.filename)
+# 
+#     def readat(self, num_bytes, offset):
+#         """
+#         Args:
+#             num_bytes (int, long, type(None)): bytes to read, or None to read the whole file
+#             offset (int, long): offset from where to start reading
+# 
+#         Returns:
+#             str: data read from the file
+#         """
+#         log("[READ]" + self.filename)
+#         return self.VMfile.readat(num_bytes, offset)
+# 
+#     def writeat(self, data, offset):
+#         """
+#         Args:
+#             data (str): data to write
+#             offset (int, long): offset from where to start writing
+#         Returns:
+#             int or None: number of bytes written, or None
+#         """
+#         log("[WRITE]" + self.filename)
+#         if is_versioned_filename(self.filename):
+#             raise FileInUseError("Cannot write to a versioned file: " + self.filename)
+#         return self.VMfile.writeat(data, offset)
+# 
+#     def close(self):
+#         """
+#         Returns:
+#             bool, type(None): __summary__
+#         """
+#         VMFile.fileopened.remove(self.filename)
+#         return self.VMfile.close()
+# 
+# def LPopenfile(filename, create):
+#     return VMFile(filename, create)
+# 
+# def LPremovefile(filename):
+#     """reject any removefile calls to prevent deletion of versioned files"""
+#     raise RepyArgumentError("removefile is not allowed in this security layer.")
+#     # removefile(filename)
+# 
+# def LPlistfiles():
+#     """List all files. Filtering versioned files"""
+#     log("Listing files, filtering versioned files.")
+#     fnl = []
+#     for fname in listfiles():
+#         if not is_versioned_filename(fname):
+#             fnl.append(fname)
+#     return fnl
+# 
+# # The code below sets up type checking and variable hiding for you.
+# # You should not change anything below this point.
+# sec_file_def = {
+#     "obj-type": VMFile,
+#     "name": "VMFile",
+#     "writeat": {"type": "func", "args": (str, (int, long)), "exceptions": Exception, "return": (int, type(None)), "target": VMFile.writeat},
+#     "readat": {"type": "func", "args": ((int, long, type(None)), (int, long)), "exceptions": Exception, "return": str, "target": VMFile.readat},
+#     "close": {"type": "func", "args": None, "exceptions": Exception, "return": (bool, type(None)), "target": VMFile.close}
+# }
+# 
+# CHILD_CONTEXT_DEF["openfile"] = {
+#     TYPE: OBJC,
+#     ARGS: (str, bool),
+#     EXCP: Exception,
+#     RETURN: sec_file_def,
+#     TARGET: LPopenfile
+# }
+# 
+# CHILD_CONTEXT_DEF["removefile"] = {
+#     TYPE: FUNC,
+#     ARGS: (str,),
+#     EXCP: Exception,
+#     RETURN: type(None),
+#     TARGET: LPremovefile
+# }
+# 
+# CHILD_CONTEXT_DEF["listfiles"] = {
+#     TYPE: FUNC,
+#     ARGS: None,
+#     EXCP: Exception,
+#     RETURN: list,
+#     TARGET: LPlistfiles
+# }
+# 
+# # Execute the user code
+# secure_dispatch_module()
+# ============================================================================
+
+# MEGA ATTACK 19: Advanced Version Manipulation Attacks
+# Tests: Complex version scenarios, gap creation, out-of-order versions
+
+# Test 1: Try to create version gaps (v1, v3 but no v2)
+f = openfile("gap.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("gap.txt", True)
+f.writeat("v2", 0)
+f.close()
+
+# Delete v2, then try to create v3
+try:
+    removefile("gap.txt.v1")
+    
+    f = openfile("gap.txt", True)
+    f.close()
+    
+    # Check what version was created
+    files = listfiles()
+    if "gap.txt.v2" in files:
+        log("ATTACK SUCCESSFUL: Created v2 after deleting v1\n")
+    elif "gap.txt.v3" in files:
+        log("ATTACK SUCCESSFUL: Created v3 with gap\n")
+except Exception:
+    pass
+
+# Test 2: Manually create v10 when only v1 exists
+f = openfile("jump.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("jump.txt", True)
+f.close()
+
+try:
+    f10 = openfile("jump.txt.v10", True)
+    f10.writeat("jumped", 0)
+    f10.close()
+    
+    log("ATTACK SUCCESSFUL: Manually created v10\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 3: Create versions out of order
+try:
+    fv5 = openfile("reverse.txt.v5", True)
+    fv5.writeat("v5", 0)
+    fv5.close()
+    
+    fv3 = openfile("reverse.txt.v3", True)
+    fv3.writeat("v3", 0)
+    fv3.close()
+    
+    fbase = openfile("reverse.txt", True)
+    fbase.writeat("base", 0)
+    fbase.close()
+    
+    log("ATTACK SUCCESSFUL: Created versions out of order\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 4: Version number overflow
+f = openfile("overflow.txt", True)
+f.writeat("base", 0)
+f.close()
+
+try:
+    fv = openfile("overflow.txt.v999999999999", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created huge version number\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 5: Negative version number
+try:
+    fv = openfile("neg.txt.v-1", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created negative version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 6: Version with alphabetic suffix
+try:
+    fv = openfile("alpha.txt.vabc", True)
+    fv.close()
+    log("ATTACK SUCCESSFUL: Created alphabetic version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass
+
+# Test 7: Check version counter reset after delete
+f = openfile("reset.txt", True)
+f.writeat("v1", 0)
+f.close()
+
+f = openfile("reset.txt", True)
+f.close()
+
+# v1 exists now
+try:
+    removefile("reset.txt")
+    
+    # Recreate base
+    f = openfile("reset.txt", True)
+    f.writeat("new base", 0)
+    f.close()
+    
+    # Create version - should it be v1 or v2?
+    f = openfile("reset.txt", True)
+    f.close()
+    
+    files = listfiles()
+    if "reset.txt.v2" in files:
+        log("ATTACK SUCCESSFUL: Version counter didn't reset\n")
+except Exception:
+    pass
+
+# Test 8: Multiple base files with overlapping version names
+f1 = openfile("base1.txt", True)
+f1.writeat("base1", 0)
+f1.close()
+
+f2 = openfile("base2.txt", True)
+f2.writeat("base2", 0)
+f2.close()
+
+f1 = openfile("base1.txt", True)
+f1.close()
+
+f2 = openfile("base2.txt", True)
+f2.close()
+
+# Both should have .v1 files
+files = listfiles()
+v1_count = 0
+for fname in files:
+    if ".v1" in fname:
+        v1_count += 1
+
+if v1_count != 2:
+    log("ATTACK SUCCESSFUL: Version files conflict across bases\n")
+
+# Test 9: Create version of version (recursive versioning)
+f = openfile("recursive.txt", True)
+f.writeat("base", 0)
+f.close()
+
+f = openfile("recursive.txt", True)
+f.close()
+
+try:
+    fvv = openfile("recursive.txt.v1.v1", True)
+    fvv.close()
+    log("ATTACK SUCCESSFUL: Created version of version\n")
+except RepyArgumentError:
+    pass
+except Exception:
+    pass

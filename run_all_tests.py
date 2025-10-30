@@ -108,9 +108,9 @@ def run_test(monitor_file, test_file):
     
     try:
         # Read files and compute MD5
-        with open(monitor_file, 'r') as f:
+        with open(monitor_file, 'r', encoding='utf-8', errors='replace') as f:
             monitor_text = f.read()
-        with open(test_file, 'r') as f:
+        with open(test_file, 'r', encoding='utf-8', errors='replace') as f:
             attack_text = f.read()
         
         execution_info["monitor_md5"] = compute_md5(monitor_text)
@@ -285,7 +285,7 @@ def create_attack_case_with_header(original_test_file, output_path, netid, test_
     Includes all execution details: stdout, runtime, timestamps, MD5 hashes, exit codes, monitor code, etc.
     """
     # Read original test content
-    with open(original_test_file, 'r') as f:
+    with open(original_test_file, 'r', encoding='utf-8', errors='replace') as f:
         original_content = f.read()
     
     # Extract original header if it exists
@@ -401,7 +401,7 @@ def create_attack_case_with_header(original_test_file, output_path, netid, test_
     header_lines.append("=" * 78)
     
     # Write the file with comprehensive header
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write('"""\n')
         f.write('\n'.join(header_lines))
         f.write('\n"""\n\n')
@@ -466,6 +466,7 @@ Examples:
     
     # Get all monitor files
     monitor_files = sorted(glob.glob("submit/reference_monitor/reference_monitor_*.r2py"))
+    monitor_files = [os.path.join("submit", "reference_monitor", "reference_monitor_sl10429.r2py")]
     
     if not monitor_files:
         print("❌ ERROR: No monitor files found in submit/reference_monitor/")
@@ -533,7 +534,7 @@ Examples:
                 # Read monitor content once for all failed tests
                 monitor_content = None
                 try:
-                    with open(monitor_file, 'r') as f:
+                    with open(monitor_file, 'r', encoding='utf-8', errors='replace') as f:
                         monitor_content = f.read()
                 except Exception as e:
                     tqdm.write(f"    ⚠️  Warning: Could not read monitor file: {e}")
@@ -590,7 +591,7 @@ Examples:
     csv_output_path = "submit/result/test_results_matrix.csv"
     print(f"\n📊 Writing test results matrix to: {csv_output_path}")
     
-    with open(csv_output_path, 'w', newline='') as csvfile:
+    with open(csv_output_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         
         # Header row: Monitor/NetID, Test1, Test2, ..., TestN
@@ -624,7 +625,7 @@ Examples:
         "executions": all_execution_logs
     }
     
-    with open(json_output_path, 'w') as jsonfile:
+    with open(json_output_path, 'w', encoding='utf-8') as jsonfile:
         json.dump(json_output, jsonfile, indent=2)
     
     print(f"✓ JSON logs saved successfully ({len(all_execution_logs)} executions logged)")
