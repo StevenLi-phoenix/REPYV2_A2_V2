@@ -6,6 +6,7 @@ Built with FastAPI and Tailwind CSS.
 """
 import csv
 import json
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pathlib import Path
@@ -23,7 +24,7 @@ def load_execution_logs():
         return {}
     
     try:
-        with open(JSON_PATH, 'r') as f:
+        with open(JSON_PATH, 'r', encoding='utf-8', errors='replace') as f:
             data = json.load(f)
             executions = data.get('executions', [])
             
@@ -46,7 +47,7 @@ def load_data():
     # Load execution logs for detailed hover information
     execution_logs = load_execution_logs()
     
-    with open(CSV_PATH, 'r') as f:
+    with open(CSV_PATH, 'r', encoding='utf-8', errors='replace') as f:
         reader = csv.reader(f)
         headers = next(reader)  # First row: Monitor/NetID, Test1, Test2, ...
         test_names = headers[1:]  # All test names
@@ -66,6 +67,30 @@ def load_data():
             results_dict = {}
             for test_name, result in zip(test_names, results):
                 exec_info = execution_logs.get((netid, test_name), {})
+
+                # Derive file paths
+                monitor_filename = exec_info.get('monitor_file')
+                test_path = exec_info.get('test_path')
+                monitor_path = None
+                if monitor_filename:
+                    monitor_path = os.path.join('submit', 'reference_monitor', monitor_filename)
+
+                # Read source code (UTF-8 with replacement to avoid decode errors)
+                monitor_code = None
+                attack_code = None
+                try:
+                    if monitor_path and os.path.exists(monitor_path):
+                        with open(monitor_path, 'r', encoding='utf-8', errors='replace') as mf:
+                            monitor_code = mf.read()
+                except Exception:
+                    monitor_code = None
+                try:
+                    if test_path and os.path.exists(test_path):
+                        with open(test_path, 'r', encoding='utf-8', errors='replace') as tf:
+                            attack_code = tf.read()
+                except Exception:
+                    attack_code = None
+
                 results_dict[test_name] = {
                     'status': result,
                     'duration': exec_info.get('duration_seconds'),
@@ -73,7 +98,11 @@ def load_data():
                     'error': exec_info.get('error'),
                     'stdout': exec_info.get('stdout', ''),
                     'start_time': exec_info.get('start_time'),
-                    'end_time': exec_info.get('end_time')
+                    'end_time': exec_info.get('end_time'),
+                    'monitor_path': monitor_path,
+                    'attack_path': test_path,
+                    'monitor_code': monitor_code,
+                    'attack_code': attack_code,
                 }
             
             monitors_data.append({
@@ -342,6 +371,20 @@ HTML_TEMPLATE = """
                     <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
                         <h4 class="text-sm font-semibold text-blue-700 uppercase mb-2">Standard Output</h4>
                         <pre class="text-sm text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(stdout)}</pre>
+                    </div>
+
+                    <!-- Reference Monitor Source -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 rounded-lg p-4">
+                        <h4 class="text-sm font-semibold text-gray-700 uppercase mb-2">Reference Monitor Source</h4>
+                        <div class="text-xs text-gray-500 mb-2">${resultData && resultData.monitor_path ? escapeHtml(resultData.monitor_path) : 'Path: N/A'}</div>
+                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(resultData && resultData.monitor_code ? resultData.monitor_code : 'N/A')}</pre>
+                    </div>
+
+                    <!-- Attack Test Source -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 rounded-lg p-4">
+                        <h4 class="text-sm font-semibold text-gray-700 uppercase mb-2">Attack Test Source</h4>
+                        <div class="text-xs text-gray-500 mb-2">${resultData && resultData.attack_path ? escapeHtml(resultData.attack_path) : 'Path: N/A'}</div>
+                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(resultData && resultData.attack_code ? resultData.attack_code : 'N/A')}</pre>
                     </div>
                     
                     <!-- Actions -->
@@ -715,5 +758,5 @@ if __name__ == '__main__':
     print("Starting web server on http://localhost:8000")
     print("Press Ctrl+C to stop")
     print("=" * 80)
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
 

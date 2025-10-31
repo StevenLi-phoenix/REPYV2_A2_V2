@@ -460,13 +460,13 @@ Examples:
     
     print("✓ Remote server is available\n")
     
-    # Create output directories
-    os.makedirs("submit/result/failed", exist_ok=True)
-    os.makedirs("submit/result/success", exist_ok=True)
+    # Ensure base result directory exists (for CSV/JSON outputs)
+    os.makedirs("submit/result", exist_ok=True)
     
     # Get all monitor files
     monitor_files = sorted(glob.glob("submit/reference_monitor/reference_monitor_*.r2py"))
-    monitor_files = [os.path.join("submit", "reference_monitor", "reference_monitor_sl10429.r2py")]
+#    # monitor_files = [os.path.join("submit", "reference_monitor", "reference_monitor_sl10429.r2py")]
+    # monitor_files = [os.path.join("submit", "reference_monitor", "reference_monitor_sl00000.r2py")]
     
     if not monitor_files:
         print("❌ ERROR: No monitor files found in submit/reference_monitor/")
@@ -531,57 +531,17 @@ Examples:
             
             # Store results
             if failed > 0:
-                # Read monitor content once for all failed tests
-                monitor_content = None
-                try:
-                    with open(monitor_file, 'r', encoding='utf-8', errors='replace') as f:
-                        monitor_content = f.read()
-                except Exception as e:
-                    tqdm.write(f"    ⚠️  Warning: Could not read monitor file: {e}")
-                
-                # Copy failed tests to submit/result/failed/ with comprehensive headers
+                # List failed tests without writing files
                 tqdm.write(f"\n  Failed tests:")
                 for idx, (test_file, test_name, error) in enumerate(failed_tests, start=1):
-                    # Determine failure reason
-                    if error == "TIMEOUT":
-                        reason = "timeout"
-                        reason_display = "⏱️  TIMEOUT"
-                    else:
-                        reason = "failed"
-                        reason_display = f"❌ FAILED"
-                    
+                    reason_display = "⏱️  TIMEOUT" if error == "TIMEOUT" else "❌ FAILED"
                     output_name = f"{netid}_attackcase{idx}.r2py"
                     tqdm.write(f"    {output_name} - Test: {test_name} - Reason: {reason_display}")
-                    
-                    if test_file:  # Only copy if we have a valid test file
-                        output_path = os.path.join("submit/result/failed", output_name)
-                        
-                        # Find execution info for this specific test
-                        exec_info = None
-                        for log_entry in execution_logs:
-                            if log_entry['test_file'] == test_name:
-                                exec_info = log_entry
-                                break
-                        
-                        # Create attack case with comprehensive header including monitor code
-                        if exec_info:
-                            create_attack_case_with_header(
-                                test_file, output_path, netid, test_name, 
-                                exec_info, error, monitor_content
-                            )
-                        else:
-                            # Fallback: just copy if execution info not found
-                            shutil.copy2(test_file, output_path)
-                
                 total_monitors_failed += 1
                 monitor_pbar.set_postfix_str(f"Failed: {total_monitors_failed}, Passed: {total_monitors_passed}")
             else:
-                # Copy monitor to submit/result/success/
-                tqdm.write(f"\n  ✓ All tests passed! Copying monitor to submit/result/success/")
-                output_path = os.path.join("submit/result/success", monitor_name)
-                shutil.copy2(monitor_file, output_path)
-                tqdm.write(f"    ✓ {monitor_name}")
-                
+                # Mark as passed without copying to success folder
+                tqdm.write(f"\n  ✓ All tests passed for {monitor_name}")
                 total_monitors_passed += 1
                 monitor_pbar.set_postfix_str(f"Failed: {total_monitors_failed}, Passed: {total_monitors_passed}")
             
@@ -639,10 +599,6 @@ Examples:
     print(f"Total monitors tested: {total_monitors_passed + total_monitors_failed}")
     print("=" * 80)
     
-    if total_monitors_passed > 0:
-        print(f"\n✓ Successful monitors saved to: submit/result/success/")
-    if total_monitors_failed > 0:
-        print(f"✓ Failed test cases saved to: submit/result/failed/")
     print(f"✓ Test results matrix saved to: {csv_output_path}")
     print(f"✓ Detailed execution logs saved to: {json_output_path}")
     
