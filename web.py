@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 from typing import List, Dict, Optional
+from pydantic import BaseModel
 import uvicorn
 
 app = FastAPI(title="Test Results Data Visualizer")
@@ -18,6 +19,47 @@ app = FastAPI(title="Test Results Data Visualizer")
 CSV_PATH = "submit/result/test_results_matrix.csv"
 JSON_PATH = "submit/result/test_execution_logs.json"
 VERIFICATION_PATH = "verification_results.json"
+ANNOTATIONS_PATH = "test_annotations.json"
+
+def load_annotations():
+    """Load test annotations (resolved, TODO, invalid tests)"""
+    if not Path(ANNOTATIONS_PATH).exists():
+        return {
+            'resolved': {},  # {(netid, test_name): True}
+            'todo': {},      # {(netid, test_name): True}
+            'invalid_tests': {}  # {test_name: reason}
+        }
+    
+    try:
+        with open(ANNOTATIONS_PATH, 'r') as f:
+            data = json.load(f)
+            # Convert string keys back to tuples for resolved/todo
+            resolved = {tuple(k.split('|')): v for k, v in data.get('resolved', {}).items()}
+            todo = {tuple(k.split('|')): v for k, v in data.get('todo', {}).items()}
+            return {
+                'resolved': resolved,
+                'todo': todo,
+                'invalid_tests': data.get('invalid_tests', {})
+            }
+    except Exception as e:
+        print(f"Warning: Could not load annotations: {e}")
+        return {'resolved': {}, 'todo': {}, 'invalid_tests': {}}
+
+def save_annotations(annotations):
+    """Save test annotations to file"""
+    try:
+        # Convert tuple keys to strings for JSON serialization
+        data = {
+            'resolved': {f"{k[0]}|{k[1]}": v for k, v in annotations['resolved'].items()},
+            'todo': {f"{k[0]}|{k[1]}": v for k, v in annotations['todo'].items()},
+            'invalid_tests': annotations['invalid_tests']
+        }
+        with open(ANNOTATIONS_PATH, 'w') as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving annotations: {e}")
+        return False
 
 def load_verification_results():
     """Load ChatGPT verification comments from JSON"""
@@ -55,13 +97,16 @@ def load_execution_logs():
 def load_data():
     """Load CSV data and return structured data with execution details"""
     if not Path(CSV_PATH).exists():
-        return None, [], [], {}, {}
+        return None, [], [], {}, {}, {}
     
     # Load execution logs for detailed hover information
     execution_logs = load_execution_logs()
     
     # Load verification results from ChatGPT
     verification_results = load_verification_results()
+    
+    # Load annotations (resolved, TODO, invalid tests)
+    annotations = load_annotations()
     
     with open(CSV_PATH, 'r', encoding='utf-8', errors='replace') as f:
         reader = csv.reader(f)
@@ -84,12 +129,18 @@ def load_data():
             for test_name, result in zip(test_names, results):
                 exec_info = execution_logs.get((netid, test_name), {})
 
-                # Derive file paths
+                # Derive file paths using os.path.join for cross-platform compatibility
                 monitor_filename = exec_info.get('monitor_file')
-                test_path = exec_info.get('test_path')
+                test_filename = exec_info.get('test_file')
+                
                 monitor_path = None
+                test_path = None
+                
                 if monitor_filename:
                     monitor_path = os.path.join('submit', 'reference_monitor', monitor_filename)
+                
+                if test_filename:
+                    test_path = os.path.join('submit', 'general_tests', test_filename)
 
                 # Read source code (UTF-8 with replacement to avoid decode errors)
                 monitor_code = None
@@ -98,17 +149,24 @@ def load_data():
                     if monitor_path and os.path.exists(monitor_path):
                         with open(monitor_path, 'r', encoding='utf-8', errors='replace') as mf:
                             monitor_code = mf.read()
-                except Exception:
-                    monitor_code = None
+                except Exception as e:
+                    monitor_code = f"Error reading file: {e}"
+                
                 try:
                     if test_path and os.path.exists(test_path):
                         with open(test_path, 'r', encoding='utf-8', errors='replace') as tf:
                             attack_code = tf.read()
-                except Exception:
-                    attack_code = None
+                except Exception as e:
+                    attack_code = f"Error reading file: {e}"
 
                 # Get verification comment for this test case (matched by test_name)
                 verification_comment = verification_results.get(test_name, '')
+                
+                # Check annotations
+                is_resolved = annotations['resolved'].get((netid, test_name), False)
+                is_todo = annotations['todo'].get((netid, test_name), False)
+                is_invalid_test = test_name in annotations['invalid_tests']
+                invalid_reason = annotations['invalid_tests'].get(test_name, '')
                 
                 results_dict[test_name] = {
                     'status': result,
@@ -122,7 +180,11 @@ def load_data():
                     'attack_path': test_path,
                     'monitor_code': monitor_code,
                     'attack_code': attack_code,
-                    'verification': verification_comment
+                    'verification': verification_comment,
+                    'is_resolved': is_resolved,
+                    'is_todo': is_todo,
+                    'is_invalid_test': is_invalid_test,
+                    'invalid_reason': invalid_reason
                 }
             
             monitors_data.append({
@@ -134,7 +196,7 @@ def load_data():
                 'total': total
             })
     
-    return monitors_data, test_names, headers, execution_logs, verification_results
+    return monitors_data, test_names, headers, execution_logs, verification_results, annotations
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -262,27 +324,33 @@ HTML_TEMPLATE = """
         
         <!-- Legend -->
         <div class="px-8 py-4 bg-gray-50 border-b-2 border-gray-200">
-            <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
+            <div class="flex items-center justify-center gap-4 text-sm flex-wrap">
                 <div class="flex items-center gap-2">
                     <div class="bg-green-500 text-white rounded px-3 py-1 font-bold">✓</div>
                     <span class="text-gray-700 font-medium">Pass</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="bg-red-500 text-white rounded px-3 py-1 font-bold">✗</div>
-                    <span class="text-gray-700 font-medium">Fail / Timeout</span>
+                    <span class="text-gray-700 font-medium">Fail</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-500 text-white rounded px-3 py-1 font-bold">⏱</div>
+                    <span class="text-gray-700 font-medium">Timeout / Resolved</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-orange-500 text-white rounded px-3 py-1 font-bold ring-2 ring-orange-300">📌</div>
+                    <span class="text-gray-700 font-medium">TODO</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-yellow-400 text-gray-900 rounded px-3 py-1 font-bold">⚠</div>
+                    <span class="text-gray-700 font-medium">Invalid Test</span>
                 </div>
                 <div class="h-6 w-px bg-gray-300"></div>
                 <div class="flex items-center gap-2">
-                    <span class="text-gray-600 italic">💡 Hover NetID for stats</span>
+                    <span class="text-gray-600 italic text-xs">💡 Hover for preview</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-gray-600 italic">💡 Hover headers for counts</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-600 italic">💡 Hover cells for preview</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-purple-600 font-semibold italic">👆 Click cells for full details</span>
+                    <span class="text-purple-600 font-semibold italic text-xs">👆 Click for details & actions</span>
                 </div>
             </div>
         </div>
@@ -301,6 +369,34 @@ HTML_TEMPLATE = """
         let allData = {{ data|tojson }};
         let allTests = {{ tests|tojson }};
         let currentData = [...allData];
+        
+        // Save/restore filter state from localStorage
+        function saveFilterState() {
+            const filterState = {
+                monitorFilter: document.getElementById('monitorFilter').value,
+                testFilter: document.getElementById('testFilter').value,
+                sortMonitorsBy: document.getElementById('sortMonitorsBy').value,
+                sortTestsBy: document.getElementById('sortTestsBy').value,
+                sortOrder: document.getElementById('sortOrder').value
+            };
+            localStorage.setItem('testVisualizerFilters', JSON.stringify(filterState));
+        }
+        
+        function restoreFilterState() {
+            const saved = localStorage.getItem('testVisualizerFilters');
+            if (saved) {
+                try {
+                    const filterState = JSON.parse(saved);
+                    document.getElementById('monitorFilter').value = filterState.monitorFilter || '';
+                    document.getElementById('testFilter').value = filterState.testFilter || '';
+                    document.getElementById('sortMonitorsBy').value = filterState.sortMonitorsBy || 'netid';
+                    document.getElementById('sortTestsBy').value = filterState.sortTestsBy || 'name';
+                    document.getElementById('sortOrder').value = filterState.sortOrder || 'desc';
+                } catch (e) {
+                    console.error('Failed to restore filter state:', e);
+                }
+            }
+        }
         
         function openDetailModal(netid, testName, resultData) {
             const modal = document.getElementById('detailModal');
@@ -420,10 +516,52 @@ HTML_TEMPLATE = """
                     </div>
                     
                     <!-- Actions -->
-                    <div class="flex justify-end gap-3">
-                        <button onclick="closeDetailModal()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
-                            Close
-                        </button>
+                    <div class="space-y-4">
+                        <!-- Annotation Actions (only show for failed tests, not timeouts) -->
+                        ${status === 'FAIL' && !resultData.is_invalid_test ? `
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Mark as:</h4>
+                            <div class="flex gap-3 flex-wrap">
+                                <button onclick="markAsResolved('${netid}', '${testName}', ${!resultData.is_resolved})" 
+                                        class="px-4 py-2 ${resultData.is_resolved ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white font-semibold rounded-lg transition">
+                                    ${resultData.is_resolved ? '✓ Resolved' : 'Mark Resolved'}
+                                </button>
+                                <button onclick="markAsTodo('${netid}', '${testName}', ${!resultData.is_todo})" 
+                                        class="px-4 py-2 ${resultData.is_todo ? 'bg-gray-400' : 'bg-orange-500 hover:bg-orange-600'} text-white font-semibold rounded-lg transition">
+                                    ${resultData.is_todo ? '📌 TODO' : 'Mark TODO'}
+                                </button>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Invalid Test Action -->
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Test Validity:</h4>
+                            ${resultData.is_invalid_test ? `
+                                <div class="mb-3">
+                                    <div class="text-sm text-yellow-700 bg-yellow-50 rounded p-3 mb-2">
+                                        <strong>⚠ Invalid Test</strong><br>
+                                        Reason: ${escapeHtml(resultData.invalid_reason || 'No reason provided')}
+                                    </div>
+                                    <button onclick="markTestAsInvalid('${testName}', false)" 
+                                            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition">
+                                        Mark as Valid
+                                    </button>
+                                </div>
+                            ` : `
+                                <button onclick="promptMarkTestAsInvalid('${testName}')" 
+                                        class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition">
+                                    Mark Entire Test as Invalid
+                                </button>
+                            `}
+                        </div>
+                        
+                        <!-- Close Button -->
+                        <div class="flex justify-end">
+                            <button onclick="closeDetailModal()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -617,19 +755,48 @@ HTML_TEMPLATE = """
                     const resultData = monitor.results[test];
                     const status = resultData ? resultData.status : 'N/A';
                     
-                    // Determine colors: green for PASS, red for FAIL/TIMEOUT
+                    // Check annotation states
+                    const isInvalidTest = resultData && resultData.is_invalid_test;
+                    const isResolved = resultData && resultData.is_resolved;
+                    const isTodo = resultData && resultData.is_todo;
+                    
+                    // Determine colors based on status and annotations
                     let bgClass = 'bg-gray-200';
                     let textClass = 'text-gray-600';
                     let symbol = '?';
+                    let borderClass = '';
                     
-                    if (status === 'PASS') {
+                    // If test is invalid, always show yellow regardless of PASS/FAIL
+                    if (isInvalidTest) {
+                        bgClass = 'bg-yellow-400 hover:bg-yellow-500';
+                        textClass = 'text-gray-900';
+                        symbol = '⚠';
+                    } else if (status === 'PASS') {
                         bgClass = 'bg-green-500 hover:bg-green-600';
                         textClass = 'text-white';
                         symbol = '✓';
-                    } else if (status === 'FAIL' || status === 'TIMEOUT') {
-                        bgClass = 'bg-red-500 hover:bg-red-600';
+                    } else if (status === 'TIMEOUT') {
+                        // Timeouts show blue by default (expected behavior)
+                        bgClass = 'bg-blue-500 hover:bg-blue-600';
                         textClass = 'text-white';
-                        symbol = '✗';
+                        symbol = '⏱';
+                    } else if (status === 'FAIL') {
+                        // Failed tests - check if resolved or TODO
+                        if (isResolved) {
+                            bgClass = 'bg-blue-500 hover:bg-blue-600';
+                            textClass = 'text-white';
+                            symbol = '✓';
+                            borderClass = 'ring-2 ring-blue-300';
+                        } else if (isTodo) {
+                            bgClass = 'bg-orange-500 hover:bg-orange-600';
+                            textClass = 'text-white';
+                            symbol = '📌';
+                            borderClass = 'ring-2 ring-orange-300';
+                        } else {
+                            bgClass = 'bg-red-500 hover:bg-red-600';
+                            textClass = 'text-white';
+                            symbol = '✗';
+                        }
                     }
                     
                     // Build tooltip content
@@ -658,7 +825,7 @@ HTML_TEMPLATE = """
                     }
                     
                     bodyHTML += `<td class="px-1 py-2 text-center border-r border-gray-200">
-                        <div class="${bgClass} ${textClass} rounded px-2 py-1 cursor-pointer transition font-bold relative group"
+                        <div class="${bgClass} ${textClass} ${borderClass} rounded px-2 py-1 cursor-pointer transition font-bold relative group"
                              title="${status} (click for details)"
                              onclick='openDetailModal("${monitor.netid}", "${test}", window["${cellId}"])'>
                             ${symbol}
@@ -685,6 +852,9 @@ HTML_TEMPLATE = """
             const sortMonitorsBy = document.getElementById('sortMonitorsBy').value;
             const sortTestsBy = document.getElementById('sortTestsBy').value;
             const sortOrder = document.getElementById('sortOrder').value;
+            
+            // Save filter state to localStorage
+            saveFilterState();
             
             // Filter by monitor
             let filtered = allData.filter(m => {
@@ -730,6 +900,74 @@ HTML_TEMPLATE = """
         document.getElementById('sortTestsBy').addEventListener('change', applyFilters);
         document.getElementById('sortOrder').addEventListener('change', applyFilters);
         
+        // Restore saved filter state on page load
+        restoreFilterState();
+        
+        // API call functions
+        async function markAsResolved(netid, testName, resolved) {
+            try {
+                const response = await fetch('/api/mark_resolved', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({netid, test_name: testName, resolved})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();  // Reload to show updated colors
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Network error: ' + error);
+            }
+        }
+        
+        async function markAsTodo(netid, testName, todo) {
+            try {
+                const response = await fetch('/api/mark_todo', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({netid, test_name: testName, todo})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Network error: ' + error);
+            }
+        }
+        
+        function promptMarkTestAsInvalid(testName) {
+            const reason = prompt(`Mark "${testName}" as invalid for ALL monitors.\\n\\nPlease provide a reason:`);
+            if (reason !== null && reason.trim()) {
+                markTestAsInvalid(testName, true, reason.trim());
+            }
+        }
+        
+        async function markTestAsInvalid(testName, invalid, reason = '') {
+            try {
+                const response = await fetch('/api/mark_invalid_test', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({test_name: testName, invalid, reason})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Network error: ' + error);
+            }
+        }
+        
         // Initial render
         applyFilters();
     </script>
@@ -740,7 +978,7 @@ HTML_TEMPLATE = """
 @app.get("/", response_class=HTMLResponse)
 async def index():
     """Main page showing the data table"""
-    monitors_data, test_names, headers, execution_logs, verification_results = load_data()
+    monitors_data, test_names, headers, execution_logs, verification_results, annotations = load_data()
     
     if monitors_data is None:
         return """
@@ -772,7 +1010,7 @@ async def index():
 @app.get("/api/data")
 async def api_data():
     """API endpoint to get raw data as JSON"""
-    monitors_data, test_names, headers, execution_logs, verification_results = load_data()
+    monitors_data, test_names, headers, execution_logs, verification_results, annotations = load_data()
     
     if monitors_data is None:
         raise HTTPException(status_code=404, detail="CSV file not found")
@@ -782,13 +1020,95 @@ async def api_data():
         'test_names': test_names
     }
 
+class MarkResolvedRequest(BaseModel):
+    netid: str
+    test_name: str
+    resolved: bool
+
+class MarkTodoRequest(BaseModel):
+    netid: str
+    test_name: str
+    todo: bool
+
+class MarkInvalidTestRequest(BaseModel):
+    test_name: str
+    invalid: bool
+    reason: str = ""
+
+@app.post("/api/mark_resolved")
+async def mark_resolved(request: MarkResolvedRequest):
+    """Mark a test result as resolved or unresolved"""
+    annotations = load_annotations()
+    key = (request.netid, request.test_name)
+    
+    if request.resolved:
+        annotations['resolved'][key] = True
+        # Remove from TODO if marking as resolved
+        annotations['todo'].pop(key, None)
+    else:
+        annotations['resolved'].pop(key, None)
+    
+    if save_annotations(annotations):
+        return {"success": True, "message": f"Marked {request.netid}/{request.test_name} as {'resolved' if request.resolved else 'unresolved'}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to save annotations")
+
+@app.post("/api/mark_todo")
+async def mark_todo(request: MarkTodoRequest):
+    """Mark a test result as TODO or remove TODO"""
+    annotations = load_annotations()
+    key = (request.netid, request.test_name)
+    
+    if request.todo:
+        annotations['todo'][key] = True
+        # Remove from resolved if marking as TODO
+        annotations['resolved'].pop(key, None)
+    else:
+        annotations['todo'].pop(key, None)
+    
+    if save_annotations(annotations):
+        return {"success": True, "message": f"Marked {request.netid}/{request.test_name} as {'TODO' if request.todo else 'not TODO'}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to save annotations")
+
+@app.post("/api/mark_invalid_test")
+async def mark_invalid_test(request: MarkInvalidTestRequest):
+    """Mark an entire test as invalid (affects all monitors)"""
+    annotations = load_annotations()
+    
+    if request.invalid:
+        if not request.reason:
+            raise HTTPException(status_code=400, detail="Reason is required when marking test as invalid")
+        annotations['invalid_tests'][request.test_name] = request.reason
+    else:
+        annotations['invalid_tests'].pop(request.test_name, None)
+    
+    if save_annotations(annotations):
+        return {"success": True, "message": f"Marked {request.test_name} as {'invalid' if request.invalid else 'valid'}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to save annotations")
+
+@app.get("/api/annotations")
+async def get_annotations():
+    """Get all annotations"""
+    annotations = load_annotations()
+    # Convert tuple keys to strings for JSON
+    return {
+        'resolved': [f"{k[0]}|{k[1]}" for k in annotations['resolved'].keys()],
+        'todo': [f"{k[0]}|{k[1]}" for k in annotations['todo'].keys()],
+        'invalid_tests': annotations['invalid_tests']
+    }
+
 if __name__ == '__main__':
+    HOST = "0.0.0.0"    
+    PORT = 8001
     print("=" * 80)
     print("Test Results Data Visualizer (FastAPI + Tailwind CSS)")
     print("=" * 80)
     print(f"CSV Source: {CSV_PATH}")
-    print("Starting web server on http://localhost:8000")
+    print(f"Starting web server on http://localhost:{PORT}")
     print("Press Ctrl+C to stop")
     print("=" * 80)
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host=HOST, port=PORT)
+
 

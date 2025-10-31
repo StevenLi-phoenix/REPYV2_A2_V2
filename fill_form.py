@@ -1,88 +1,211 @@
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from pydantic import BaseModel, Field
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 import time
-import pickle
-import os
+import threading
+import uvicorn
 
-COOKIE_FILE = "google_cookies.pkl"
-form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdWKAlQPqcteypacqRFwS0DZEx-247xNVUYnIoigx7bjOHvLg/viewform"
+app = FastAPI(
+    title="Google Forms Submission API",
+    description="API for submitting Google Forms with manual login",
+    version="1.0.0"
+)
 
-driver = webdriver.Chrome()
+FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdWKAlQPqcteypacqRFwS0DZEx-247xNVUYnIoigx7bjOHvLg/viewform"
 
-# 1. Try to visit form directly with existing cookies
-if os.path.exists(COOKIE_FILE):
-    driver.get("https://accounts.google.com/")
-    with open(COOKIE_FILE, "rb") as f:
-        cookies = pickle.load(f)
-        for cookie in cookies:
+# XPath selectors for form fields
+CHECKBOX_XPATH = '//*[@id="i5"]'
+NAME_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div/div[1]/input'
+NETID_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div[1]/div/div[1]/input'
+ATTACK_CASE_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[4]/div/div/div[2]/div/div[1]/div/div[1]/input'
+REASON_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[5]/div/div/div[2]/div/div[1]/div[2]/textarea'
+SUBMIT_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[2]/div[1]/div/span/span'
+SUBMIT_ANOTHER_FORM_XPATH = '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[2]/div[1]/div[2]/span'
+
+# Global browser instance to persist login
+browser_driver = None
+browser_lock = threading.Lock()
+
+class FormSubmission(BaseModel):
+    name: str = Field(..., description="Student name")
+    netid: str = Field(..., description="Student NetID")
+    attack_case: str = Field(..., description="Attack case filename to flag")
+    reason: str = Field(..., description="Reason for flagging")
+    submit: bool = Field(False, description="Whether to actually submit the form")
+
+
+class SubmissionResponse(BaseModel):
+    status: str
+    message: str
+    data: dict
+
+
+def initialize_browser():
+    """Initialize browser and perform one-time login"""
+    global browser_driver
+    
+    if browser_driver is None:
+        print("Initializing browser for first time login...")
+        browser_driver = webdriver.Chrome()
+        
+        # Navigate to Google login
+        browser_driver.get("https://accounts.google.com/")
+        input("Please log in to Google, then press Enter in the terminal to continue...")
+        print("Login successful! Browser session will be reused for subsequent submissions.")
+    
+    return browser_driver
+
+
+def fill_google_form(name: str, netid: str, attack_case: str, reason: str, submit: bool = False):
+    """
+    Fill out the Google Form with provided data.
+    Uses persistent browser session to maintain login state.
+    """
+    global browser_driver
+    
+    with browser_lock:
+        try:
+            # Initialize browser if needed (first time only)
+            driver = initialize_browser()
+            
+            # Navigate to form
+            driver.get(FORM_URL)
+            time.sleep(2)
+            
+            # Fill out fields
+            checkbox = driver.find_element(By.XPATH, CHECKBOX_XPATH)
+            checkbox.click()
+            
+            name_input = driver.find_element(By.XPATH, NAME_XPATH)
+            name_input.send_keys(name)
+            
+            netid_input = driver.find_element(By.XPATH, NETID_XPATH)
+            netid_input.send_keys(netid)
+            
+            attack_case_input = driver.find_element(By.XPATH, ATTACK_CASE_XPATH)
+            attack_case_input.send_keys(attack_case)
+            
+            reason_input = driver.find_element(By.XPATH, REASON_XPATH)
+            reason_input.send_keys(reason)
+            
+            if submit:
+                submit_button = driver.find_element(By.XPATH, SUBMIT_XPATH)
+                submit_button.click()
+                time.sleep(3)
+                print(f"Form submitted successfully for {name} ({netid})!")
+                
+                # Click "Submit another form" to reset the form
+                try:
+                    submit_another_button = driver.find_element(By.XPATH, SUBMIT_ANOTHER_FORM_XPATH)
+                    submit_another_button.click()
+                    time.sleep(2)
+                    print("Ready for next submission.")
+                except Exception as e:
+                    print(f"Could not click 'Submit another form': {e}")
+                    # Navigate back to form manually if button not found
+                    driver.get(FORM_URL)
+                    time.sleep(2)
+            else:
+                print(f"Form filled but not submitted for {name} ({netid}) (review mode)")
+                time.sleep(5)  # Brief pause for review
+            
+            return True
+        except Exception as e:
+            print(f"Error filling form: {e}")
+            return False
+
+
+@app.post("/api/submit", response_model=SubmissionResponse, status_code=200)
+async def submit_form(form_data: FormSubmission):
+    """
+    Submit a Google Form with the provided data.
+    
+    First request will require manual login to Google in the browser window.
+    Subsequent requests will reuse the same browser session (no re-login needed).
+    """
+    try:
+        # Fill form synchronously since we use a lock anyway
+        success = fill_google_form(
+            form_data.name,
+            form_data.netid,
+            form_data.attack_case,
+            form_data.reason,
+            form_data.submit
+        )
+        
+        if success:
+            return SubmissionResponse(
+                status="success",
+                message="Form processed successfully." if form_data.submit else "Form filled but not submitted.",
+                data={
+                    "name": form_data.name,
+                    "netid": form_data.netid,
+                    "attack_case": form_data.attack_case,
+                    "submit": form_data.submit
+                }
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Failed to fill form")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "ok",
+        "service": "Google Forms Submission API"
+    }
+
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "service": "Google Forms Submission API",
+        "version": "1.0.0",
+        "login_status": "logged_in" if browser_driver is not None else "not_logged_in",
+        "endpoints": {
+            "POST /api/submit": "Submit a form with student information",
+            "GET /api/health": "Health check",
+            "POST /api/close_browser": "Close the browser session",
+            "GET /docs": "Interactive API documentation",
+            "GET /redoc": "Alternative API documentation"
+        }
+    }
+
+
+@app.post("/api/close_browser")
+async def close_browser():
+    """Close the persistent browser session"""
+    global browser_driver
+    
+    with browser_lock:
+        if browser_driver is not None:
             try:
-                # Only add cookies that match the current domain
-                if 'domain' in cookie and 'google.com' in cookie['domain']:
-                    driver.add_cookie(cookie)
-            except Exception:
-                # Skip cookies that can't be added
-                continue
+                browser_driver.quit()
+                browser_driver = None
+                return {"status": "success", "message": "Browser session closed"}
+            except Exception as e:
+                return {"status": "error", "message": f"Failed to close browser: {str(e)}"}
+        else:
+            return {"status": "info", "message": "No active browser session"}
 
-    # Try accessing the form
-    driver.get(form_url)
-    time.sleep(2)
 
-    # Check if we're on the form page (not redirected to login)
-    if "forms" not in driver.current_url or "ServiceLogin" in driver.current_url:
-        print("Cookies expired, need to log in again")
-        driver.get("https://accounts.google.com/")
-        input("Log in to Google, then press Enter here...")
-
-        # Save new cookies
-        cookies = driver.get_cookies()
-        with open(COOKIE_FILE, "wb") as f:
-            pickle.dump(cookies, f)
-
-        driver.get(form_url)
-    else:
-        print("Successfully accessed form with saved cookies")
-else:
-    # First time: manual login and save cookies
-    print("No saved cookies found, logging in...")
-    driver.get("https://accounts.google.com/")
-    input("Log in to Google, then press Enter here...")
-
-    # Save cookies
-    cookies = driver.get_cookies()
-    with open(COOKIE_FILE, "wb") as f:
-        pickle.dump(cookies, f)
-    print("Cookies saved!")
-
-    driver.get(form_url)
-    
-    
-# form fields
-# checkbox: records as <email>@nyu.edu
-# text: name
-# text netid
-# text: Attack case you’d like to flag (please mention the attack case filename along with their NetID)
-# text: Please describe the reason for flagging this attack case
-
-checkbox_xpath = '//*[@id="i5"]'
-name_xpath = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div/div[1]/input'
-netid_xpath = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div[1]/div/div[1]/input'
-attack_case_xpath = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[4]/div/div/div[2]/div/div[1]/div/div[1]/input'
-reason_xpath = '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[5]/div/div/div[2]/div/div[1]/div[2]/textarea'
-submit_xpath = '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[2]/div[1]/div/span/span'
-
-# 2. Fill out fields
-checkbox = driver.find_element(By.XPATH, checkbox_xpath)
-checkbox.click()
-name_input = driver.find_element(By.XPATH, name_xpath)
-name_input.send_keys("Steven Li")
-netid_input = driver.find_element(By.XPATH, netid_xpath)
-netid_input.send_keys("sl36325")
-attack_case_input = driver.find_element(By.XPATH, attack_case_xpath)
-attack_case_input.send_keys("test1.r2py")
-reason_input = driver.find_element(By.XPATH, reason_xpath)
-reason_input.send_keys("Test reason")
-# submit_button = driver.find_element(By.XPATH, submit_xpath)
-# submit_button.click()
-time.sleep(3000)
-driver.quit()
+if __name__ == "__main__":
+    print("Starting Google Forms Submission API Server with FastAPI...")
+    print("API Documentation available at:")
+    print("  - Swagger UI: http://localhost:8000/docs")
+    print("  - ReDoc: http://localhost:8000/redoc")
+    print("\nAPI Endpoints:")
+    print("  POST /api/submit - Submit a form")
+    print("  GET  /api/health - Health check")
+    print("\nExample usage:")
+    print('  curl -X POST http://localhost:8000/api/submit \\')
+    print('    -H "Content-Type: application/json" \\')
+    print('    -d \'{"name": "Steven Li", "netid": "sl36325", "attack_case": "test1.r2py", "reason": "Test reason", "submit": false}\'')
+    print("\nServer running on http://localhost:8000")
+    uvicorn.run(app, host="0.0.0.0", port=8000)

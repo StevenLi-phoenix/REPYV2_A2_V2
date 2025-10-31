@@ -1,0 +1,15 @@
+{
+  "resolved": {},
+  "todo": {
+    "sl00000|aa12037_attackcase14.r2py": true,
+    "sl00000|al8372_attackcase8.r2py": true,
+    "sl00000|aa11931_attackcase15.r2py": true,
+    "sl00000|al8372_attackcase11.r2py": true,
+    "sl00000|al8372_attackcase17.r2py": true
+  },
+  "invalid_tests": {
+    "ag10656_attackcase2.r2py": "It logs on success.",
+    "ag10656_attackcase3.r2py": "naming invalid f1 = openfile(\"testfile.v1\", True)",
+    "ag10656_attackcase5.r2py": "naming is not invalid should pass, no log print on success"
+  }
+}
