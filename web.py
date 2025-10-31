@@ -17,6 +17,19 @@ app = FastAPI(title="Test Results Data Visualizer")
 
 CSV_PATH = "submit/result/test_results_matrix.csv"
 JSON_PATH = "submit/result/test_execution_logs.json"
+VERIFICATION_PATH = "verification_results.json"
+
+def load_verification_results():
+    """Load ChatGPT verification comments from JSON"""
+    if not Path(VERIFICATION_PATH).exists():
+        return {}
+    
+    try:
+        with open(VERIFICATION_PATH, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Warning: Could not load verification results: {e}")
+        return {}
 
 def load_execution_logs():
     """Load detailed execution logs from JSON"""
@@ -42,10 +55,13 @@ def load_execution_logs():
 def load_data():
     """Load CSV data and return structured data with execution details"""
     if not Path(CSV_PATH).exists():
-        return None, [], [], {}
+        return None, [], [], {}, {}
     
     # Load execution logs for detailed hover information
     execution_logs = load_execution_logs()
+    
+    # Load verification results from ChatGPT
+    verification_results = load_verification_results()
     
     with open(CSV_PATH, 'r', encoding='utf-8', errors='replace') as f:
         reader = csv.reader(f)
@@ -63,7 +79,7 @@ def load_data():
             timeout_count = results.count("TIMEOUT")
             total = len(results)
             
-            # Build results dict with execution details
+            # Build results dict with execution details and verification comments
             results_dict = {}
             for test_name, result in zip(test_names, results):
                 exec_info = execution_logs.get((netid, test_name), {})
@@ -91,6 +107,9 @@ def load_data():
                 except Exception:
                     attack_code = None
 
+                # Get verification comment for this test case (matched by test_name)
+                verification_comment = verification_results.get(test_name, '')
+                
                 results_dict[test_name] = {
                     'status': result,
                     'duration': exec_info.get('duration_seconds'),
@@ -103,6 +122,7 @@ def load_data():
                     'attack_path': test_path,
                     'monitor_code': monitor_code,
                     'attack_code': attack_code,
+                    'verification': verification_comment
                 }
             
             monitors_data.append({
@@ -114,7 +134,7 @@ def load_data():
                 'total': total
             })
     
-    return monitors_data, test_names, headers, execution_logs
+    return monitors_data, test_names, headers, execution_logs, verification_results
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -298,6 +318,7 @@ HTML_TEMPLATE = """
             const stdout = resultData && resultData.stdout ? resultData.stdout : '(empty)';
             const startTime = resultData && resultData.start_time ? formatTime(resultData.start_time) : 'N/A';
             const endTime = resultData && resultData.end_time ? formatTime(resultData.end_time) : 'N/A';
+            const verification = resultData && resultData.verification ? resultData.verification : '';
             
             // Determine status color and icon
             let statusClass = 'bg-gray-100 text-gray-700';
@@ -364,6 +385,17 @@ HTML_TEMPLATE = """
                     <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
                         <h4 class="text-sm font-semibold text-red-700 uppercase mb-2">Error Message</h4>
                         <pre class="text-sm text-red-900 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto">${escapeHtml(error)}</pre>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- ChatGPT Verification Comment -->
+                    ${verification ? `
+                    <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🤖</span>
+                            <h4 class="text-sm font-semibold text-purple-700 uppercase">ChatGPT Verification Analysis</h4>
+                        </div>
+                        <div class="text-sm text-gray-800 whitespace-pre-wrap bg-white rounded p-4 overflow-x-auto max-h-96 leading-relaxed">${escapeHtml(verification)}</div>
                     </div>
                     ` : ''}
                     
@@ -708,7 +740,7 @@ HTML_TEMPLATE = """
 @app.get("/", response_class=HTMLResponse)
 async def index():
     """Main page showing the data table"""
-    monitors_data, test_names, headers, execution_logs = load_data()
+    monitors_data, test_names, headers, execution_logs, verification_results = load_data()
     
     if monitors_data is None:
         return """
@@ -740,7 +772,7 @@ async def index():
 @app.get("/api/data")
 async def api_data():
     """API endpoint to get raw data as JSON"""
-    monitors_data, test_names, headers, execution_logs = load_data()
+    monitors_data, test_names, headers, execution_logs, verification_results = load_data()
     
     if monitors_data is None:
         raise HTTPException(status_code=404, detail="CSV file not found")
