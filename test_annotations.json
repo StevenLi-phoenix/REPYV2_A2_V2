@@ -10,6 +10,23 @@
   "invalid_tests": {
     "ag10656_attackcase2.r2py": "It logs on success.",
     "ag10656_attackcase3.r2py": "naming invalid f1 = openfile(\"testfile.v1\", True)",
-    "ag10656_attackcase5.r2py": "naming is not invalid should pass, no log print on success"
+    "ag10656_attackcase5.r2py": "naming is not invalid should pass, no log print on success",
+    "an4851_attackcase1.r2py": "log when passed",
+    "app7633_attackcase1.r2py": "log when passed",
+    "app7633_attackcase2.r2py": "log when passed",
+    "app7633_attackcase4.r2py": "log when passed",
+    "ar9783_attackcase2.r2py": "log after success or failed",
+    "ar9783_attackcase3.r2py": "log when success",
+    "ar9783_attackcase4.r2py": "log when success",
+    "ar9783_attackcase5.r2py": "log when success",
+    "ar9783_attackcase7.r2py": "log when success",
+    "ar9783_attackcase8.r2py": "log when success",
+    "bjk9802_attackcase1.r2py": "Code failed safety check! Error: (<class exception_hierarchy.CheckNodeException> (Unsafe call IfExp in line 25,),)",
+    "bjk9802_attackcase2.r2py": "MAX_VERSIONS_PER_FILE not defined",
+    "jmk9800_attackcase6.r2py": "Code failed safety check!",
+    "jq2272_attackcase3.r2py": "dy_import_module is not defined",
+    "jsh10043_attackcase1.r2py": "Code failed safety check! f_old",
+    "jsh10043_attackcase2.r2py": "Code failed safety check! f_verify",
+    "jsh10043_attackcase3.r2py": "The security wrapper only exposes writeat, readat, and close; it doesn\u2019t expose filename, so attribute access fails. Also hasattr is also cause a unsafe code."
   }
 }

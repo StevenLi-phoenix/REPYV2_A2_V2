@@ -62,16 +62,32 @@ def save_annotations(annotations):
         return False
 
 def load_verification_results():
-    """Load ChatGPT verification comments from JSON"""
-    if not Path(VERIFICATION_PATH).exists():
-        return {}
+    """Load ChatGPT verification comments from JSON or JSONL"""
+    # Try JSON first (old format)
+    if Path(VERIFICATION_PATH).exists():
+        try:
+            with open(VERIFICATION_PATH, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Warning: Could not load verification_results.json: {e}")
     
-    try:
-        with open(VERIFICATION_PATH, 'r') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Warning: Could not load verification results: {e}")
-        return {}
+    # Try JSONL format (batch output)
+    jsonl_path = "batch_verification_output.jsonl"
+    if Path(jsonl_path).exists():
+        try:
+            results = {}
+            with open(jsonl_path, 'r') as f:
+                for line in f:
+                    item = json.loads(line)
+                    custom_id = item.get('custom_id')
+                    if custom_id and item.get('response', {}).get('status_code') == 200:
+                        content = item['response']['body']['choices'][0]['message']['content']
+                        results[custom_id + '.r2py'] = content
+            return results
+        except Exception as e:
+            print(f"Warning: Could not load batch_verification_output.jsonl: {e}")
+    
+    return {}
 
 def load_execution_logs():
     """Load detailed execution logs from JSON"""
@@ -95,18 +111,14 @@ def load_execution_logs():
         return {}
 
 def load_data():
-    """Load CSV data and return structured data with execution details"""
+    """Load CSV data and return structured data WITHOUT heavy execution details"""
     if not Path(CSV_PATH).exists():
-        return None, [], [], {}, {}, {}
-    
-    # Load execution logs for detailed hover information
-    execution_logs = load_execution_logs()
-    
-    # Load verification results from ChatGPT
-    verification_results = load_verification_results()
+        return None, [], [], {}
     
     # Load annotations (resolved, TODO, invalid tests)
     annotations = load_annotations()
+    
+    # Don't load execution logs or verification here - too heavy! Load on-demand.
     
     with open(CSV_PATH, 'r', encoding='utf-8', errors='replace') as f:
         reader = csv.reader(f)
@@ -124,44 +136,9 @@ def load_data():
             timeout_count = results.count("TIMEOUT")
             total = len(results)
             
-            # Build results dict with execution details and verification comments
+            # Build results dict with lightweight data (no logs/code/verification)
             results_dict = {}
             for test_name, result in zip(test_names, results):
-                exec_info = execution_logs.get((netid, test_name), {})
-
-                # Derive file paths using os.path.join for cross-platform compatibility
-                monitor_filename = exec_info.get('monitor_file')
-                test_filename = exec_info.get('test_file')
-                
-                monitor_path = None
-                test_path = None
-                
-                if monitor_filename:
-                    monitor_path = os.path.join('submit', 'reference_monitor', monitor_filename)
-                
-                if test_filename:
-                    test_path = os.path.join('submit', 'general_tests', test_filename)
-
-                # Read source code (UTF-8 with replacement to avoid decode errors)
-                monitor_code = None
-                attack_code = None
-                try:
-                    if monitor_path and os.path.exists(monitor_path):
-                        with open(monitor_path, 'r', encoding='utf-8', errors='replace') as mf:
-                            monitor_code = mf.read()
-                except Exception as e:
-                    monitor_code = f"Error reading file: {e}"
-                
-                try:
-                    if test_path and os.path.exists(test_path):
-                        with open(test_path, 'r', encoding='utf-8', errors='replace') as tf:
-                            attack_code = tf.read()
-                except Exception as e:
-                    attack_code = f"Error reading file: {e}"
-
-                # Get verification comment for this test case (matched by test_name)
-                verification_comment = verification_results.get(test_name, '')
-                
                 # Check annotations
                 is_resolved = annotations['resolved'].get((netid, test_name), False)
                 is_todo = annotations['todo'].get((netid, test_name), False)
@@ -170,21 +147,12 @@ def load_data():
                 
                 results_dict[test_name] = {
                     'status': result,
-                    'duration': exec_info.get('duration_seconds'),
-                    'exit_code': exec_info.get('exit_code'),
-                    'error': exec_info.get('error'),
-                    'stdout': exec_info.get('stdout', ''),
-                    'start_time': exec_info.get('start_time'),
-                    'end_time': exec_info.get('end_time'),
-                    'monitor_path': monitor_path,
-                    'attack_path': test_path,
-                    'monitor_code': monitor_code,
-                    'attack_code': attack_code,
-                    'verification': verification_comment,
                     'is_resolved': is_resolved,
                     'is_todo': is_todo,
                     'is_invalid_test': is_invalid_test,
-                    'invalid_reason': invalid_reason
+                    'invalid_reason': invalid_reason,
+                    'netid': netid,
+                    'test_name': test_name
                 }
             
             monitors_data.append({
@@ -196,7 +164,7 @@ def load_data():
                 'total': total
             })
     
-    return monitors_data, test_names, headers, execution_logs, verification_results, annotations
+    return monitors_data, test_names, headers, annotations
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -398,7 +366,7 @@ HTML_TEMPLATE = """
             }
         }
         
-        function openDetailModal(netid, testName, resultData) {
+        async function openDetailModal(netid, testName, resultData) {
             const modal = document.getElementById('detailModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalContent = document.getElementById('modalContent');
@@ -406,15 +374,37 @@ HTML_TEMPLATE = """
             // Set title
             modalTitle.textContent = `${netid} - ${testName}`;
             
-            // Build content
-            const status = resultData ? resultData.status : 'N/A';
-            const duration = resultData && resultData.duration ? resultData.duration.toFixed(3) : 'N/A';
-            const exitCode = resultData && resultData.exit_code !== null ? resultData.exit_code : 'N/A';
-            const error = resultData && resultData.error ? resultData.error : 'None';
-            const stdout = resultData && resultData.stdout ? resultData.stdout : '(empty)';
-            const startTime = resultData && resultData.start_time ? formatTime(resultData.start_time) : 'N/A';
-            const endTime = resultData && resultData.end_time ? formatTime(resultData.end_time) : 'N/A';
-            const verification = resultData && resultData.verification ? resultData.verification : '';
+            // Show loading state
+            modalContent.innerHTML = `
+                <div class="flex items-center justify-center py-16">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">⏳</div>
+                        <div class="text-xl text-gray-600">Loading details...</div>
+                    </div>
+                </div>
+            `;
+            
+            // Show modal immediately
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Fetch detailed data from API
+            try {
+                const response = await fetch(`/api/test_details/${encodeURIComponent(netid)}/${encodeURIComponent(testName)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load details');
+                }
+                const details = await response.json();
+                
+                // Build content with loaded data
+                const status = resultData ? resultData.status : 'N/A';
+                const duration = details.duration ? details.duration.toFixed(3) : 'N/A';
+                const exitCode = details.exit_code !== null ? details.exit_code : 'N/A';
+                const error = details.error ? details.error : 'None';
+                const stdout = details.stdout ? details.stdout : '(empty)';
+                const startTime = details.start_time ? formatTime(details.start_time) : 'N/A';
+                const endTime = details.end_time ? formatTime(details.end_time) : 'N/A';
+                const verification = details.verification || '';
             
             // Determine status color and icon
             let statusClass = 'bg-gray-100 text-gray-700';
@@ -504,15 +494,15 @@ HTML_TEMPLATE = """
                     <!-- Reference Monitor Source -->
                     <div class="bg-gray-50 border-l-4 border-gray-500 rounded-lg p-4">
                         <h4 class="text-sm font-semibold text-gray-700 uppercase mb-2">Reference Monitor Source</h4>
-                        <div class="text-xs text-gray-500 mb-2">${resultData && resultData.monitor_path ? escapeHtml(resultData.monitor_path) : 'Path: N/A'}</div>
-                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(resultData && resultData.monitor_code ? resultData.monitor_code : 'N/A')}</pre>
+                        <div class="text-xs text-gray-500 mb-2">${details.monitor_path ? escapeHtml(details.monitor_path) : 'Path: N/A'}</div>
+                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(details.monitor_code || 'N/A')}</pre>
                     </div>
 
                     <!-- Attack Test Source -->
                     <div class="bg-gray-50 border-l-4 border-gray-500 rounded-lg p-4">
                         <h4 class="text-sm font-semibold text-gray-700 uppercase mb-2">Attack Test Source</h4>
-                        <div class="text-xs text-gray-500 mb-2">${resultData && resultData.attack_path ? escapeHtml(resultData.attack_path) : 'Path: N/A'}</div>
-                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(resultData && resultData.attack_code ? resultData.attack_code : 'N/A')}</pre>
+                        <div class="text-xs text-gray-500 mb-2">${details.attack_path ? escapeHtml(details.attack_path) : 'Path: N/A'}</div>
+                        <pre class="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white rounded p-3 overflow-x-auto max-h-96">${escapeHtml(details.attack_code || 'N/A')}</pre>
                     </div>
                     
                     <!-- Actions -->
@@ -565,10 +555,21 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
             `;
-            
-            // Show modal
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            } catch (error) {
+                // Show error state
+                modalContent.innerHTML = `
+                    <div class="flex items-center justify-center py-16">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4">❌</div>
+                            <div class="text-xl text-red-600 mb-4">Failed to load details</div>
+                            <div class="text-sm text-gray-600">${escapeHtml(error.message)}</div>
+                            <button onclick="closeDetailModal()" class="mt-6 px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         function closeDetailModal(event) {
@@ -799,35 +800,57 @@ HTML_TEMPLATE = """
                         }
                     }
                     
-                    // Build tooltip content
+                    // Build tooltip content with test name, monitor name, and status type
                     let tooltipHTML = '';
                     if (resultData) {
-                        tooltipHTML = `<strong>${test}</strong><br>`;
-                        tooltipHTML += `Status: <strong>${status}</strong><br>`;
-                        tooltipHTML += `Duration: ${formatDuration(resultData.duration)}<br>`;
-                        tooltipHTML += `Exit Code: ${resultData.exit_code !== null ? resultData.exit_code : 'N/A'}<br>`;
-                        if (resultData.error) {
-                            tooltipHTML += `Error: ${escapeHtml(resultData.error).substring(0, 100)}...<br>`;
+                        // Header with test and monitor info
+                        tooltipHTML = `<div class="font-bold text-yellow-300 mb-2">📋 ${test}</div>`;
+                        tooltipHTML += `<div class="text-xs text-gray-300 mb-2">Monitor: ${monitor.netid}</div>`;
+                        tooltipHTML += `<div class="border-t border-gray-700 pt-2 mb-2"></div>`;
+                        
+                        // Status with color and description
+                        let statusDisplay = '';
+                        if (status === 'PASS') {
+                            statusDisplay = '<span class="text-green-400 font-bold">✓ PASS</span>';
+                        } else if (status === 'FAIL') {
+                            if (isResolved) {
+                                statusDisplay = '<span class="text-blue-400 font-bold">✓ FAIL (Resolved)</span>';
+                            } else if (isTodo) {
+                                statusDisplay = '<span class="text-orange-400 font-bold">📌 FAIL (TODO)</span>';
+                            } else {
+                                statusDisplay = '<span class="text-red-400 font-bold">✗ FAIL</span>';
+                            }
+                        } else if (status === 'TIMEOUT') {
+                            statusDisplay = '<span class="text-blue-400 font-bold">⏱ TIMEOUT</span>';
+                        } else {
+                            statusDisplay = `<span class="text-gray-400">${status}</span>`;
                         }
-                        if (resultData.stdout && resultData.stdout.length > 0) {
-                            tooltipHTML += `Output: ${escapeHtml(resultData.stdout).substring(0, 100)}...<br>`;
+                        
+                        tooltipHTML += `Status: ${statusDisplay}<br>`;
+                        
+                        // Invalid test warning
+                        if (isInvalidTest) {
+                            tooltipHTML += `<div class="bg-yellow-600 text-white px-2 py-1 rounded text-xs mt-1 mb-1">⚠ Invalid Test</div>`;
                         }
                     } else {
-                        tooltipHTML = `${test}<br>No data available`;
+                        tooltipHTML = `<div class="font-bold text-yellow-300">${test}</div>`;
+                        tooltipHTML += `<div class="text-xs text-gray-300">Monitor: ${monitor.netid}</div>`;
+                        tooltipHTML += `<div class="text-gray-400 mt-2">No data available</div>`;
                     }
                     
-                    // Create a unique ID for this cell to store data
-                    const cellId = `cell_${monitor.netid}_${test}`.replace(/[^a-zA-Z0-9_]/g, '_');
-                    
-                    // Store result data in a data attribute
-                    if (resultData) {
-                        window[cellId] = resultData;
-                    }
+                    // Store minimal data as JSON string in data attribute
+                    const cellData = JSON.stringify({
+                        status: status,
+                        is_resolved: resultData?.is_resolved || false,
+                        is_todo: resultData?.is_todo || false,
+                        is_invalid_test: resultData?.is_invalid_test || false,
+                        invalid_reason: resultData?.invalid_reason || ''
+                    });
                     
                     bodyHTML += `<td class="px-1 py-2 text-center border-r border-gray-200">
                         <div class="${bgClass} ${textClass} ${borderClass} rounded px-2 py-1 cursor-pointer transition font-bold relative group"
                              title="${status} (click for details)"
-                             onclick='openDetailModal("${monitor.netid}", "${test}", window["${cellId}"])'>
+                             onclick='openDetailModal("${monitor.netid}", "${test}", ${cellData})'>
                             ${symbol}
                             <div class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none" 
                                  style="left: 50%; transform: translateX(-50%); bottom: 100%; margin-bottom: 8px; min-width: 250px; max-width: 350px;">
@@ -903,7 +926,7 @@ HTML_TEMPLATE = """
         // Restore saved filter state on page load
         restoreFilterState();
         
-        // API call functions
+        // API call functions with in-place updates (no page reload)
         async function markAsResolved(netid, testName, resolved) {
             try {
                 const response = await fetch('/api/mark_resolved', {
@@ -913,13 +936,26 @@ HTML_TEMPLATE = """
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();  // Reload to show updated colors
+                    // Update in-memory data
+                    const monitor = allData.find(m => m.netid === netid);
+                    if (monitor && monitor.results[testName]) {
+                        monitor.results[testName].is_resolved = resolved;
+                        if (resolved) {
+                            monitor.results[testName].is_todo = false;
+                        }
+                    }
+                    
+                    // Re-render table without page reload
+                    applyFilters();
+                    
+                    // Close modal and show success
+                    closeDetailModal();
+                    showToast(data.message, 'success');
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             } catch (error) {
-                alert('Network error: ' + error);
+                showToast('Network error: ' + error, 'error');
             }
         }
         
@@ -932,13 +968,26 @@ HTML_TEMPLATE = """
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    // Update in-memory data
+                    const monitor = allData.find(m => m.netid === netid);
+                    if (monitor && monitor.results[testName]) {
+                        monitor.results[testName].is_todo = todo;
+                        if (todo) {
+                            monitor.results[testName].is_resolved = false;
+                        }
+                    }
+                    
+                    // Re-render table without page reload
+                    applyFilters();
+                    
+                    // Close modal and show success
+                    closeDetailModal();
+                    showToast(data.message, 'success');
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             } catch (error) {
-                alert('Network error: ' + error);
+                showToast('Network error: ' + error, 'error');
             }
         }
         
@@ -958,14 +1007,43 @@ HTML_TEMPLATE = """
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    // Update in-memory data for ALL monitors
+                    allData.forEach(monitor => {
+                        if (monitor.results[testName]) {
+                            monitor.results[testName].is_invalid_test = invalid;
+                            monitor.results[testName].invalid_reason = reason;
+                        }
+                    });
+                    
+                    // Re-render table without page reload
+                    applyFilters();
+                    
+                    // Close modal and show success
+                    closeDetailModal();
+                    showToast(data.message, 'success');
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             } catch (error) {
-                alert('Network error: ' + error);
+                showToast('Network error: ' + error, 'error');
             }
+        }
+        
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Fade out and remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
         
         // Initial render
@@ -978,7 +1056,7 @@ HTML_TEMPLATE = """
 @app.get("/", response_class=HTMLResponse)
 async def index():
     """Main page showing the data table"""
-    monitors_data, test_names, headers, execution_logs, verification_results, annotations = load_data()
+    monitors_data, test_names, headers, annotations = load_data()
     
     if monitors_data is None:
         return """
@@ -1010,7 +1088,7 @@ async def index():
 @app.get("/api/data")
 async def api_data():
     """API endpoint to get raw data as JSON"""
-    monitors_data, test_names, headers, execution_logs, verification_results, annotations = load_data()
+    monitors_data, test_names, headers, annotations = load_data()
     
     if monitors_data is None:
         raise HTTPException(status_code=404, detail="CSV file not found")
@@ -1097,6 +1175,62 @@ async def get_annotations():
         'resolved': [f"{k[0]}|{k[1]}" for k in annotations['resolved'].keys()],
         'todo': [f"{k[0]}|{k[1]}" for k in annotations['todo'].keys()],
         'invalid_tests': annotations['invalid_tests']
+    }
+
+@app.get("/api/test_details/{netid}/{test_name}")
+async def get_test_details(netid: str, test_name: str):
+    """Load detailed execution info, logs, and source code on-demand"""
+    # Load execution logs
+    execution_logs = load_execution_logs()
+    exec_info = execution_logs.get((netid, test_name), {})
+    
+    if not exec_info:
+        raise HTTPException(status_code=404, detail="Test execution not found")
+    
+    # Derive file paths
+    monitor_filename = exec_info.get('monitor_file')
+    test_filename = exec_info.get('test_file')
+    
+    monitor_path = None
+    test_path = None
+    monitor_code = None
+    attack_code = None
+    
+    if monitor_filename:
+        monitor_path = os.path.join('submit', 'reference_monitor', monitor_filename)
+        try:
+            if os.path.exists(monitor_path):
+                with open(monitor_path, 'r', encoding='utf-8', errors='replace') as mf:
+                    monitor_code = mf.read()
+        except Exception as e:
+            monitor_code = f"Error reading file: {e}"
+    
+    if test_filename:
+        test_path = os.path.join('submit', 'general_tests', test_filename)
+        try:
+            if os.path.exists(test_path):
+                with open(test_path, 'r', encoding='utf-8', errors='replace') as tf:
+                    attack_code = tf.read()
+        except Exception as e:
+            attack_code = f"Error reading file: {e}"
+    
+    # Load verification result on-demand
+    verification_results = load_verification_results()
+    verification = verification_results.get(test_name.rstrip('.r2py'), '')
+    
+    return {
+        'duration': exec_info.get('duration_seconds'),
+        'exit_code': exec_info.get('exit_code'),
+        'error': exec_info.get('error'),
+        'stdout': exec_info.get('stdout', ''),
+        'stderr': exec_info.get('stderr', ''),
+        'start_time': exec_info.get('start_time'),
+        'end_time': exec_info.get('end_time'),
+        'monitor_path': monitor_path,
+        'attack_path': test_path,
+        'monitor_code': monitor_code,
+        'attack_code': attack_code,
+        'verification': verification
     }
 
 if __name__ == '__main__':
